@@ -30,7 +30,8 @@ export default () => {
          { name: "DemoGLTF"           , path: "./demoGLTF.js"           },
          { name: "DemoSprite"         , path: "./demoSprite.js"         },
          { name: "DemoIntersect"      , path: "./demoIntersect.js"      },
-         { name: "DemoSandBox"        , path: "./demoSandBox.js"      },
+         { name: "DemoSandBox"        , path: "./demoSandbox.js"      },
+          { name: "DemoSandBoxTest"        , path: "./demoSandboxTest.js"      },
       ]
    };
 }
