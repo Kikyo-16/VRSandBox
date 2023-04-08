@@ -53,10 +53,12 @@ export function CreateBoxController(model) {
     }
 
 
+    let getPN = () =>{
+
+    }
     let focusWall = () =>{
-        let p = 1;
-        let n = 1;
-        return this.sandbox.select(p, n);
+        let res = getPN();
+        return this.sandbox.select(res[0], res[1], mode);
     }
     let remove = (fn) => {
         console.log(this.remove_cnt);
@@ -90,18 +92,17 @@ export function CreateBoxController(model) {
             clearStatus(0);
             return true;
         }else if(isRBt1()){
-            let w = focusWall();
+            let res = focusWall();
             if(!this.isSpliting){
-                if(w !== undefined){
-                    this.sandbox.focus(w[0], w[1], true);
+                if(res !== undefined){
+                    this.sandbox.focus(res, true, mode);
                     this.isSpliting = true;
                 }
             }else{
-                if(w !== undefined){
-                    this.sandbox.splitingFocus(w[0], w[1]);
+                if(res !== undefined){
+                    this.sandbox.splitingFocus(res, mode);
                 } else{
-                    let p = 1;
-                    this.sandbox.spliting(p);
+                    this.sandbox.spliting(getEndPoint(), mode);
                 }
             }
             clearStatus(2);
@@ -110,9 +111,9 @@ export function CreateBoxController(model) {
             clearStatus(1);
             return remove(this.sandbox.deleteFocus);
         }else if(isLBt1()){
-            let w = focusWall();
-            if(w !== undefined){
-                this.sandbox.focus(w[0], w[1], false)
+            let res = focusWall();
+            if(res !== undefined){
+                this.sandbox.focus(res, false, mode)
             }
             clearStatus(0);
             return true;
