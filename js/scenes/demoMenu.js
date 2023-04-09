@@ -37,16 +37,23 @@ export const init = async model => {
       g2.fillText('Color Picker', .5, .92, 'center');
       g2.drawWidgets(colorPicker);
    });
-
    colorPicker.colorR = 0.5;
    colorPicker.colorG = 0.5;
    colorPicker.colorB = 0.5;
-
    g2.addWidget(colorPicker, 'slider', .5, .268, '#ff0000', 'RED', value => colorPicker.colorR = value);
    g2.addWidget(colorPicker, 'slider', .5, .168, '#00ff00', 'GREEN', value => colorPicker.colorG = value);
    g2.addWidget(colorPicker, 'slider', .5, .068, '#0000ff', 'BLUE', value => colorPicker.colorB = value);
    
+   
    // TexturePicker
+   let texturePreviewObjects = [];
+   let spaceBetweenTextures = 0.5;
+   let textureScale = 0.25;
+   let textureList = [
+      '../media/textures/NO_TEXTURE.png',
+      '../media/textures/brick.png',
+      '../media/textures/concrete.png'
+   ];
    let texturePicker = model.add('cube').texture(() => {
       g2.setColor('#FFFFFF');
       g2.fillRect(0.25,0,0.5,1);
@@ -54,15 +61,6 @@ export const init = async model => {
       g2.setColor('black');
       g2.fillText('Texture Picker', .5, .92, 'center');
    });
-
-   let textureList = [
-      '../media/textures/NO_TEXTURE.png',
-      '../media/textures/brick.png',
-      '../media/textures/concrete.png'
-   ];
-   let texturePreviewObjects = [];
-   let spaceBetweenTextures = 0.5;
-   let textureScale = 0.25;
    for (let i = 0; i < textureList.length; i++) {
       let yLoc = spaceBetweenTextures - 2.2*i*textureScale ;
       let texturePanelItem = texturePicker.add('cube').move(0,yLoc,0.83 ).scale(textureScale).texture(textureList[i]);
@@ -82,7 +80,6 @@ export const init = async model => {
          objectList.push(objectPickerItem);
    }
 
-   
    let getBeamIntersectionWithObjects = (objectList, intersectionRadius, rt, rt_prev, currentSelection) => {
       for(let i=0;i<objectList.length;i++){
          let center = objectList[i].getGlobalMatrix().slice(12,15);
@@ -92,8 +89,6 @@ export const init = async model => {
 
          if(hit){
             if(rt && !rt_prev){
-               // model.remove(selectedObject);
-               // selectedObject = null;
                return i;
             }
          } 
@@ -128,7 +123,8 @@ export const init = async model => {
       colorPicker.identity().hud().move(-0.7,0, 0).turnY(0.4).scale(0.3,0.3,.0001);
       texturePicker.identity().hud().move(0.7,0, 0).turnY(-0.4).scale(0.4,0.4,0.0001);
       objectPicker.identity().hud().move(objectPickerLeftOffset,-0.5, 0).scale(0.2);
-      debugPanel.identity().hud().move(0,0.1, 0).turnY(0.4).scale(0.3,0.3,.0001);
+      // Debug Panel
+      //debugPanel.identity().hud().move(0,0.1, 0).turnY(0.4).scale(0.3,0.3,.0001);
 
       rt = buttonState.right[0].pressed;
       let hitRadius = 0.04;
@@ -139,7 +135,6 @@ export const init = async model => {
          selectedObject = null;
          selectedTextureIndex = newSelectedTextureIndex;
       }
-      
       // BEAM INTERSECTION FOR OBJECT PICKER
       let newSelectedObjectMeshIndex = getBeamIntersectionWithObjects(objectList, hitRadius, rt, rt_prev, selectedObjectMeshIndex);
       if(newSelectedObjectMeshIndex != selectedObjectMeshIndex){
