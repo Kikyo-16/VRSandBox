@@ -26,8 +26,8 @@ export const init = async model => {
       //menu_controller.animation(world, selected_obj, model.time);
       //obj_controller.animation(world, selected_obj, model.time);
       
-      //obj_controller.animation(world, [obj, obj], model.time);
-      obj_controller.animation(world, [obj, obj1], model.time);
+      obj_controller.animation(world, [obj, obj], model.time);
+      //obj_controller.animation(world, [obj, obj1], model.time);
    });
 }
 
