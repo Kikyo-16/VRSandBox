@@ -31,7 +31,8 @@ export default () => {
          { name: "DemoSprite"         , path: "./demoSprite.js"         },
          { name: "DemoIntersect"      , path: "./demoIntersect.js"      },
          { name: "DemoSandBox"        , path: "./demoSandbox.js"      },
-          { name: "DemoSandBoxTest"        , path: "./demoSandboxTest.js"      },
+         { name: "DemoSandBoxTest"        , path: "./demoSandboxTest.js"      },
+         { name: "DemoMenu"            , path: "./demoMenu.js"      },
       ]
    };
 }
