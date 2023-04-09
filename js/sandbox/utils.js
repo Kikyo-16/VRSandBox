@@ -1,3 +1,6 @@
+
+import * as cg from "../render/core/cg.js";
+
 export let isObj = (obj) => {
     return obj._form !== undefined && obj.status === 0;
 }
@@ -17,4 +20,20 @@ export let disableSelect = (obj) => {
        disableSelect(obj[i]);
     }
     obj.status = 1;
+}
+
+export let mCopy = (m) => {
+    let a = Array(0);
+    for(let i = 0; i < m.length; ++i){
+        a.push(m[i])
+    }
+    return a;
+}
+
+export let transform = (mTr, obj) => {
+    let mGA = obj.getGlobalMatrix();
+    let mA  = obj.getMatrix();
+    let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
+    tr      = cg.mMultiply(mTr, tr);
+    return cg.mMultiply(tr, mA)
 }
