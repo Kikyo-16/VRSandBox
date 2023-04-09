@@ -18,13 +18,13 @@ export const init = async model => {
 
   
    // Debug Panel
-   let first = true;
-   let objectHit = -1;
-   let debugPanel = model.add('cube').texture(() => {
-      g2.setColor('black');
-      g2.textHeight(0.07);
-      g2.fillText('hit = ' + hit + ' Obj = ' + objectHit, .5, .92, 'center');
-   });
+   // let first = true;
+   // let objectHit = -1;
+   // let debugPanel = model.add('cube').texture(() => {
+   //    g2.setColor('black');
+   //    g2.textHeight(0.07);
+   //    g2.fillText('hit = ' + hit + ' Obj = ' + objectHit, .5, .92, 'center');
+   // });
 
    // Color Picker Panel
    let colorPicker = model.add('cube').texture(() => {
@@ -77,18 +77,12 @@ export const init = async model => {
    let objectList = [];
    let spaceBetweenObjects = 1;
    let objectPickerLeftOffset = -0.2;
-  
-
    for (let i = 0; i < objectMeshList.length; i++) {
-      let objectPickerItem = objectPicker.add(objectMeshList[i]).move(spaceBetweenObjects*i,0,0).scale(0.3);
-      objectList.push(objectPickerItem);
+         let objectPickerItem = objectPicker.add(objectMeshList[i]).move(spaceBetweenObjects*i,0,0).scale(0.3);
+         objectList.push(objectPickerItem);
    }
 
-   let selectedObjectDetails = { objectType : objectMeshList[selectedObjectMeshIndex],
-      objectColor : selectedColor, 
-      objectTextureIndex:selectedTextureIndex
-   };
-
+   
    let getBeamIntersectionWithObjects = (objectList, intersectionRadius, rt, rt_prev, currentSelection) => {
       for(let i=0;i<objectList.length;i++){
          let center = objectList[i].getGlobalMatrix().slice(12,15);
@@ -155,39 +149,9 @@ export const init = async model => {
       }
       
       rt_prev = rt;
-      /*
-      // Texture selector
-      if( intersect with texturePicker){
-         // get Index of texture picked
-      }
-         
-      // Object Selector
-      if(interect with objectPicker) {
-         // get Index of object
-      }
-      */
+      
 
    });
 }
 
-
-// let leftPanel = model.add('cube').texture(() => {
-//    g2.setColor('white');
-//    g2.fillRect(.1,0,.8,1);
-//    g2.setColor('black');
-//    g2.fillText('Color Picker', .5, .9, 'center');
-// }).scale(1,1,0.00001);
-// g2.addWidget(leftPanel, 'slider', 0, 2.068, '#80ffff', 'color', value => leftPanel.color = 0.5);
-
-
-// if(i==0){
-//    texturePreviewObjects.push(texturePicker.add('cube').move(0,yLoc,0.83 ).scale(textureScale).texture(() => {
-//       g2.setColor([0.5,0.5,0.5]);
-//       g2.fillRect(0,0,1,1);
-//       g2.setColor('black');
-//       g2.textHeight(0.10);
-//       g2.fillText('NO TEXTURE', .5, .5, 'center');
-//    }));
-// } else {
-   
-// }
+// NOTE : The current selected object is variable with name "selectedObject" , can use this variable to calculate intersection and place a replica of the object in the world
