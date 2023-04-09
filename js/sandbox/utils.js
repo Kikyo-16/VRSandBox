@@ -21,6 +21,22 @@ export let disableSelect = (obj) => {
     obj.status = 1;
 }
 
+export let mCopy = (m) => {
+    let a = Array(0);
+    for(let i = 0; i < m.length; ++i){
+        a.push(m[i])
+    }
+    return a;
+}
+
+export let transform = (mTr, obj) => {
+    let mGA = obj.getGlobalMatrix();
+    let mA  = obj.getMatrix();
+    let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
+    tr      = cg.mMultiply(mTr, tr);
+    return cg.mMultiply(tr, mA)
+}
+
 export let copy = (parent, obj) => {
     let obj_copy = parent.add();
     obj_copy._form = obj._form
