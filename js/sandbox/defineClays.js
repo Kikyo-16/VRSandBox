@@ -1,4 +1,4 @@
-import * as cg from "../render/core/cg";
+import * as cg from "../render/core/cg.js";
 
 
 
