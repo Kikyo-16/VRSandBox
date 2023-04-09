@@ -26,7 +26,7 @@ let insideObj = (obj, ctrM) => {
     return hit;
 }
 
-export function CreateObjController(){
+export function CreateObjController(model){
 	this.m = controllerMatrix;
     this.bs = buttonState;
     this.js = joyStickState;
@@ -129,7 +129,7 @@ export function CreateObjController(){
         obj.delete();
     }
 
-    this.animation = (world, obj, t) =>{
+    this.animate = (obj, t) =>{
         //obj[0]: obj selected by the left controller (undefined for unselected)
         //obj[1]: obj selected by the right controller (undefined for unselected)
         
