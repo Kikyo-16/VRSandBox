@@ -10,7 +10,6 @@ export const init = async model => {
    let selectedColor = [0.5,0.5,0.5];
    let selectedObject = null;
    
-
    let rt = false;
    let rt_prev = false;
    let hit = false;
