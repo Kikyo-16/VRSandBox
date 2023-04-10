@@ -28,7 +28,7 @@ export class Object{
     vallinaInit(obj){
         this.model = obj._parent;
         this.obj_node = obj;
-
+        this._form = obj._form;
     }
     getGlobalMatrix() {
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix() : undefined;

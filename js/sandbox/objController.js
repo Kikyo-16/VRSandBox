@@ -14,23 +14,44 @@ import * as wut from '../sandbox/wei_utils.js';
 import {controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 
+// function insideObj(obj, p) {
+//     // check if a point is inside an obj
+//     // manipulate only valid clays
+//     if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
+//         return false;
+    
+//     let c = obj.getLoc();
+//     let scale = obj.getScale();
+//     let inside = false;
+//     if (obj._form === 'cube') {
+//         inside = p[0] > c[0] - scale && p[0] < c[0] + scale &&
+//                  p[1] > c[1] - scale && p[1] < c[1] + scale &&
+//                  p[2] > c[2] - scale && p[2] < c[2] + scale;
+//     } else if (obj._form === 'sphere') {
+//         inside = cg.norm(cg.subtract(c, p)) < scale;
+//     } else if (obj._form === 'donut') {
+//         inside = cg.norm(c[2] - p[2]) < scale*.25 && cg.norm(cg.subtract([c[0], c[1]], [p[0], p[1]])) < scale;
+//     }
+//     return inside;
+// }
+
 function insideObj(obj, p) {
     // check if a point is inside an obj
     // manipulate only valid clays
     if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
         return false;
-    
-    let c = obj.getLoc();
-    let scale = obj.getScale();
+
+    let mGA = obj.getGlobalMatrix();
+    let m = cg.mTransform(cg.mInverse(mGA), p);
     let inside = false;
     if (obj._form === 'cube') {
-        inside = p[0] > c[0] - scale && p[0] < c[0] + scale &&
-                 p[1] > c[1] - scale && p[1] < c[1] + scale &&
-                 p[2] > c[2] - scale && p[2] < c[2] + scale;
+        inside = m[0] > - 1 && m[0] < 1 &&
+                 m[1] > - 1 && m[1] < 1 &&
+                 m[2] > - 1 && m[2] < 1;
     } else if (obj._form === 'sphere') {
-        inside = cg.norm(cg.subtract(c, p)) < scale;
+        inside = cg.norm(m) < 1;
     } else if (obj._form === 'donut') {
-        inside = cg.norm(c[2] - p[2]) < scale*.25 && cg.norm(cg.subtract([c[0], c[1]], [p[0], p[1]])) < scale;
+        inside = Math.abs(m[2]) < .25 && cg.norm([m[0], m[1]]) < 1;
     }
     return inside;
 }
@@ -132,11 +153,11 @@ export function CreateObjController(obj_model){
         obj.rotate(thetaX, thetaY);
     }
 
-    this.placeOnGround = (obj) => {
-        let s = obj.getScale();
-        let loc = obj.getLoc();
-        obj.updateLoc([loc[0], s, loc[2]]);
-    }
+    // this.placeOnGround = (obj) => {
+    //     let s = obj.getScale();
+    //     let loc = obj.getLoc();
+    //     obj.updateLoc([loc[0], s, loc[2]]);
+    // }
 
     this.deleteObj = (obj) => {
         obj.delete();
@@ -219,8 +240,8 @@ export function CreateObjController(obj_model){
         }
 
         // press 'A' to place the object on ground
-        if (obj !== null && this.bs.right[4].pressed)
-            this.placeOnGround(obj);
+        // if (obj !== null && this.bs.right[4].pressed)
+        //     this.placeOnGround(obj);
     } 
 
     this.animate = (t, objs, menu_mode) => {
@@ -235,6 +256,8 @@ export function CreateObjController(obj_model){
             //obj_model.opacity(0.001);
             return [delete_obj_idx, selected_obj_idx];
 
+        // let resl = this.hitByBeam(objs, 0);
+        // let resr = this.hitByBeam(objs, 1);
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
         let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]

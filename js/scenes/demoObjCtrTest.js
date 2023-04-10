@@ -27,14 +27,23 @@ export const init = async model => {
    let obj1 = new Object();
    let obj2 = new Object();
    let obj3 = new Object();
-   obj.init(obj_model, 'cube', [0,1,.2], .1, t.getTime());
+   obj.init(obj_model, 'cube', [0, 1,.2], .1, t.getTime());
    obj1.init(obj_model, 'sphere', [0, 1, .1], .1, t.getTime());
-   obj2.init(obj_model, 'cube', [.5,1,0], .1, t.getTime());
-   obj3.init(obj_model, 'donut', [.5,.8,-.1], .1, t.getTime());
-   let obj_collection = [obj, obj1, obj2, obj3];
+   obj2.init(obj_model, 'cube', [.5, 1, 0], .1, t.getTime());
+   obj3.init(obj_model, 'donut', [.5, .8,-.1], .1, t.getTime());
+   
+   let o = obj_model.add()
+   let o1 = o.add('cube');
+   o1.move(.5, .5, 0).scale(.1).color(.5,.5,0);
+   let o2 = o1.add('sphere')
+   o2.move(.5, .5, 0).color(.5, 0, 0);
+
+   let obj4 = new Object();
+   obj4.vallinaInit(o2);
+   let obj_collection = [obj, obj1, obj2, obj3, obj4];
    
    model.animate(() => {
-      obj_controller.animate(model.time, obj_collection);
+      obj_controller.animate(model.time, obj_collection, 2);
    });
 }
 
