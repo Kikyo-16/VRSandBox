@@ -57,7 +57,7 @@ export function CreateBoxController(model, sandbox) {
         return sandbox.select(res[0], res[1], this.box_mode);
     }
 
-    let delay = (fn, sc) => {
+    let delay = (fn, args, sc) => {
         console.log(this.remove_cnt);
         if(this.remove_cnt <0) {
             this.remove_cnt = CD*sc;
@@ -68,7 +68,10 @@ export function CreateBoxController(model, sandbox) {
             return false;
         }else{
             this.remove_cnt = -1;
-            fn();
+            if(args === null || args === undefined)
+                fn();
+            else
+                fn(args);
             return true;
         }
     }
@@ -89,7 +92,8 @@ export function CreateBoxController(model, sandbox) {
             clearStatus(0);
             return true;
         }if(isLBt1()&&isLBt2()){
-            return delay(sandbox.deleteFocus, 2);
+            let args = ["delete", null];
+            return delay(sandbox.reviseFocus, args, 2);
         }else if(isRBt1()){
             if(this.isSpliting <= 1){
                 sandbox.clear(3);
@@ -107,18 +111,15 @@ export function CreateBoxController(model, sandbox) {
             }
             return false;
         }else if(isRBt2()){
-            //clearStatus(1);
-            //return remove(sandbox.deleteFocus);
             sandbox.split();
             return false;
-        }/*else if(isLBt1()){
-            let res = focusWall(0);
-            if(res !== undefined){
-                sandbox.focus(res, false, this.box_mode)
-            }
+        }else if(isLBt1()){
+            sandbox.clear(0);
+            sandbox.clear(2);
+            sandbox.focus(res, false, this.box_mode, false);
             clearStatus(0);
             return true;
-        }else if(isLBt2()){
+        }/*else if(isLBt2()){
             sandbox.merge();
             clearStatus(0);
             return true;
@@ -140,6 +141,8 @@ export function CreateBoxController(model, sandbox) {
     }
 
     let box = () =>{
+        clearStatus(1);
+        sandbox.clear(3);
         if(isRBt1() && isRBt2()) {
             // Pick a location
             this.cursor.identity().move(getEndPoint()).turnX(Math.PI/4)
@@ -159,7 +162,7 @@ export function CreateBoxController(model, sandbox) {
         }else if(isRBt2()){
             // remove a floor
             clearStatus(1);
-            return delay(sandbox.removeFloor, 2);
+            return delay(sandbox.removeFloor, null, 2);
         }else if(isLBt1()){
             // expand
             clearStatus(0);
@@ -172,8 +175,6 @@ export function CreateBoxController(model, sandbox) {
             sandbox.collapse();
             return true;
         }
-
-        clearStatus(0);
         return false;
 
     }

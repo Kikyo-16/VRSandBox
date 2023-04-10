@@ -37,6 +37,7 @@ export const init = async model => {
    if(res[0] !== undefined) {
       sandbox.focus(res, true, 0);}
       sandbox.spliting(s2, 0);
+      sandbox.reviseFocus(["delete"])
       /*res = sand_box.select(s2, n2, 0);
       sand_box.splitingFocus(res, 0);
       sand_box.split();
@@ -72,8 +73,29 @@ export const init = async model => {
    let p4 = [0.2, 1.4, .2];
    model.add("cube").move(p4).scale(.02).color(1, 0, 0);
    sand_box.expand()
-   sand_box.div(p4);*/
-
+   sand_box.div(p4);
+   let s5 = [.1, 1.52, .2];
+   model.add("cube").color(0, 1, 1).move(s5).scale(.02);
+   sandbox.div(s5);
+   let m = s1_ob.getMatrix();
+   sandbox.addObj(1, m, "cube")
+   sandbox.addObj(1, m, "cube")
+   let a = sandbox.addObj(1, m, "cube")
+   console.log("getObjCollection", sandbox.getObjCollection(0))
+   console.log("getObjCollection", sandbox.getObjCollection(1))
+   sandbox.removeObj(0, 1)
+   sandbox.removeObj(0, 1)
+   console.log("remove", sandbox.getObjCollection(0))
+   console.log("remove", sandbox.getObjCollection(1))
+   console.log(a.getGlobalMatrix().slice(12, 15));
+   a.move(.1, 0, 0)
+   console.log(a.getGlobalMatrix().slice(12, 15));
+   console.log("refreshObj", sandbox.getObjCollection(0)[0].getGlobalMatrix().slice(12, 15))
+   console.log("refreshObj", sandbox.getObjCollection(1)[0].getGlobalMatrix().slice(12, 15))
+   sandbox.refreshObj(0, 1)
+   console.log("refreshObj", sandbox.getObjCollection(0)[0].getGlobalMatrix().slice(12, 15))
+   console.log("refreshObj", sandbox.getObjCollection(1)[0].getGlobalMatrix().slice(12, 15))
+   a.move(.1, 0, 0)*/
 
 
    model.animate(() => {

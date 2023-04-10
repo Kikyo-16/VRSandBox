@@ -22,6 +22,7 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
     this.level = level;
     this.focus_edge = null;
     this.color = [1, 1, 1];
+    this.texture = undefined;
     this.wall.color(this.color);
     this.focus_flag = 0;
     this.in_active_floor = false;
@@ -29,6 +30,7 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
     p2[1] = h * 2;
     this.p1 = p1;
     this.p2 = p2;
+
 
     let setPosition = (debug)=>{
         wall.setMatrix(cg.mIdentity());
@@ -101,6 +103,14 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
     }
     this.getGPosition = (p) =>{
         return ut.objGlobalMatrix(cg.mTranslate(p), inner).slice(12, 15);
+    }
+    this.setColor = (c) =>{
+        this.wall.color(c);
+        this.color = c;
+    }
+    this.setTexture = (v) =>{
+        this.wall.texture(v);
+        this.texture = v;
     }
     this.getWallGPosition = (p) =>{
         return ut.objGlobalMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
@@ -320,6 +330,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
                 objModel.remove(obj);
             }
         }
+        this.objCollection = n_objCollection;
     }
 
 }
@@ -429,10 +440,19 @@ export function CreateSandbox(model){
     let deleteW = (w) =>{
         this.boxes[w.level].delete(w);
     }
-    this.deleteFocus = () =>{
+    this.reviseFocus = (args) =>{
+        let mode = args[0];
+        args = args[1];
         for(let i = 0; i < this.focus_walls.length; ++ i){
             let w = this.focus_walls[i];
-            deleteW(w);
+            if(mode === "delete"){
+                deleteW(w);
+            }else if(mode === "color"){
+                w.setColor(args)
+            }else if(mode === "texture"){
+                w.setTexture(args)
+            }
+
         }
         this.focus_walls = Array(0);
         this.clear(3);
@@ -548,6 +568,8 @@ export function CreateSandbox(model){
     this.reviseObj = (floor, idx, obj) =>{
         let target = this.getObj(floor, idx);
         target.setMatrix(obj.getMatrix());
+        target.texture = obj.texture;
+        target.color = obj.color;
     }
 
     this.newObj = (floor, m, tag) =>{
@@ -590,6 +612,12 @@ export function CreateVRSandbox(model){
     this.initialize = (p) =>{
         model.move(0, .8, -.4);
         this.addFloor();
+        this.active_floor = 0;
+        mini_sandbox.activeFloor(this.active_floor);
+        room.activeFloor(this.active_floor);
+        effect.activeFloor(this.active_floor);
+
+
     }
 
     let deleteTmpFocus = () =>{
@@ -658,10 +686,10 @@ export function CreateVRSandbox(model){
         boxes[1].merge();
         boxes[2].merge();
     }
-    this.deleteFocus = () =>{
-        boxes[0].deleteFocus();
-        boxes[1].deleteFocus();
-        boxes[2].deleteFocus();
+    this.reviseFocus = (args) =>{
+        boxes[0].reviseFocus(args);
+        boxes[1].reviseFocus(args);
+        boxes[2].reviseFocus(args);
         boxes[2].deleteTmpFocus();
     }
 
@@ -734,10 +762,9 @@ export function CreateVRSandbox(model){
     }
 
 
-
-    this.getObjCollection = () =>{
+    this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
-        return room.boxes[floor].objCollection;
+        return boxes[mode].boxes[floor].objCollection;
     }
 
     this.addObj = (mode, m, tag) =>{
@@ -756,6 +783,7 @@ export function CreateVRSandbox(model){
         boxes[mode].removeObj(floor, idx);
         boxes[1 - mode].removeObj(floor, idx);
         boxes[2].removeObj(floor, idx);
+        return this.getObjCollection(mode);
 
     }
 
@@ -766,8 +794,10 @@ export function CreateVRSandbox(model){
         let obj = boxes[mode].getObj(floor, idx);
         boxes[1 - mode].reviseObj(floor, idx, obj);
         boxes[2].reviseObj(floor, idx, obj);
+        return this.getObjCollection(mode);
 
     }
+
 
     this.divAnimation = () =>{
         if(!this.is_diving){
