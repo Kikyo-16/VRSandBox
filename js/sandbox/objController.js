@@ -244,9 +244,12 @@ export function CreateObjController(obj_model){
 
         // objs: obj_collection, list of objects
         //if (!this.active)
+
+        let delete_obj_idx = -1;
+        let selected_obj_idx = -1;
         if(objs.length === 0 || menu_mode === 1)
             //obj_model.opacity(0.001);
-            return;
+            return [delete_obj_idx, selected_obj_idx];
 
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
@@ -256,6 +259,7 @@ export function CreateObjController(obj_model){
         if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
             //press both trigger to resize obj
             if (this.isResize(t, resl[0] > -1 ? objs[resl[0]] : null, resl[0])) {
+
                 this.resizeObj(t);
             }
         }
@@ -271,7 +275,8 @@ export function CreateObjController(obj_model){
                 if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
                     objs[resl[0]].setColor([0,0,0]); // for test
                     //this.deleteObj(objs[resl[0]], t);
-                    return resl[0];
+                    delete_obj_idx = resl[0];
+                    return [delete_obj_idx, selected_obj_idx];
                 }
             } 
         }
@@ -281,6 +286,8 @@ export function CreateObjController(obj_model){
 
         // TODO
         // this.walk();
-        return -1;
+
+        //TODO Cand u put the index of the modifiled obj in selected_obj_idx?
+        return [delete_obj_idx, selected_obj_idx];
     }
 }

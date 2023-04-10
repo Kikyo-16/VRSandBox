@@ -91,6 +91,17 @@ export class Object{
     		this.obj_node.texture(v);
     	}
     }
+    getColor() {
+
+    	if (this.obj_node !== null) {
+    		return this.obj_node._color;
+    	}
+    }
+    getTexture() {
+    	if (this.obj_node !== null) {
+    		return this.obj_node._texture;
+    	}
+    }
 
     transform(m) {
     	if (this.obj_node !== null) {

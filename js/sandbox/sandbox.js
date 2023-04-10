@@ -600,8 +600,8 @@ export function CreateSandbox(model){
     this.reviseObj = (floor, idx, obj) =>{
         let target = this.getObj(floor, idx);
         target.setMatrix(obj.getMatrix());
-        target.texture(obj._texture);
-        target.color(obj._color);
+        target.setColor(obj.getColor());
+        target.setTexture(obj.getTexture());
     }
 
     this.newObj = (floor, obj, m) =>{
@@ -841,7 +841,7 @@ export function CreateVRSandbox(model){
 
     this.removeObj = (mode, idx) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode <0 || idx === -1)
+        if(floor === -1 || mode <0 || idx < 0)
             return
         boxes[mode].removeObj(floor, idx);
         boxes[1 - mode].removeObj(floor, idx);
@@ -850,9 +850,9 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.refreshObj = (idx, mode) =>{
+    this.refreshObj = (mode, idx) =>{
         let floor = this.active_floor;
-        if(floor === -1)
+        if(floor === -1 || mode < 0 || idx < 0)
             return
         let obj = boxes[mode].getObj(floor, idx);
         boxes[1 - mode].reviseObj(floor, idx, obj);

@@ -36,8 +36,9 @@ export const init = async model => {
       //   cube.move(.5, 0, 0)
       //}
       let obj_collection = sandbox.getObjCollection(collection_mode);
-      let delete_idx = obj_controller.animate(model.time, obj_collection, menu_status[0]);
-      sandbox.removeObj(collection_mode, delete_idx);
+      let obj_index = obj_controller.animate(model.time, obj_collection, menu_status[0]);
+      sandbox.removeObj(collection_mode, obj_index[0]);
+      sandbox.refreshObj(collection_mode, obj_index[1]);
       sandbox.animate(model.time);
 
    });
