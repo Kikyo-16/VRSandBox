@@ -10,6 +10,7 @@ object controller to select/move/resize/rotate/delete object
 
 import * as cg from "../render/core/cg.js";
 import * as ut from '../sandbox/utils.js';
+import * as wut from '../sandbox/wei_utils.js';
 import {controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 
@@ -21,16 +22,15 @@ function insideObj(obj, p) {
     
     let c = obj.getLoc();
     let scale = obj.getScale();
-    
     let inside = false;
     if (obj._form === 'cube') {
-        inside = p[0] >= c[0] - scale && p[0] <= c[0] + scale &&
-                 p[1] >= c[1] - scale && p[1] <= c[1] + scale &&
-                 p[2] >= c[2] - scale && p[2] <= c[2] + scale;
+        inside = p[0] > c[0] - scale && p[0] < c[0] + scale &&
+                 p[1] > c[1] - scale && p[1] < c[1] + scale &&
+                 p[2] > c[2] - scale && p[2] < c[2] + scale;
     } else if (obj._form === 'sphere') {
-        inside = cg.norm(cg.subtract(c, p)) <= scale;
-    } else if (obj._form === 'tubeX') {
-        //TO DO
+        inside = cg.norm(cg.subtract(c, p)) < scale;
+    } else if (obj._form === 'donut') {
+        inside = cg.norm(c[2] - p[2]) < scale*.25 && cg.norm(cg.subtract([c[0], c[1]], [p[0], p[1]])) < scale;
     }
     return inside;
 }
@@ -64,6 +64,9 @@ export function CreateObjController(obj_model){
     //
     let trackChanges = null;
 
+    //
+    this.debug = true;
+
     // press both trigger to resize, both ctr select the same obj, ctr does not have to be inside obj
 	this.isResize = (t, obj, idx) => {
         let press = this.bs.right[0].pressed && this.bs.left[0].pressed;
@@ -84,7 +87,8 @@ export function CreateObjController(obj_model){
             resize_lock = false;
             resize_obj_idx = -1;
             resize_obj = null;
-            resize_obj.setColor([0,1,1]); //for testing
+            if (this.debug)
+                resize_obj.setColor([0,1,1]);
         }
         return state === 'drag' || state === 'press';
     }
@@ -141,34 +145,17 @@ export function CreateObjController(obj_model){
         this.active = mode === 2;
     }
 
-    // this.walk = () => {
-    //     obj_model.move(-this.js.right.x*move_speed, -0, -this.js.right.y*move_speed);
-    // }
+    this.walk = () => {
+        obj_model.move(-this.js.right.x*move_speed, -0, -this.js.right.y*move_speed);
+    }
 
-    // this.moveObjWCtr = (obj, mode, p) => {
-    //     // 0: left ctr grab, 1: right ctr grab
-    //     let ml = this.m.left.slice(12, 15);
-    //     let mr = this.m.right.slice(12, 15);
-    //     let offset = [0, 0, -obj.getScale()/2];
-    //     obj.updateLoc(cg.add(mode ? ml : mr, offset));
-    // }
-
-    // this.select = (obj, hand) => {
-    //     // hand: 0 for left, 1 for right
-    //     if (hand === 0 && this.bs.left[0].pressed) {
-    //         for (let i = 0; i < obj.length; ++i) {
-    //             if (insideObj(obj[i], this.m.left.slice(12, 15)))
-    //                 return obj[i];
-    //         }
-    //     }
-    //     if (hand === 1 && this.bs.right[0].pressed) {
-    //         for (let i = 0; i < obj.length; ++i) {
-    //             if (insideObj(obj[i], this.m.right.slice(12, 15)))
-    //                 return obj[i];
-    //         }
-    //     }
-    //     return null;
-    // }
+    this.moveObjWCtr = (obj, mode, p) => {
+        // 0: left ctr grab, 1: right ctr grab
+        let ml = this.m.left.slice(12, 15);
+        let mr = this.m.right.slice(12, 15);
+        let offset = [0, 0, -obj.getScale()/2];
+        obj.updateLoc(cg.add(mode ? ml : mr, offset));
+    }
 
     this.hitByBeam = (objs, hand) => {
         // hand: 0 for left, 1 for right
@@ -197,8 +184,8 @@ export function CreateObjController(obj_model){
                 }
             }
         }
-        //for testing
-        if (hitObjIdx > -1)
+
+        if (this.debug && hitObjIdx > -1)
             objs[hitObjIdx].setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
         return [hitObjIdx, projectPoint];
     }
@@ -218,8 +205,9 @@ export function CreateObjController(obj_model){
 
         let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
         if (obj !== null && triggerPressed) {
-            
-            obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
+
+            if (this.debug)
+                obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
             
             // press one left/right trigger to grab objects with ctr
             this.moveObj(obj, p); //
@@ -236,10 +224,11 @@ export function CreateObjController(obj_model){
             this.placeOnGround(obj);
     } 
 
+
     this.animate = (t, objs) => {
+
         // objs: obj_collection, list of objects
-        //if (!this.active)
-        if(objs.length === 0)
+        if (objs.length === 0)
             //obj_model.opacity(0.001);
             return;
 

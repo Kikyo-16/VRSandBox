@@ -7,26 +7,38 @@ export class Object{
         this._form = null;
         this.lock = false;
         this.dead = false;
+        this.scale = 1;
+        this.loc = [0, 0, 0]; //global location
     }
 
     init(model, form, loc, scale, time){
     	this._form = form;
     	
     	this.model = model;
-        let obj = model.add();
-        let obj_node = obj.add(form);
-        this.obj = obj;
+        let obj_node = model.add(form);
+
         this.obj_node = obj_node;
+        this.time = time;
+        this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
+
+        this.updateScale(scale);
+        this.loc = loc; 
+        this.updateLoc(loc);
+    }
+
+    initObj(model, obj, scale, time){
+        if (obj === null) {
+            this.obj_node = null;
+            return;
+        }
+        this._form = obj._form;
+        this.model = model;
+        this.obj_node = obj;
 
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
 
-        this.scale = 1;
-        this.loc = loc; //global location
-
-        this.updateLoc(loc);
         this.updateScale(scale);
-        
     }
 
     getGlobalMatrix() {
@@ -37,10 +49,10 @@ export class Object{
     	return this.obj_node !== null ? this.obj_node.getMatrix() : undefined;
     }
 
-    setMatrix(m) {
-    	if (this.obj_node !== null)
-    		this.obj_node.setMatrix(m);
-    }
+    // setMatrix(m) {
+    // 	if (this.obj_node !== null)
+    // 		this.obj_node.setMatrix(m);
+    // }
 
     getLoc(){ // return global location
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix().slice(12, 15) : [0,0,0];
@@ -90,8 +102,9 @@ export class Object{
     }
 
     delete() {
-    	if (this.obj !== null) {
-    		this.model.remove(this.obj);
+    	if (this.obj_node !== null) {
+    		// this.model.remove(this.obj);
+            this.model.remove(this.obj_node);
     	}
     	this.dead = true;
     }
