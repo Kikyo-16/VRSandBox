@@ -238,7 +238,8 @@ export function CreateObjController(obj_model){
 
     this.animate = (t, objs) => {
         // objs: obj_collection, list of objects
-        if (!this.active)
+        //if (!this.active)
+        if(objs.length === 0)
             //obj_model.opacity(0.001);
             return;
 

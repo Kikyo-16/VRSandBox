@@ -21,22 +21,17 @@ export const init = async model => {
 
    let mode_controller = new CreateModeController(mode_model);
    let box_controller = new CreateBoxController(box_model, sandbox);
-   let menu_controller = new CreateMenuController(menu_model)
-   /*
+   let menu_controller = new CreateMenuController()
    let obj_controller = new CreateObjController(obj_model);
-   */
+
 
    model.animate(() => {
       mode_controller.animate(model.time, sandbox.in_room);
-      box_controller.animate(model.time, mode_controller.getModeID());
-
-      menu_controller.setMode(mode_controller.getModeID());
-      menu_controller.animate(model.time, model, sandbox);
-      /*
-      obj_controller.setMode(mode_controller.getMode());
-      obj_controller.animate(model.time, sandbox.getObjCollection());
-      */
-
+      let require_mode = box_controller.animate(model.time, mode_controller.getModeID());
+      //menu_controller.setMode(mode_controller.getModeID());
+      let created_obj = menu_controller.animate(model.time, menu_model, require_mode);
+      box_controller.recieveObj(created_obj);
+      //obj_controller.animate(model.time, box_controller.getObjCollection(mode_controller.getModeID()));
       sandbox.animate(model.time);
 
    });

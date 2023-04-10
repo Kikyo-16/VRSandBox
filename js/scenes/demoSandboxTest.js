@@ -36,9 +36,28 @@ export const init = async model => {
    console.log(res);
    if(res[0] !== undefined) {
       sandbox.focus(res, true, 0);}
-      sandbox.spliting(s2, 0);
-      sandbox.reviseFocus(["delete"])
-      /*res = sand_box.select(s2, n2, 0);
+      sandbox.spliting(s1, 0);
+      res = sandbox.select(n1, s1, 0);
+      sandbox.splitingFocus(res, 0);
+      sandbox.split();
+
+      let s5 = [.1, 1.52, .2];
+      let a = model.add("cube").color(0, 1, 1).move(s5).scale(.02);
+      sandbox.leaveRoom();
+      //;
+      sandbox.addObj(a, 0);
+      console.log("add", sandbox.getObjCollection(0))
+      console.log("add", sandbox.getObjCollection(1))
+
+      res = sandbox.select(n1, s1, 0);
+      sandbox.focus(res, false, 0, false);
+      sandbox.reviseFocus(["texture", a]);
+      res = sandbox.select(n1, s1, 0);
+      console.log("done")
+      //sandbox.focus(res, true, 0, false);
+      //sandbox.div(s5)
+      /*sandbox.reviseFocus(["delete"])
+      res = sand_box.select(s2, n2, 0);
       sand_box.splitingFocus(res, 0);
       sand_box.split();
       let nn = cg.subtract(cg.add(s1, n1), s2);
@@ -53,6 +72,7 @@ export const init = async model => {
 
      // let s4 = [-.03, 1.52, .03]
       let n4 = [.2, -.06, 0.1];
+
       //model.add("sphere").move(s4).scale(.01).color(0, 0, 0);
       model.add("sphere").move(cg.add(s1, n4)).scale(.01).color(1, 1, 1);
       res = sand_box.select(s1, n4, 0);
@@ -70,8 +90,7 @@ export const init = async model => {
    //sand_box.gather();
 
 
-   let p4 = [0.2, 1.4, .2];
-   model.add("cube").move(p4).scale(.02).color(1, 0, 0);
+
    sand_box.expand()
    sand_box.div(p4);
    let s5 = [.1, 1.52, .2];

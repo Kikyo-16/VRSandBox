@@ -161,13 +161,15 @@ export class CreateMenuController {
          menuOpen = false;
       };
 
-      this.animate = (t, model, room) => {
+      this.animate = (t, model, require_mode) => {
+         let res = undefined;
          rt = buttonState.right[0].pressed;
          // Object Mode
-         if (mode == 2) {
+         if (require_mode > 0 || menuOpen) {
             // Create Menu - "X" button on left controller
             //let leftXButton = true; //buttonState.left[4].pressed;
-            let leftXButton = buttonState.left[4].pressed;
+            let leftXButton = buttonState.left[4].pressed || require_mode >= 3;
+            //console.log("here")
             if (leftXButton && !menuOpen) {
                this.openMenu(model);
             } 
@@ -222,7 +224,7 @@ export class CreateMenuController {
             if (buttonState.left[5].pressed) {
                this.closeMenu(model);
                if (selectedObject != null) {
-                  room.model.addObj(selectedObject);
+                  res = selectedObject;
                   model.remove(selectedObject);
                   selectedObject = null;
                }
@@ -242,7 +244,8 @@ export class CreateMenuController {
 
 
          rt_prev = rt;
-
+         return [menuOpen, res];
       };
+
    }
 }
