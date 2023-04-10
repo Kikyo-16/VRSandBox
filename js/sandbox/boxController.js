@@ -217,19 +217,22 @@ export function CreateBoxController(model, sandbox) {
             return -2;
         }
     }
-    this.recieveObj = (res) =>{
+    this.recieveObj = (res, modeID) =>{
         let menu_mode = res[0];
         let obj = res[1];
-        if(obj !==null && obj !== undefined){
-            if(this.require_mode === NON_ACTION){
-                if(menu_mode === 0)
-                    sandbox.addObj(obj, 1);
-            }else if(this.require_mode === REQUIRE_WALL_PROP){
-                if(menu_mode === 0)
-                    sandbox.reviseFocus(["texture", obj]);
-            }
-            this.require_mode = NON_ACTION;
+        if(obj ===null || obj === undefined){
+            return
         }
+        if(menu_mode === 0){
+            if(this.require_mode === NON_ACTION){
+                sandbox.addObj(obj, modeID);
+
+            }else if(this.require_mode === REQUIRE_WALL_PROP){
+                sandbox.reviseFocus(["texture", obj]);
+            }
+
+        }
+        this.require_mode = NON_ACTION;
 
     }
     let changeMode = () =>{
