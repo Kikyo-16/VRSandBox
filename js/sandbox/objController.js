@@ -62,7 +62,7 @@ export function CreateObjController(obj_model){
     let move_speed = .025;
 
     //
-    let trackChanges = [];
+    let trackChanges = null;
 
     // press both trigger to resize, both ctr select the same obj, ctr does not have to be inside obj
 	this.isResize = (t, obj, idx) => {
@@ -138,7 +138,7 @@ export function CreateObjController(obj_model){
     }
 
     this.setMode = (mode) => {
-        this.active = mode === "Object Mode";
+        this.active = mode === 2;
     }
 
     // this.walk = () => {
@@ -203,9 +203,7 @@ export function CreateObjController(obj_model){
         return [hitObjIdx, projectPoint];
     }
 
-    this.getRefreshObjs = () => {
-        return trackChanges;
-    } 
+    this.getRefreshObjs = () => trackChanges; // return idxes of the left and/or right selected objs, null if no objs are selected
 
     this.operateSingleObj = (objs, objInfo, hand) => {
         // obj: [obj, project point on beam]
@@ -245,9 +243,7 @@ export function CreateObjController(obj_model){
             return;
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
-        // objl = this.select(obj, 0);
-        // objr = this.select(obj, 1);
-        let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj, project point] or null if no obj selected
+        let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]
         let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
 
         // left and right controller select the same obj
@@ -273,10 +269,10 @@ export function CreateObjController(obj_model){
             } 
         }
 
-        trackChanges = resl[0] === -1 && resr[0] === -1 ? [] :
+        trackChanges = resl[0] === -1 && resr[0] === -1 ? null :
                        resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
 
-        // TODO use right joystick to walk around
+        // TODO
         // this.walk();
     }
 }

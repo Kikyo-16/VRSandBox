@@ -31,9 +31,10 @@ export const init = async model => {
    obj2.init(obj_model, 'cube', [.5,1,.2], .1, t.getTime());
    let obj_collection = [obj, obj1, obj2];
 
-   mode_controller.selected_id = 1;
+   
    model.animate(() => {
       mode_controller.animate(model.time);
+      mode_controller.turnObjMode();
       /*menu_controller.animate(model.time, sandbox.getRoom());
       box_controller.animate(model.time);
       obj_controller.animate(model.time, sandbox.getObjCollection());
@@ -42,7 +43,7 @@ export const init = async model => {
       menu_controller.setMode(mode_controller.getMode());*/
 
       obj_controller.animate(model.time, obj_collection);
-      obj_controller.setMode(mode_controller.getMode());
+      obj_controller.setMode(mode_controller.getModeID());
    });
 }
 
