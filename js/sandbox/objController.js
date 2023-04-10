@@ -269,7 +269,7 @@ export function CreateObjController(obj_model){
             } 
         }
 
-        trackChanges = resl[0] === -1 && resr[0] === -1 ? null :
+        trackChanges = resl[0] === -1 && resr[0] === -1 ? Array(0) :
                        resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
 
         // TODO
