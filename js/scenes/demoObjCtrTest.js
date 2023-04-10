@@ -43,7 +43,8 @@ export const init = async model => {
    let obj_collection = [obj, obj1, obj2, obj3, obj4];
    
    model.animate(() => {
-      obj_controller.animate(model.time, obj_collection, 2);
+      changed_objs = obj_controller.animate(model.time, obj_collection, 2);
+
    });
 }
 
