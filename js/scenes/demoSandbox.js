@@ -34,7 +34,7 @@ export const init = async model => {
       let collection_mode = box_controller.getObjCollection(mode_controller.getModeID());
       let obj_collection = sandbox.getObjCollection(collection_mode);
       let delete_idx = obj_controller.animate(model.time, obj_collection, menu_status[0]);
-      //sandbox.removeObj(collection_mode, delete_idx);
+      sandbox.removeObj(collection_mode, delete_idx);
       sandbox.animate(model.time);
 
    });

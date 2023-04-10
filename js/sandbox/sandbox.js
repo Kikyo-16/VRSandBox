@@ -334,12 +334,12 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
     this.removeObjOfIdx = (idx) =>{
         let n_objCollection = Array(0);
-        let obj = this.objCollection[idx];
         for(let i = 0; i < this.objCollection.length; ++ i){
             if(i !== idx){
                 n_objCollection.push(this.objCollection[i]);
             }else{
-                obj_model.remove(obj);
+
+                this.objCollection[idx].delete();
             }
         }
         this.objCollection = n_objCollection;
@@ -838,7 +838,7 @@ export function CreateVRSandbox(model){
 
     this.removeObj = (mode, idx) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode === -1 || idx === -1)
+        if(floor === -1 || mode <0 || idx === -1)
             return
         boxes[mode].removeObj(floor, idx);
         boxes[1 - mode].removeObj(floor, idx);

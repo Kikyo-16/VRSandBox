@@ -98,12 +98,12 @@ export class Object{
     	}
     }
 
-    /*delete() {
-    	if (this.obj !== null) {
-    		//this.model.remove(this.obj);
+    delete() {
+    	if (this.obj_node !== null) {
+    		this.model.remove(this.obj_node);
     	}
     	this.dead = true;
-    }*/
+    }
 
     animate(time){
 

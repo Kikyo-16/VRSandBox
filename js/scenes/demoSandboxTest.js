@@ -56,7 +56,10 @@ export const init = async model => {
       res = sandbox.select(n1, s1, 0);
       console.log("done")
       sandbox.addObj(a, 0);
+      sandbox.addObj(a, 0);
       model.remove(a)
+
+
       //a = model.add("cube").color(0, 1, 1).move(s5).scale(.02);
       //sandbox.addObj(a, 0);
 
@@ -129,6 +132,7 @@ export const init = async model => {
    objList[0].move(.2, 1, -1);
    console.log(objList)
    objList[0].setColor([1, 0, 0]);/**/
+   objList = sandbox.removeObj(0, 0);
    //objList[1].move(.4, 1, -1);
    //objList[1].setColor([1, 0, 0]);
    //objList.push(obj2)
