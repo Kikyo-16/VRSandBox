@@ -52,6 +52,7 @@ export function CreateObjController(obj_model){
     // for resize
     let resize_lock = false;
     let resize_obj = null;
+    let resize_obj_idx = -1;
     let norm_prev = -1;
     let norm_t = 0;
     let triggerPressedPrev = false;
@@ -60,9 +61,11 @@ export function CreateObjController(obj_model){
     let rotate_speed = 3.14/400;
     let move_speed = .025;
 
+    //
+    let trackChanges = [];
 
     // press both trigger to resize, both ctr select the same obj, ctr does not have to be inside obj
-	this.isResize = (t, obj) => {
+	this.isResize = (t, obj, idx) => {
         let press = this.bs.right[0].pressed && this.bs.left[0].pressed;
         let state = !triggerPressedPrev && press ? 'press':
                     !press & triggerPressedPrev ? 'release' : press ? 'drag' : 'move';
@@ -70,6 +73,7 @@ export function CreateObjController(obj_model){
         if (state === 'press') {
             resize_lock = true;
             resize_obj = obj;
+            resize_obj_idx = idx;
             resize_obj.setColor([1,1,0]); //for testing
             norm_prev = cg.norm(cg.subtract(this.m.left.slice(12, 15), this.m.right.slice(12, 15)));
             norm_t = t;
@@ -78,6 +82,7 @@ export function CreateObjController(obj_model){
             norm_prev = -1;
             norm_t = 0;
             resize_lock = false;
+            resize_obj_idx = -1;
             resize_obj = null;
             resize_obj.setColor([0,1,1]); //for testing
         }
@@ -167,15 +172,16 @@ export function CreateObjController(obj_model){
 
     this.hitByBeam = (objs, hand) => {
         // hand: 0 for left, 1 for right
+        // return index of the closest hit obj, -1 if not hit any obj
         let minDist = 1000;
-        let hitObj = null;
+        let hitObjIdx = -1;
         let projectPoint = null;
 
         if (hand === 0) {
             for (let i = 0; i < objs.length; ++i) {
                 let hit = beamHitObj(objs[i], this.m.left.slice(12, 15), lcb);
                 if (hit[0] && hit[1] < minDist) {
-                    hitObj = objs[i];
+                    hitObjIdx = i;
                     projectPoint = hit[2];
                     minDist = hit[1];
                 }
@@ -185,25 +191,32 @@ export function CreateObjController(obj_model){
             for (let i = 0; i < objs.length; ++i) {
                 let hit = beamHitObj(objs[i], this.m.right.slice(12, 15), rcb);
                 if (hit[0] && hit[1] < minDist) {
-                    hitObj = objs[i];
+                    hitObjIdx = i;
                     projectPoint = hit[2];
                     minDist = hit[1];
                 }
             }
         }
-        if (hitObj === null)
-            return null;
-        hitObj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
-        return [hitObj, projectPoint];
+        //for testing
+        if (hitObjIdx > -1)
+            objs[hitObjIdx].setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
+        return [hitObjIdx, projectPoint];
     }
 
-    this.operateSingleObj = (objInfo, hand) => {
+    this.getRefreshObjs = () => {
+        return trackChanges;
+    } 
+
+    this.operateSingleObj = (objs, objInfo, hand) => {
         // obj: [obj, project point on beam]
         // hand: 0 for left, 1 for right
         // place/rotate/place on ground
 
-        let obj = objInfo[0];
+        let objIdx = objInfo[0];
         let p = objInfo[1];
+        if (objIdx < -1) return;
+        
+        let obj = objs[objIdx];
 
         let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
         if (obj !== null && triggerPressed) {
@@ -225,42 +238,45 @@ export function CreateObjController(obj_model){
             this.placeOnGround(obj);
     } 
 
-    this.animate = (t, objs) =>{
+    this.animate = (t, objs) => {
         // objs: obj_collection, list of objects
         if (!this.active)
+            //obj_model.opacity(0.001);
             return;
-        
+
         // select (grab) obj, press one left/right trigger to grab objects with ctr
         // objl = this.select(obj, 0);
         // objr = this.select(obj, 1);
-        let resl = resize_lock ? [resize_obj, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [null, null]; //[obj, project point] or null if no obj selected
-        let resr = resize_lock ? [resize_obj, null ] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [null, null];
+        let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj, project point] or null if no obj selected
+        let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
 
         // left and right controller select the same obj
-        if (resize_lock || (resl[0] !== null && resr[0] !== null && resl[0].rid == resr[0].rid)){
+        if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
             //press both trigger to resize obj
-            if (this.isResize(t, resl[0])) {
+            if (this.isResize(t, resl[0] > -1 ? objs[resl[0]] : null, resl[0])) {
                 this.resizeObj(t);
             }
         }
 
         if (!resize_lock) {
-            this.operateSingleObj(resl, 0);
-            this.operateSingleObj(resr, 1);
+            this.operateSingleObj(objs, resl, 0);
+            this.operateSingleObj(objs, resr, 1);
 
             // press both buttons to delect the Obj, both controller have to select the same object
             if (this.isDelete()) {
                 resl = this.hitByBeam(objs, 0);
                 resr = this.hitByBeam(objs, 1);
-                if (resl[0] !== null && resr[0] !== null && resl[0].rid == resr[0].rid) {
-                    resl[0].setColor([0,0,0]); // for test
-                    this.deleteObj(resl[0], t);
+                if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
+                    objs[resl[0]].setColor([0,0,0]); // for test
+                    this.deleteObj(objs[resl[0]], t);
                 }
             } 
         }
 
+        trackChanges = resl[0] === -1 && resr[0] === -1 ? [] :
+                       resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
+
         // TODO use right joystick to walk around
         // this.walk();
-    }   
-
+    }
 }

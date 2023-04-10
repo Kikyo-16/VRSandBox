@@ -43,7 +43,6 @@ export const init = async model => {
 
       obj_controller.animate(model.time, obj_collection);
       obj_controller.setMode(mode_controller.getMode());
-      //obj_controller.animation(world, [obj, obj1], model.time);
    });
 }
 
