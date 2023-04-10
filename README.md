@@ -9,7 +9,7 @@ When u dive into the room, it atomatically turns to ***Object Mode***. And it is
 ## Sandbox MODE
 ### Sandbox View MODE
 Press ***X*** to add a new floor;  
-Press ***Y*** to remove the top floor; 
+Press ***Y*** to remove the top floor;  
 Press ***Left_1*** to expand the building;  
 Press ***Left_2*** to collapse the building;  
 Press ***right_1*** & ***right_2*** to place a location cursor in a floor;  
