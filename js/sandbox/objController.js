@@ -10,27 +10,48 @@ object controller to select/move/resize/rotate/delete object
 
 import * as cg from "../render/core/cg.js";
 import * as ut from '../sandbox/utils.js';
+import * as wut from '../sandbox/wei_utils.js';
 import {controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
+
+// function insideObj(obj, p) {
+//     // check if a point is inside an obj
+//     // manipulate only valid clays
+//     if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
+//         return false;
+    
+//     let c = obj.getLoc();
+//     let scale = obj.getScale();
+//     let inside = false;
+//     if (obj._form === 'cube') {
+//         inside = p[0] > c[0] - scale && p[0] < c[0] + scale &&
+//                  p[1] > c[1] - scale && p[1] < c[1] + scale &&
+//                  p[2] > c[2] - scale && p[2] < c[2] + scale;
+//     } else if (obj._form === 'sphere') {
+//         inside = cg.norm(cg.subtract(c, p)) < scale;
+//     } else if (obj._form === 'donut') {
+//         inside = cg.norm(c[2] - p[2]) < scale*.25 && cg.norm(cg.subtract([c[0], c[1]], [p[0], p[1]])) < scale;
+//     }
+//     return inside;
+// }
 
 function insideObj(obj, p) {
     // check if a point is inside an obj
     // manipulate only valid clays
     if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
         return false;
-    
-    let c = obj.getLoc();
-    let scale = obj.getScale();
-    
+
+    let mGA = obj.getGlobalMatrix();
+    let m = cg.mTransform(cg.mInverse(mGA), p);
     let inside = false;
     if (obj._form === 'cube') {
-        inside = p[0] >= c[0] - scale && p[0] <= c[0] + scale &&
-                 p[1] >= c[1] - scale && p[1] <= c[1] + scale &&
-                 p[2] >= c[2] - scale && p[2] <= c[2] + scale;
+        inside = m[0] > - 1 && m[0] < 1 &&
+                 m[1] > - 1 && m[1] < 1 &&
+                 m[2] > - 1 && m[2] < 1;
     } else if (obj._form === 'sphere') {
-        inside = cg.norm(cg.subtract(c, p)) <= scale;
-    } else if (obj._form === 'tubeX') {
-        //TO DO
+        inside = cg.norm(m) < 1;
+    } else if (obj._form === 'donut') {
+        inside = Math.abs(m[2]) < .25 && cg.norm([m[0], m[1]]) < 1;
     }
     return inside;
 }
@@ -63,7 +84,7 @@ export function CreateObjController(obj_model){
     let move_speed = .025;
 
     //
-    let trackChanges = null;
+    this.debug = true;
 
     // press both trigger to resize, both ctr select the same obj, ctr does not have to be inside obj
 	this.isResize = (t, obj, idx) => {
@@ -85,7 +106,8 @@ export function CreateObjController(obj_model){
             resize_lock = false;
             resize_obj_idx = -1;
             resize_obj = null;
-            resize_obj.setColor([0,1,1]); //for testing
+            if (this.debug)
+                resize_obj.setColor([0,1,1]);
         }
         return state === 'drag' || state === 'press';
     }
@@ -128,11 +150,11 @@ export function CreateObjController(obj_model){
         obj.rotate(thetaX, thetaY);
     }
 
-    this.placeOnGround = (obj) => {
-        let s = obj.getScale();
-        let loc = obj.getLoc();
-        obj.updateLoc([loc[0], s, loc[2]]);
-    }
+    // this.placeOnGround = (obj) => {
+    //     let s = obj.getScale();
+    //     let loc = obj.getLoc();
+    //     obj.updateLoc([loc[0], s, loc[2]]);
+    // }
 
     this.deleteObj = (obj) => {
         obj.delete();
@@ -142,34 +164,17 @@ export function CreateObjController(obj_model){
         this.active = mode === 2;
     }
 
-    // this.walk = () => {
-    //     obj_model.move(-this.js.right.x*move_speed, -0, -this.js.right.y*move_speed);
-    // }
+    this.walk = () => {
+        obj_model.move(-this.js.right.x*move_speed, -0, -this.js.right.y*move_speed);
+    }
 
-    // this.moveObjWCtr = (obj, mode, p) => {
-    //     // 0: left ctr grab, 1: right ctr grab
-    //     let ml = this.m.left.slice(12, 15);
-    //     let mr = this.m.right.slice(12, 15);
-    //     let offset = [0, 0, -obj.getScale()/2];
-    //     obj.updateLoc(cg.add(mode ? ml : mr, offset));
-    // }
-
-    // this.select = (obj, hand) => {
-    //     // hand: 0 for left, 1 for right
-    //     if (hand === 0 && this.bs.left[0].pressed) {
-    //         for (let i = 0; i < obj.length; ++i) {
-    //             if (insideObj(obj[i], this.m.left.slice(12, 15)))
-    //                 return obj[i];
-    //         }
-    //     }
-    //     if (hand === 1 && this.bs.right[0].pressed) {
-    //         for (let i = 0; i < obj.length; ++i) {
-    //             if (insideObj(obj[i], this.m.right.slice(12, 15)))
-    //                 return obj[i];
-    //         }
-    //     }
-    //     return null;
-    // }
+    this.moveObjWCtr = (obj, mode, p) => {
+        // 0: left ctr grab, 1: right ctr grab
+        let ml = this.m.left.slice(12, 15);
+        let mr = this.m.right.slice(12, 15);
+        let offset = [0, 0, -obj.getScale()/2];
+        obj.updateLoc(cg.add(mode ? ml : mr, offset));
+    }
 
     this.hitByBeam = (objs, hand) => {
         // hand: 0 for left, 1 for right
@@ -199,14 +204,10 @@ export function CreateObjController(obj_model){
             }
         }
 
-        //for testing
-
-        if (hitObjIdx > -1)
+        if (this.debug && hitObjIdx > -1)
             objs[hitObjIdx].setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
         return [hitObjIdx, projectPoint];
     }
-
-    this.getRefreshObjs = () => trackChanges; // return idxes of the left and/or right selected objs, null if no objs are selected
 
     this.operateSingleObj = (objs, objInfo, hand) => {
         // obj: [obj, project point on beam]
@@ -221,8 +222,9 @@ export function CreateObjController(obj_model){
 
         let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
         if (obj !== null && triggerPressed) {
-            
-            obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
+
+            if (this.debug)
+                obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
             
             // press one left/right trigger to grab objects with ctr
             this.moveObj(obj, p); //
@@ -235,8 +237,8 @@ export function CreateObjController(obj_model){
         }
 
         // press 'A' to place the object on ground
-        if (obj !== null && this.bs.right[4].pressed)
-            this.placeOnGround(obj);
+        // if (obj !== null && this.bs.right[4].pressed)
+        //     this.placeOnGround(obj);
     } 
 
     this.animate = (t, objs, menu_mode) => {
@@ -246,15 +248,21 @@ export function CreateObjController(obj_model){
         //if (!this.active)
 
         let delete_obj_idx = -1;
-        let selected_obj_idx = -1;
+        let selected_obj_idx = Array(0);
         if(objs.length === 0 || menu_mode === 1)
             //obj_model.opacity(0.001);
             return [delete_obj_idx, selected_obj_idx];
 
+        // let resl = this.hitByBeam(objs, 0);
+        // let resr = this.hitByBeam(objs, 1);
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
         let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]
         let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
+        
+        selected_obj_idx = resl[0] === -1 && resr[0] === -1 ? Array(0) :
+                       resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
+
         // left and right controller select the same obj
         if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
             //press both trigger to resize obj
@@ -273,7 +281,8 @@ export function CreateObjController(obj_model){
                 resl = this.hitByBeam(objs, 0);
                 resr = this.hitByBeam(objs, 1);
                 if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
-                    objs[resl[0]].setColor([0,0,0]); // for test
+                    if (this.debug)
+                        objs[resl[0]].setColor([0,0,0]); // for test
                     //this.deleteObj(objs[resl[0]], t);
                     delete_obj_idx = resl[0];
                     return [delete_obj_idx, selected_obj_idx];
@@ -281,12 +290,9 @@ export function CreateObjController(obj_model){
             } 
         }
 
-        trackChanges = resl[0] === -1 && resr[0] === -1 ? null :
-                       resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
-
         // TODO
         // this.walk();
-
+        
         //TODO Cand u put the index of the modifiled obj in selected_obj_idx?
         return [delete_obj_idx, selected_obj_idx];
     }

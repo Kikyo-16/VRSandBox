@@ -7,30 +7,28 @@ export class Object{
         this._form = null;
         this.lock = false;
         this.dead = false;
+        this.scale = 1;
+        this.loc = [0, 0, 0]; //global location
     }
 
     init(model, form, loc, scale, time){
     	this._form = form;
     	console.log("init??????")
     	this.model = model;
-        this.obj_node = model.add(form);
-
+        let obj_node = model.add(form);
+        this.obj_node = obj_node;
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
 
-        this.scale = 1;
-        this.loc = loc; //global location
-
-        this.updateLoc(loc);
         this.updateScale(scale);
-
-        
+        this.loc = loc; 
+        this.updateLoc(loc);
     }
 
     vallinaInit(obj){
         this.model = obj._parent;
         this.obj_node = obj;
-
+        this._form = obj._form;
     }
     getGlobalMatrix() {
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix() : undefined;
@@ -40,10 +38,10 @@ export class Object{
     	return this.obj_node !== null ? this.obj_node.getMatrix() : undefined;
     }
 
-    setMatrix(m) {
-    	if (this.obj_node !== null)
-    		this.obj_node.setMatrix(m);
-    }
+    // setMatrix(m) {
+    // 	if (this.obj_node !== null)
+    // 		this.obj_node.setMatrix(m);
+    // }
 
     getLoc(){ // return global location
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix().slice(12, 15) : [0,0,0];
