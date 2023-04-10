@@ -650,6 +650,9 @@ export function CreateVRSandbox(model){
         mini_sandbox.activeFloor(this.active_floor);
         room.activeFloor(this.active_floor);
         effect.activeFloor(this.active_floor);
+        this.in_room = true;
+        this.is_diving = false;
+        this.leaveRoom();
 
 
     }
@@ -816,9 +819,9 @@ export function CreateVRSandbox(model){
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode === -2)
+        if(floor === -1 || mode === -1)
             return Array(0);
-        if(mode === -1){
+        if(mode === -2){
             return wrapped_model
         }
         return boxes[mode].boxes[floor].objCollection;

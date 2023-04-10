@@ -1,7 +1,7 @@
 import {buttonState, controllerMatrix, joyStickState} from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
-import {MODES} from "../sandbox/utils.js"
+import {SANDBOX_MODES, REQUIRE_NEW_OBJ, NON_ACTION, REQUIRE_WALL_PROP, SANDBOX_OBJ} from "../sandbox/utils.js";
 
 
 
@@ -15,7 +15,9 @@ export function CreateBoxController(model, sandbox) {
     this.cursor = model.add("cube").scale(.1).color(1, 0, 0).move(-100, 0, 0);
     this.box_mode = 0;
     this.stick_len = 5;
-    this.require_mode = 0;
+    this.require_mode = NON_ACTION;
+    this.sandbox_mode_id = 0;
+
 
     let rod = model.add("tubeZ").color(1, 0, 1);
 
@@ -96,7 +98,7 @@ export function CreateBoxController(model, sandbox) {
 
         }
         if(s !== 3 ){
-            this.require_mode = 0;
+            this.require_mode = NON_ACTION;
 
         }
 
@@ -105,13 +107,13 @@ export function CreateBoxController(model, sandbox) {
         let res = focusWall(1);
 
         if(isLX()) {
-            this.require_mode = 3;
+            this.require_mode = REQUIRE_WALL_PROP;
             clearStatus(3);
             return true;
-        }if(isRA()){
+        }if(isRBt2()){
             let args = ["delete", null];
-            sandbox.reviseFocus(args);
-            return true;
+            return delay(sandbox.reviseFocus, args, 2);
+            //return true;
         }else if(isRBt1()){
             if(this.isSpliting <= 1){
                 sandbox.clear(3);
@@ -167,7 +169,7 @@ export function CreateBoxController(model, sandbox) {
                 .turnZ(Math.PI/4).scale(.01);
             clearStatus(0);
             return false;
-        }else if(isRA()) {
+        }else if(isRB()) {
             // Dive into the selected location marked by the cursor
             sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
             clearStatus(0);
@@ -207,8 +209,10 @@ export function CreateBoxController(model, sandbox) {
         //.005, .005, this.stick_len / 50
     }
     this.getObjCollection = (modeID) =>{
-        if(modeID !== 1 && modeID !== 0){
+        if(modeID === 1){
             return 1;
+        }else if(this.sandbox_mode_id === 2){
+            return 0;
         }else{
             return -2;
         }
@@ -217,35 +221,49 @@ export function CreateBoxController(model, sandbox) {
         let menu_mode = res[0];
         let obj = res[1];
         if(obj !==null && obj !== undefined){
-            if(this.require_mode === 0){
+            if(this.require_mode === NON_ACTION){
                 if(menu_mode === 0)
                     sandbox.addObj(obj, 1);
-            }else if(this.require_mode === 3){
+            }else if(this.require_mode === REQUIRE_WALL_PROP){
                 if(menu_mode === 0)
                     sandbox.reviseFocus(["texture", obj]);
             }
-            this.require_mode = 0;
+            this.require_mode = NON_ACTION;
         }
 
     }
+    let changeMode = () =>{
+        if(isRA()){
+            this.sandbox_mode_id = (this.sandbox_mode_id + 1) % SANDBOX_MODES.length;
+            clearStatus(0);
+            return true;
+        }
+        return false
+    }
+    let restoreBeam = () =>{
+        rcb.beam.opacity(1);
+        rod.opacity(0.0001);
+        this.cursor.opacity(0.0001);
+    }
     this.animate = (t, modeID) =>{
-        if(modeID !== 1 && modeID !== 0){
-            rcb.beam.opacity(1);
-            rod.opacity(0.0001);
-            this.cursor.opacity(0.0001);
-            return 1;
+        if(modeID === 1){
+            restoreBeam();
+            return REQUIRE_NEW_OBJ;
         }
         if(this.require_mode > 0){
-            rcb.beam.opacity(1);
-            rod.opacity(0.0001);
-            this.cursor.opacity(0.0001);
+            restoreBeam();
             return this.require_mode;
         }
 
-        sandbox.leaveRoom();
-        rcb.beam.opacity(0.0001);
-        rod.opacity(1);
-        if(modeID === 0)
+        //box obj mode
+        if(this.sandbox_mode_id === 2) {
+            restoreBeam();
+        }else{
+            sandbox.leaveRoom();
+            rcb.beam.opacity(0.0001);
+            rod.opacity(1);
+        }
+        if(this.sandbox_mode_id === 0)
             this.cursor.opacity(1);
         else
             this.cursor.opacity(0.0001);
@@ -254,17 +272,21 @@ export function CreateBoxController(model, sandbox) {
             this.cold_down -= 1;
             return this.require_mode;
         }
-        adjustRodLength(t);
         let flag = false;
-        if(modeID === 1)
+        adjustRodLength(t);
+
+        //box edit
+        flag = changeMode() || flag;
+        if(!flag&&this.sandbox_mode_id === 1)
             flag = split() || flag;
-        else if(modeID === 0)
+        //box view
+        else if(this.sandbox_mode_id === 0)
             flag = box() || flag;
 
         if(flag){
             this.cold_down = CD;
         }
-        return this.require_mode;
+        return this.sandbox_mode_id === 2 ? SANDBOX_OBJ : this.require_mode;
 
     }
 }
