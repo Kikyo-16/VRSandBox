@@ -13,7 +13,6 @@ export const init = async model => {
 
    let rt = false;
    let rt_prev = false;
-   let hit = false;
    model.setTable(false);
 
   
@@ -23,7 +22,9 @@ export const init = async model => {
    // let debugPanel = model.add('cube').texture(() => {
    //    g2.setColor('black');
    //    g2.textHeight(0.07);
-   //    g2.fillText('hit = ' + hit + ' Obj = ' + objectHit, .5, .92, 'center');
+   //    for(let i=0;i<buttonState.left.length; i++){
+   //       g2.fillText( i + ' : ' + buttonState.left[i].pressed, .5, 0.1 * i, 'center');
+   //    }
    // });
 
    // Color Picker Panel
@@ -44,7 +45,7 @@ export const init = async model => {
    g2.addWidget(colorPicker, 'slider', .5, .168, '#00ff00', 'GREEN', value => colorPicker.colorG = value);
    g2.addWidget(colorPicker, 'slider', .5, .068, '#0000ff', 'BLUE', value => colorPicker.colorB = value);
    
-   
+
    // TexturePicker
    let texturePreviewObjects = [];
    let spaceBetweenTextures = 0.5;
@@ -142,10 +143,7 @@ export const init = async model => {
          selectedObject = null;
          selectedObjectMeshIndex = newSelectedObjectMeshIndex;
       }
-      
       rt_prev = rt;
-      
-
    });
 }
 
