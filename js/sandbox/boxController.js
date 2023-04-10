@@ -1,12 +1,14 @@
 import {buttonState, controllerMatrix, joyStickState} from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
+import {MODES} from "../sandbox/utils.js"
+
+
 
 export function CreateBoxController(model, sandbox) {
     // split-merge / box
 
-    let CD = 10;
-    let mode = "split";
+    let CD = 15;
     this.remove_cnt = -1;
     this.cold_down = -1;
     this.isSpliting = 0;
@@ -48,18 +50,17 @@ export function CreateBoxController(model, sandbox) {
 
     let getPN = () =>{
         let origin = rcb.m.slice(12, 15);
-        let n =cg.subtract(getEndPoint(), origin);
-        return [origin, n]
+        return [origin, getEndPoint()]
     }
     let focusWall = (direct) =>{
         let res = getPN(direct);
         return sandbox.select(res[0], res[1], this.box_mode);
     }
 
-    let remove = (fn) => {
+    let delay = (fn, sc) => {
         console.log(this.remove_cnt);
         if(this.remove_cnt <0) {
-            this.remove_cnt = CD*5;
+            this.remove_cnt = CD*sc;
             return false;
         }
         else if(this.remove_cnt >5) {
@@ -88,7 +89,7 @@ export function CreateBoxController(model, sandbox) {
             clearStatus(0);
             return true;
         }if(isLBt1()&&isLBt2()){
-            return remove(sandbox.deleteFocus);
+            return delay(sandbox.deleteFocus, 2);
         }else if(isRBt1()){
             if(this.isSpliting <= 1){
                 sandbox.clear(3);
@@ -100,13 +101,10 @@ export function CreateBoxController(model, sandbox) {
                 if(res[0] !== undefined){
                     sandbox.splitingFocus(res, this.box_mode);
                 } else{
-                    //let p = sandbox.boxes[0].focus_walls[0].focus_edge;
-                    //this.cursor.identity().move(p).scale(.1);
                     this.isSpliting = 3;
                     sandbox.spliting(getEndPoint(), this.box_mode);
                 }
             }
-            //clearStatus(2);
             return false;
         }else if(isRBt2()){
             //clearStatus(1);
@@ -126,11 +124,7 @@ export function CreateBoxController(model, sandbox) {
             return true;
         }
 
-        else if(this.isSpliting <= 2){
-            //sandbox.clear(3);
-            //sandbox.focus(res, true, this.box_mode, true);
-            //clearStatus(0);
-            //return false;
+
         }*/else{
             clearStatus(0);
             sandbox.focus(res, false, this.box_mode, true);
@@ -165,7 +159,7 @@ export function CreateBoxController(model, sandbox) {
         }else if(isRBt2()){
             // remove a floor
             clearStatus(1);
-            return remove(sandbox.removeFloor);
+            return delay(sandbox.removeFloor, 2);
         }else if(isLBt1()){
             // expand
             clearStatus(0);
@@ -184,7 +178,6 @@ export function CreateBoxController(model, sandbox) {
 
     }
     let fixRod = () =>{
-        rcb.beam.opacity(.0001);
         let m = cg.mMultiply(rcb.m,
             cg.mMultiply(
                 cg.mRotateX(-Math.PI / 4),
@@ -194,7 +187,20 @@ export function CreateBoxController(model, sandbox) {
         //.005, .005, this.stick_len / 50
     }
 
-    this.animation = (t) =>{
+    this.animate = (t, modeID) =>{
+        if(modeID !== 1 && modeID !== 0){
+            rcb.beam.opacity(1);
+            rod.opacity(0.0001);
+            this.cursor.opacity(0.0001);
+            return
+        }
+        sandbox.leaveRoom();
+        rcb.beam.opacity(0.0001);
+        rod.opacity(1);
+        if(modeID === 0)
+            this.cursor.opacity(1);
+        else
+            this.cursor.opacity(0.0001);
         fixRod();
         if(this.cold_down > 0){
             this.cold_down -= 1;
@@ -202,10 +208,11 @@ export function CreateBoxController(model, sandbox) {
         }
         adjustRodLength(t);
         let flag = false;
-        if(mode === "split")
+        if(modeID === 1)
             flag = split() || flag;
-        else if(mode === "box")
+        else if(modeID === 0)
             flag = box() || flag;
+
         if(flag){
             this.cold_down = CD;
         }

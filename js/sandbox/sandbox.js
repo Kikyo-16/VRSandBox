@@ -17,12 +17,14 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
     let op = .8;
 
     let wall = model.add("cube").opacity(op);
+    let inner = wall.add();
     this.wall = wall;
     this.level = level;
     this.focus_edge = null;
     this.color = [1, 1, 1];
     this.wall.color(this.color);
     this.focus_flag = 0;
+    this.in_active_floor = false;
     p1[1] = h * 2;
     p2[1] = h * 2;
     this.p1 = p1;
@@ -56,10 +58,10 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
         this.focus_flag = flag;
     }
     this.defocus = () =>{
-        this.wall.opacity(op);
         this.focus_edge = null;
         this.wall.color(this.color);
         this.focus_flag = 0;
+        this.isOnActiveFloor(this.in_active_floor);
     }
     this.hidden = () =>{
         this.wall.opacity(0.1);
@@ -84,6 +86,7 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
         }else{
             this.wall.opacity(op);
         }
+        this.in_active_floor = flag;
     }
 
     this.getPoly = () =>{
@@ -91,6 +94,19 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
         p3[1] = 0;
         p4[1] = 0;
         return [p1, p3, p4, p2];
+    }
+
+    this.getMPosition = (p) =>{
+        return ut.objMatrix(cg.mTranslate(p), inner).slice(12, 15);
+    }
+    this.getGPosition = (p) =>{
+        return ut.objGlobalMatrix(cg.mTranslate(p), inner).slice(12, 15);
+    }
+    this.getWallGPosition = (p) =>{
+        return ut.objGlobalMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
+    }
+    this.getWallMPosition = (p) =>{
+        return ut.objMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
     }
 }
 
@@ -116,23 +132,21 @@ function WallCollection(model, level, h, d){
     let opacityCanSelect = .2;
 
 
-    let isInWall = (w, p, n) =>{
-        let poly = w.getPoly();
-        let p0 = p;
-        let nw = cg.cross(cg.subtract(poly[0], poly[1]), cg.subtract(poly[1], poly[2]));
-        if (cg.dot(n, nw) === 0){
-            return undefined;
+    let isInWall = (w, p1, p2) =>{
+        let rp1 = w.getMPosition(p1);
+        let rp2 = w.getMPosition(p2);
+
+        let rn = cg.subtract(rp2, rp1);
+        if(Math.abs(rn[2]) <= 1e-5)
+            return undefined
+        let t = -rp1[2] / rn[2];
+        if(t <=0)
+            return undefined
+        let interp = cg.add(rp1, ut.mulScaler(rn, t));
+        if(ut.pointInSquare(interp, [[-1, 1, 0], [-1, -1, 0], [1, -1, 0], [1, 1, 0]])){
+            return w.getGPosition(interp);
         }
 
-        let t = cg.dot(cg.subtract(p0, poly[0]), nw) / cg.dot(n, nw);
-        //console.log(p, poly, t)
-        if(t >=0){
-            return undefined;
-        }
-        let intersect = cg.mix(p0, n, 1, -t);
-        if(ut.pointInSquare(intersect, poly)){
-            return [intersect, poly[2][1]];
-        }
         return undefined;
 
     }
@@ -186,17 +200,17 @@ function WallCollection(model, level, h, d){
         this.createWall(p, poly[3], 0);
         this.remove(w);
     }
-    this.select = (p, n) =>{
+    this.select = (p1, p2) =>{
         let min_dis = -1, idx = -1, intp = -1;
         for(let i = 0; i < this.walls.length; ++ i){
 
             if(this.walls[i].wall._opacity <= opacityCanSelect) {
                 continue;
             }
-            let intersection = isInWall(this.walls[i], p, n);
+            let intersection = isInWall(this.walls[i], p1, p2);
 
             if(intersection !== undefined){
-                let dis = cg.distance(p, intersection[0]);
+                let dis = cg.distance(p2, intersection);
                 if(min_dis < 0 || min_dis > dis){
                     min_dis = dis;
                     idx = i;
@@ -219,11 +233,12 @@ function WallCollection(model, level, h, d){
 }
 
 export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
-    let node_1 = model.add();
-    let node_2 = node_1.move(0, (h*2 + .01)*level, 0).add();
+    let node_1 = model.add().move(0, (h*2 + .01)*level, 0);
+    let node_2 = node_1.add();
     let box = node_2.add();
     let upper = box.add();
     let bottom = box.add();
+    let objModel = box.add();
     this.objCollection = Array(0);
     if(level < COLORS.length){
         this.color = COLORS[level];
@@ -239,8 +254,8 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     wall_collection.createWall(p4, p1, d)
     MakeBottom(bottom, p1, p2, p3, d, edge);
 
-    this.select = (p, n) =>{
-        return wall_collection.select(p, n);
+    this.select = (p1, p2) =>{
+        return wall_collection.select(p1, p2);
     }
 
     this.split = (w1, w2) =>{
@@ -280,7 +295,6 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
 
     }
     this.active = () =>{
-        console.log("here")
         bottom.color(this.color);
         wall_collection.isOnActiveFloor(true);
     }
@@ -289,30 +303,24 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         wall_collection.isOnActiveFloor(false);
     }
 
-    this.addObj = (obj) => {
-        box.add(obj);
+    this.newObj = (m, tag) => {
+        let obj = objModel.add(tag);
+        let nm = ut.objMatrix(m, objModel);
+        obj.setMatrix(nm);
         this.objCollection.push(obj);
+        return obj;
     }
     this.removeObjOfIdx = (idx) =>{
-        let obj = this.objCollection[idx];
-        this.removeObj(obj);
-    }
-    this.removeObj = (obj) => {
-        let hit = -1;
         let n_objCollection = Array(0);
+        let obj = this.objCollection[idx];
         for(let i = 0; i < this.objCollection.length; ++ i){
-            if(obj !== this.objCollection[i]){
+            if(i !== idx){
                 n_objCollection.push(this.objCollection[i]);
             }else{
-                hit = i;
+                objModel.remove(obj);
             }
         }
-        if(hit > -1)
-            box.remove(obj);
-        this.objCollection = n_objCollection;
-        return hit;
     }
-
 
 }
 
@@ -320,16 +328,14 @@ export function CreateSandbox(model){
     let h = .1;
     let d = .01;
     let edge = .02;
-    let node = model.add();
+    let root = model.add();
+    let node = root.add();
     let box_model = node.add();
     this.boxes = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];
     let p3 = [1, 0, 1];
     let p4 = [1, 0, 0];
-    //this.boxes.push(new CreateBox(box_model, p1, p2, p3, p4, h, d, edge, 0));
-
-
 
     this.wall_to_split = undefined;
     this.focus_walls = Array(0);
@@ -341,17 +347,6 @@ export function CreateSandbox(model){
     this.getNodelMatrix = () =>{
         return node.getMatrix();
     }
-
-    /*this.select = (p, n, idx) =>{
-        /*or(let i =0; i < this.boxes.length; i ++){
-            let res = this.boxes[i].select(p, n);
-            if(res !== undefined){
-                return res;
-            }
-        }
-        return undefined;
-    }*/
-
 
 
     this.focus = (w, p, clean, tmp) => {
@@ -397,16 +392,17 @@ export function CreateSandbox(model){
         }
     }
 
-    this.spliting = (p) => {
+    this.spliting = (rp) => {
         let w = this.focus_walls[0];
         let poly = w.getPoly();
         let y = poly[0][1];
+
         let edge = w.focus_edge;
         let p1 = [edge[0], y, edge[2]];
-        p[1] = y;
-        this.tmp_wall.replace(p1, p);
+
+        this.tmp_wall.replace(p1, rp);
         this.tmp_wall.active();
-        return [p1, p]
+
     }
 
     this.split = () => {
@@ -418,7 +414,6 @@ export function CreateSandbox(model){
         let w2 = this.wall_to_split;
         this.boxes[w1.level].split(w1, w2);
         this.clear(3);
-
 
     }
 
@@ -498,6 +493,15 @@ export function CreateSandbox(model){
 
     }
 
+    this.select = (floor, rp1, rp2) =>{
+        let p1 = this.getGPosition(rp1);
+        let p2 = this.getGPosition(rp2);
+        let res = this.boxes[floor].select(p1, p2);
+        if(res !== undefined){
+            return [res[0], this.getMPosition(res[1])];
+        }
+        return res
+    }
 
     this.inWhichBox = (p) =>{
         for(let i = 0; i < this.boxes.length; ++ i){
@@ -536,34 +540,30 @@ export function CreateSandbox(model){
                 this.boxes[i].deactive();
         }
     }
-    this.addFurniture = (obj, p) => {
-        for(let i =0; i < this.boxes.length; ++ i) {
-            if(this.addFurnitureToBox(obj, p, i))
-                return i;
-        }
-        return -1;
-    }
-    this.addFurnitureToBox = (obj, p, idx) => {
-        if(this.boxes[idx].isInbox(p)){
-            this.boxes[idx].addObj(obj);
-            return true;
-        }
-        return false;
 
+    this.getObj = (floor, idx) =>{
+        return this.boxes[floor].objCollection[idx];
     }
-    this.removeFurniture = (obj) => {
-        for(let i =0; i < this.boxes.length; ++ i) {
-            let idx = this.removeFurnitureOfIdx(obj, i);
-            if(idx > -1)
-                return [i, idx];
-        }
-        return undefined;
 
+    this.reviseObj = (floor, idx, obj) =>{
+        let target = this.getObj(floor, idx);
+        target.setMatrix(obj.getMatrix());
     }
-    this.removeFurnitureOfIdx = (obj, idx) => {
-        return this.boxes[idx].removeObj(obj);
 
+    this.newObj = (floor, m, tag) =>{
+        return this.boxes[floor].newObj(m, tag);
     }
+    this.removeObj = (floor, idx) =>{
+        this.boxes[floor].removeObjOfIdx(idx);
+    }
+
+    this.flyAway = () =>{
+        root.identity().move(0, -1000, 0);
+    }
+    this.comeBack = () =>{
+        root.identity();
+    }
+
     this.animation = (t) =>{
 
     }
@@ -581,9 +581,15 @@ export function CreateVRSandbox(model){
     this.div_pos = -1;
     this.active_floor = -1;
     this.is_collapse = true;
+    this.in_room = false;
 
     this.numFloors = () =>{
         return mini_sandbox.boxes.length;
+    }
+
+    this.initialize = (p) =>{
+        model.move(0, .8, -.4);
+        this.addFloor();
     }
 
     let deleteTmpFocus = () =>{
@@ -593,32 +599,34 @@ export function CreateVRSandbox(model){
     }
 
 
-    this.select = (p, n, mode) =>{
+    this.select = (p1, p2, mode) =>{
         let floor = this.active_floor;
         if(floor < 0)
             return;
-        let rp = boxes[mode].getMPosition(p);
-        let rn = boxes[mode].getMPosition(cg.add(p, n));
-        rn = cg.subtract(rn, rp);
-        let res_1 = boxes[mode].boxes[floor].select(rp, rn);
-        let res_2 = boxes[1 - mode].boxes[floor].select(rp, rn);
-        let res_3 = boxes[2].boxes[floor].select(rp, rn);
-        return [res_1, res_2, res_3];
+        let rp1 = boxes[mode].getMPosition(p1);
+        let rp2 = boxes[mode].getMPosition(p2);
+        let res_1 = boxes[mode].select(floor, rp1, rp2);
+        let res_2 = boxes[1 - mode].select(floor, rp1, rp2);
+        let res_3 = boxes[2].select(floor, rp1, rp2);
+        let res = [res_1, res_2, res_3];
+        if(res[0] === undefined || res[1]  === undefined)
+            res[0] = res[1] = res[2] = undefined;
+        return res;
     }
 
     this.focus = (res, clean, mode, tmp) => {
         if(res[mode] !== undefined){
-            let rp = res[mode][1][0];
-            boxes[mode].focus(res[mode][0], rp, clean, tmp);
-            boxes[1 - mode].focus(res[1 - mode][0], rp, clean, tmp);
-            boxes[2].focus(res[2][0], rp, clean, tmp);
+            boxes[0].focus(res[0][0], res[0][1], clean, tmp);
+            boxes[1].focus(res[1][0], res[1][1], clean, tmp);
+            boxes[2].focus(res[2][0], res[2][1], clean, tmp);
         }else{
             deleteTmpFocus();
         }
     }
 
     this.splitingFocus = (res, mode) => {
-        let rp = res[mode][1][0];
+        let rp = res[mode][1];
+
         boxes[mode].splitingFocus(res[mode][0], rp);
         boxes[1 - mode].splitingFocus(res[1 - mode][0], rp);
         boxes[2].splitingFocus(res[2][0], rp);
@@ -663,6 +671,8 @@ export function CreateVRSandbox(model){
         boxes[2].addFloor();
     }
     this.removeFloor = () =>{
+        if(this.numFloors()<= 1)
+            return;
         boxes[0].removeFloor();
         boxes[1].removeFloor();
         boxes[2].removeFloor();
@@ -698,22 +708,67 @@ export function CreateVRSandbox(model){
             this.is_collapse = true;
         }
     }
+
+    this.callSandbox = () =>{
+        mini_sandbox.comeBack();
+    }
+
     this.div = (p) =>{
 
         let floor = mini_sandbox.inWhichBox(p);
 
         if(floor !== undefined){
+
             this.div_pos = mini_sandbox.getMPosition(p);
+
+            effect.comeBack();
             this.is_diving = true;
             this.active_floor = floor;
             this.div_mode = this.is_collapse ? "collapse" : "expand";
             mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
-            room.relocate(this.div_pos, this.active_floor, 1);
+
         }
 
     }
+
+
+
+    this.getObjCollection = () =>{
+        let floor = this.active_floor;
+        return room.boxes[floor].objCollection;
+    }
+
+    this.addObj = (mode, m, tag) =>{
+        let floor = this.active_floor;
+        if(floor === -1)
+            return
+        boxes[1 - mode].newObj(floor, m, tag);
+        boxes[2].newObj(floor, m, tag);
+        return boxes[mode].newObj(floor, m, tag);
+    }
+
+    this.removeObj = (idx, mode) =>{
+        let floor = this.active_floor;
+        if(floor === -1)
+            return
+        boxes[mode].removeObj(floor, idx);
+        boxes[1 - mode].removeObj(floor, idx);
+        boxes[2].removeObj(floor, idx);
+
+    }
+
+    this.refreshObj = (idx, mode) =>{
+        let floor = this.active_floor;
+        if(floor === -1)
+            return
+        let obj = boxes[mode].getObj(floor, idx);
+        boxes[1 - mode].reviseObj(floor, idx, obj);
+        boxes[2].reviseObj(floor, idx, obj);
+
+    }
+
     this.divAnimation = () =>{
         if(!this.is_diving){
             return;
@@ -723,8 +778,11 @@ export function CreateVRSandbox(model){
         if(this.diving_time === -1){
             this.diving_time = 0;
         }else if(this.diving_time > diving_limit){
+            mini_sandbox.flyAway();
+            room.comeBack();
             room.relocate(this.div_pos, this.active_floor, sc);
             this.is_diving = false;
+            this.in_room = true;
             this.diving_time = -1;
             this.div_pos = -1;
             return;
@@ -735,57 +793,15 @@ export function CreateVRSandbox(model){
         this.diving_time = this.diving_time + 1;
     }
 
-
-    this.addFurnitureToBox = (obj) =>{
-        let p = obj.getGlobalMatrix().slice(12, 15);
-        let pos = ut.objMatrix(cg.mTranslate(p), mini_sandbox).slice(12, 15);
-        let floor = mini_sandbox.addFurniture(obj, pos);
-        if(floor !== undefined){
-            room.addFurnitureToBox(obj, pos, floor);
-            effect.addFurnitureToBox(obj, pos, floor);
-            return true
-        }
-        return false;
+    this.leaveRoom = () =>{
+        this.in_room = false;
+        mini_sandbox.comeBack();
+        room.flyAway();
+        effect.flyAway();
     }
-    this.addFurnitureToRoom = (obj) =>{
-        let p = obj.getGlobalMatrix().slice(12, 15);
-        let floor = this.active_floor;
-        if(floor >=0){
-            let pos = ut.objMatrix(cg.mTranslate(p), room).slice(12, 15);
-            if(room.addFurnitureToBox(obj, pos, floor)){
-                mini_sandbox.addFurnitureToBox(obj, pos, floor);
-                effect.addFurnitureToBox(obj, pos, floor);
-                return true
-            }
-        }
-        return false;
-    }
-    this.removeFurnitureFromBox = (obj) =>{
-        let res = mini_sandbox.removeFurniture(obj);
-        if(res !== undefined) {
-            mini_sandbox.removeFurnitureOfIdx(res);
-            effect.removeFurnitureOfIdx(res);
-            return true;
-        }
-        return false;
+    this.animate = (t) =>{
+        this.divAnimation();
     }
 
-    this.removeFurnitureFromRoom = (obj) =>{
-        if(this.active_floor < 0)
-            return false;
-        let floor = this.active_floor;
-        let idx = room[floor].removeObj(obj);
-        if(idx === -1)
-            return false;
-        mini_sandbox[floor].removeObjOfIdx(idx);
-        effect[floor].removeObjOfIdx(idx);
-        return true
-    }
 
-    this.hitFurnitureInBox = (p, n) =>{
-        //return mini_sandbox.hitFurniture(p, n);
-    }
-    this.hitFurnitureInRoom = (p) =>{
-        //
-    }
 }

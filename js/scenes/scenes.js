@@ -9,7 +9,7 @@ export default () => {
    return {
       enableSceneReloading: true,
       scenes: [ 
-         { name: "DemoSimplest"       , path: "./demoSimplest.js"       },
+         /*{ name: "DemoSimplest"       , path: "./demoSimplest.js"       },
          { name: "DemoShapes"         , path: "./demoShapes.js"         },
          { name: "DemoRobot"          , path: "./demoRobot.js"          },
          { name: "DemoControllers"    , path: "./demoControllers.js"    },
@@ -30,7 +30,7 @@ export default () => {
          { name: "DemoGLTF"           , path: "./demoGLTF.js"           },
          { name: "DemoSprite"         , path: "./demoSprite.js"         },
          { name: "DemoIntersect"      , path: "./demoIntersect.js"      },
-         { name: "DemoObjCtrTest"     , path: "./demoObjCtrTest.js"      },
+         { name: "DemoObjCtrTest"     , path: "./demoObjCtrTest.js"      },*/
          { name: "DemoSandBox"        , path: "./demoSandbox.js"      },
          { name: "DemoSandBoxTest"    , path: "./demoSandboxTest.js"      },
          { name: "DemoMenu"           , path: "./demoMenu.js"      },
