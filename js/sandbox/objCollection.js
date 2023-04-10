@@ -11,12 +11,9 @@ export class Object{
 
     init(model, form, loc, scale, time){
     	this._form = form;
-    	
+    	console.log("init??????")
     	this.model = model;
-        let obj = model.add();
-        let obj_node = obj.add(form);
-        this.obj = obj;
-        this.obj_node = obj_node;
+        this.obj_node = model.add(form);
 
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
@@ -26,9 +23,15 @@ export class Object{
 
         this.updateLoc(loc);
         this.updateScale(scale);
+
         
     }
 
+    vallinaInit(obj){
+        this.model = obj._parent;
+        this.obj_node = obj;
+
+    }
     getGlobalMatrix() {
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix() : undefined;
     }
@@ -78,8 +81,14 @@ export class Object{
     }
 
     setColor(c) {
-    	if (this.obj_node !== null) {
+
+    	if (this.obj_node !== null && c !== null && c !== undefined) {
     		this.obj_node.color(c);
+    	}
+    }
+    setTexture(v) {
+    	if (this.obj_node !== null && v !== null && v !== undefined) {
+    		this.obj_node.texture(v);
     	}
     }
 
@@ -89,12 +98,12 @@ export class Object{
     	}
     }
 
-    delete() {
+    /*delete() {
     	if (this.obj !== null) {
-    		this.model.remove(this.obj);
+    		//this.model.remove(this.obj);
     	}
     	this.dead = true;
-    }
+    }*/
 
     animate(time){
 

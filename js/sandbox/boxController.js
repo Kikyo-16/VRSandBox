@@ -107,8 +107,6 @@ export function CreateBoxController(model, sandbox) {
         if(isLX()) {
             this.require_mode = 3;
             clearStatus(3);
-            sandbox.clear(0);
-            sandbox.clear(2);
             return true;
         }if(isRA()){
             let args = ["delete", null];
@@ -208,37 +206,33 @@ export function CreateBoxController(model, sandbox) {
         rod.setMatrix(m);
         //.005, .005, this.stick_len / 50
     }
-
-    this.recieveObj = (obj) =>{
-        let menu_open = obj[0];
-        let res = obj[1];
-        //if(!menu_open && this.require_mode >=3){
-        //   this.require_mode = 0;
-        //}
-        if(res !==null && res !== undefined){
+    this.getObjCollection = (modeID) =>{
+        if(modeID !== 1 && modeID !== 0){
+            return 1;
+        }else{
+            return -2;
+        }
+    }
+    this.recieveObj = (res) =>{
+        let menu_mode = res[0];
+        let obj = res[1];
+        if(obj !==null && obj !== undefined){
             if(this.require_mode === 0){
-                sandbox.addObj(res, 1);
+                if(menu_mode === 0)
+                    sandbox.addObj(obj, 1);
             }else if(this.require_mode === 3){
-                sandbox.reviseFocus(["texture", res]);
+                if(menu_mode === 0)
+                    sandbox.reviseFocus(["texture", obj]);
             }
             this.require_mode = 0;
         }
 
     }
-    this.getObjCollection = (modeID) =>{
-        if(modeID !== 1 && modeID !== 0) {
-            return sandbox.getObjCollection(1);
-        }else{
-            return [];
-        }
-    }
     this.animate = (t, modeID) =>{
         if(modeID !== 1 && modeID !== 0){
-            if(rcb.beam._opacity < .8){
-                rcb.beam.opacity(1);
-                rod.opacity(0.0001);
-                this.cursor.opacity(0.0001);
-            }
+            rcb.beam.opacity(1);
+            rod.opacity(0.0001);
+            this.cursor.opacity(0.0001);
             return 1;
         }
         if(this.require_mode > 0){
@@ -247,7 +241,6 @@ export function CreateBoxController(model, sandbox) {
             this.cursor.opacity(0.0001);
             return this.require_mode;
         }
-
 
         sandbox.leaveRoom();
         rcb.beam.opacity(0.0001);

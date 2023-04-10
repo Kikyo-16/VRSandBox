@@ -1,5 +1,6 @@
 import * as cg from "../render/core/cg.js";
 import * as ut from "../sandbox/wei_utils.js"
+import {Object} from "../sandbox/objCollection.js"
 
 let COLORS = [
     [255/255, 153/255, 204/255],
@@ -263,13 +264,13 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     let box = node_2.add();
     let upper = box.add();
     let bottom = box.add();
-    let objModel = box.add();
+    let obj_model = box.add();
     this.tmp_wall = new MakeWall(box, p1, p2, h, d, 0);
     this.tmp_wall.disappear();
     this.tmp_focus = undefined;
     this.wall_to_split = undefined;
     this.focus_walls = Array(0);
-    this.objModel = objModel;
+    this.obj_model = obj_model;
 
 
     this.objCollection = Array(0);
@@ -323,10 +324,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
     this.newObj = (obj, m) => {
-        let n_obj = objModel.add(obj._form);
+        let n_obj = new Object();
+        n_obj.init(obj_model, obj._form, [0, 0, 0], 1, 0);
+        n_obj.setColor(obj._color);
+        n_obj.setTexture(obj._texture);
         n_obj.setMatrix(m);
-        n_obj.color(obj._color);
-        n_obj.texture(obj._texture);
         this.objCollection.push(n_obj);
         return n_obj;
     }
@@ -337,7 +339,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
             if(i !== idx){
                 n_objCollection.push(this.objCollection[i]);
             }else{
-                objModel.remove(obj);
+                obj_model.remove(obj);
             }
         }
         this.objCollection = n_objCollection;
@@ -628,6 +630,8 @@ export function CreateVRSandbox(model){
     let room = new CreateSandbox(model);
     let effect = new CreateSandbox(model);
     let boxes = [mini_sandbox, room, effect];
+    let wrapped_model = new Object();
+    wrapped_model.vallinaInit(model)
     this.is_diving = false;
     this.diving_time = -1;
     this.div_pos = -1;
@@ -801,6 +805,7 @@ export function CreateVRSandbox(model){
             this.active_floor = floor;
             this.div_mode = this.is_collapse ? "collapse" : "expand";
             mini_sandbox.activeFloor(floor);
+            mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
 
@@ -811,6 +816,11 @@ export function CreateVRSandbox(model){
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
+        if(floor === -1 || mode === -2)
+            return Array(0);
+        if(mode === -1){
+            return wrapped_model
+        }
         return boxes[mode].boxes[floor].objCollection;
     }
 
@@ -819,15 +829,16 @@ export function CreateVRSandbox(model){
         if(floor === -1)
             return
         let m = obj.getGlobalMatrix();
-        let rm = ut.objMatrix(m, boxes[mode].boxes[floor].objModel);
+        let rm = ut.objMatrix(m, boxes[mode].boxes[floor].obj_model);
+
         boxes[1 - mode].newObj(floor, obj, rm);
         boxes[2].newObj(floor, obj, rm);
         return boxes[mode].newObj(floor, obj, rm);
     }
 
-    this.removeObj = (idx, mode) =>{
+    this.removeObj = (mode, idx) =>{
         let floor = this.active_floor;
-        if(floor === -1)
+        if(floor === -1 || mode === -1 || idx === -1)
             return
         boxes[mode].removeObj(floor, idx);
         boxes[1 - mode].removeObj(floor, idx);
@@ -859,6 +870,7 @@ export function CreateVRSandbox(model){
         }else if(this.diving_time > diving_limit){
             room.comeBack();
             room.relocate(this.div_pos, this.active_floor, sc);
+            effect.flyAway();
             this.is_diving = false;
             this.in_room = true;
             this.diving_time = -1;

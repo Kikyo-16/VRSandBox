@@ -19,8 +19,8 @@ export let transform = (mTr, obj) => {
     let mGA = obj.getGlobalMatrix();
     let mA  = obj.getMatrix();
     let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
-    tr      = cg.mMultiply(mTr, tr);
-    return cg.mMultiply(tr, mA)
+    mGA      = cg.mMultiply(mTr, mGA);
+    return cg.mMultiply(tr, mGA)
 }
 
 export let copy = (parent, obj) => {

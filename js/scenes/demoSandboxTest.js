@@ -1,6 +1,9 @@
 import * as cg from "../render/core/cg.js";
 import {CreateVRSandbox}  from '../sandbox/sandbox.js'
 import {customClays} from '../sandbox/defineClays.js'
+import {CreateObjController} from "../sandbox/objController.js";
+import {Object} from "../sandbox/objCollection.js";
+
 
 
 export const init = async model => {
@@ -45,15 +48,18 @@ export const init = async model => {
       let a = model.add("cube").color(0, 1, 1).move(s5).scale(.02);
       sandbox.leaveRoom();
       //;
-      sandbox.addObj(a, 0);
-      console.log("add", sandbox.getObjCollection(0))
-      console.log("add", sandbox.getObjCollection(1))
+      //sandbox.addObj(a, 0);
 
       res = sandbox.select(n1, s1, 0);
       sandbox.focus(res, false, 0, false);
       sandbox.reviseFocus(["texture", a]);
       res = sandbox.select(n1, s1, 0);
       console.log("done")
+      sandbox.addObj(a, 0);
+      model.remove(a)
+      //a = model.add("cube").color(0, 1, 1).move(s5).scale(.02);
+      //sandbox.addObj(a, 0);
+
       //sandbox.focus(res, true, 0, false);
       //sandbox.div(s5)
       /*sandbox.reviseFocus(["delete"])
@@ -115,10 +121,25 @@ export const init = async model => {
    console.log("refreshObj", sandbox.getObjCollection(0)[0].getGlobalMatrix().slice(12, 15))
    console.log("refreshObj", sandbox.getObjCollection(1)[0].getGlobalMatrix().slice(12, 15))
    a.move(.1, 0, 0)*/
+   let obj_model = model.add()
+   let obj_controller = new CreateObjController(obj_model);
+   let objList = sandbox.getObjCollection(0);
+   //let obj2 = new Object();
+   //obj2.init(obj_model, 'cube', [0,1,.2], .1, 0);
+   objList[0].move(.2, 1, -1);
+   console.log(objList)
+   objList[0].setColor([1, 0, 0]);/**/
+   //objList[1].move(.4, 1, -1);
+   //objList[1].setColor([1, 0, 0]);
+   //objList.push(obj2)
+
+   //objList[0].scale(2);
 
 
+   console.log(objList)
    model.animate(() => {
       sandbox.animate(model.time);
+      //obj_controller.animate(model.time, objList);
       //model.identity().turnY(Math.cos(model.time / 2) * Math.PI);
       /*box.identity().move(0, 1.5, 0)
           .scale(.3).turnX(Math.PI/6)

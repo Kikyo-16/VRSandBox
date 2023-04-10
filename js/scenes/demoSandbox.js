@@ -24,14 +24,17 @@ export const init = async model => {
    let menu_controller = new CreateMenuController()
    let obj_controller = new CreateObjController(obj_model);
 
-
    model.animate(() => {
       mode_controller.animate(model.time, sandbox.in_room);
       let require_mode = box_controller.animate(model.time, mode_controller.getModeID());
       //menu_controller.setMode(mode_controller.getModeID());
-      let created_obj = menu_controller.animate(model.time, menu_model, require_mode);
-      box_controller.recieveObj(created_obj);
-      //obj_controller.animate(model.time, box_controller.getObjCollection(mode_controller.getModeID()));
+      let menu_status = menu_controller.animate(model.time, menu_model, require_mode);
+      box_controller.recieveObj(menu_status);
+
+      let collection_mode = box_controller.getObjCollection(mode_controller.getModeID());
+      let obj_collection = sandbox.getObjCollection(collection_mode);
+      let delete_idx = obj_controller.animate(model.time, obj_collection, menu_status[0]);
+      //sandbox.removeObj(collection_mode, delete_idx);
       sandbox.animate(model.time);
 
    });
