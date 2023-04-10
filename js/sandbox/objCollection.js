@@ -13,10 +13,9 @@ export class Object{
 
     init(model, form, loc, scale, time){
     	this._form = form;
-    	
+    	console.log("init??????")
     	this.model = model;
         let obj_node = model.add(form);
-
         this.obj_node = obj_node;
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
@@ -26,21 +25,11 @@ export class Object{
         this.updateLoc(loc);
     }
 
-    initObj(model, obj, scale, time){
-        if (obj === null) {
-            this.obj_node = null;
-            return;
-        }
-        this._form = obj._form;
-        this.model = model;
+    vallinaInit(obj){
+        this.model = obj._parent;
         this.obj_node = obj;
 
-        this.time = time;
-        this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
-
-        this.updateScale(scale);
     }
-
     getGlobalMatrix() {
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix() : undefined;
     }
@@ -90,8 +79,25 @@ export class Object{
     }
 
     setColor(c) {
-    	if (this.obj_node !== null) {
+
+    	if (this.obj_node !== null && c !== null && c !== undefined) {
     		this.obj_node.color(c);
+    	}
+    }
+    setTexture(v) {
+    	if (this.obj_node !== null && v !== null && v !== undefined) {
+    		this.obj_node.texture(v);
+    	}
+    }
+    getColor() {
+
+    	if (this.obj_node !== null) {
+    		return this.obj_node._color;
+    	}
+    }
+    getTexture() {
+    	if (this.obj_node !== null) {
+    		return this.obj_node._texture;
     	}
     }
 
@@ -103,8 +109,7 @@ export class Object{
 
     delete() {
     	if (this.obj_node !== null) {
-    		// this.model.remove(this.obj);
-            this.model.remove(this.obj_node);
+    		this.model.remove(this.obj_node);
     	}
     	this.dead = true;
     }

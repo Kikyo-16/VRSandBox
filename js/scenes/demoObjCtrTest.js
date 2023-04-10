@@ -28,9 +28,9 @@ export const init = async model => {
    let obj2 = new Object();
    let obj3 = new Object();
    obj.init(obj_model, 'cube', [0,1,.2], .1, t.getTime());
-   obj1.init(obj_model, 'sphere', [-.5, 1, .2], .1, t.getTime());
-   obj2.init(obj_model, 'cube', [.5,1,.2], .1, t.getTime());
-   obj3.init(obj_model, 'donut', [.5,.5,.2], .1, t.getTime());
+   obj1.init(obj_model, 'sphere', [0, 1, .1], .1, t.getTime());
+   obj2.init(obj_model, 'cube', [.5,1,0], .1, t.getTime());
+   obj3.init(obj_model, 'donut', [.5,.8,-.1], .1, t.getTime());
    let obj_collection = [obj, obj1, obj2, obj3];
    
    model.animate(() => {

@@ -1,6 +1,14 @@
 import * as cg from "../render/core/cg.js";
 
-export let MODES = ["Sandbox View", "Edit Sandbox", "Object Mode"];
+export let MODES = ["Sandbox->View", "Room->Object"];
+export let SANDBOX_MODES = ["Sandbox->View", "Sandbox->Edit", "Sandbox->Object"]
+export let SANDBOX_OBJ = 2;
+export let NON_ACTION = 0;
+export let REQUIRE_NEW_OBJ = 1;
+export let REQUIRE_WALL_PROP = 3;
+
+
+
 
 export let isObj = (obj) => {
     return obj._form !== undefined && obj.status === 0;
@@ -19,8 +27,8 @@ export let transform = (mTr, obj) => {
     let mGA = obj.getGlobalMatrix();
     let mA  = obj.getMatrix();
     let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
-    tr      = cg.mMultiply(mTr, tr);
-    return cg.mMultiply(tr, mA)
+    mGA      = cg.mMultiply(mTr, mGA);
+    return cg.mMultiply(tr, mGA)
 }
 
 export let copy = (parent, obj) => {

@@ -23,15 +23,22 @@ export const init = async model => {
    let box_controller = new CreateBoxController(box_model, sandbox);
    let menu_controller = new CreateMenuController()
    let obj_controller = new CreateObjController(obj_model);
-
-
+   //let cube = model.add("cube").move(0, 1.5, 0).scale(.2)
    model.animate(() => {
-      mode_controller.animate(model.time, sandbox.in_room);
-      let require_mode = box_controller.animate(model.time, mode_controller.getModeID());
+      mode_controller.animate(model.time, sandbox.in_room, box_controller.sandbox_mode_id);
+      let modeID = mode_controller.getModeID();
+      let require_mode = box_controller.animate(model.time, modeID);
       //menu_controller.setMode(mode_controller.getModeID());
-      let created_obj = menu_controller.animate(model.time, menu_model, require_mode);
-      box_controller.recieveObj(created_obj);
-      //obj_controller.animate(model.time, box_controller.getObjCollection(mode_controller.getModeID()));
+      let menu_status = menu_controller.animate(model.time, menu_model, require_mode);
+      box_controller.recieveObj(menu_status, modeID);
+      let collection_mode = box_controller.getObjCollection(modeID);
+      //if(collection_mode === 0){
+      //   cube.move(.5, 0, 0)
+      //}
+      let obj_collection = sandbox.getObjCollection(collection_mode);
+      let obj_index = obj_controller.animate(model.time, obj_collection, menu_status[0]);
+      sandbox.removeObj(collection_mode, obj_index[0]);
+      sandbox.refreshObj(collection_mode, obj_index[1]);
       sandbox.animate(model.time);
 
    });

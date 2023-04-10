@@ -39,6 +39,7 @@ function beamHitObj(obj, ctr, cb) {
     let center = obj.getLoc();
     let point = cb.projectOntoBeam(center);
     let dist = cg.norm(cg.subtract(ctr, point));
+    //console.log("center", center, point, ctr, dist);
     return [insideObj(obj, point), dist, point];
 }
 
@@ -190,8 +191,6 @@ export function CreateObjController(obj_model){
         return [hitObjIdx, projectPoint];
     }
 
-    this.getRefreshObjs = () => trackChanges; // return idxes of the left and/or right selected objs, null if no objs are selected
-
     this.operateSingleObj = (objs, objInfo, hand) => {
         // obj: [obj, project point on beam]
         // hand: 0 for left, 1 for right
@@ -224,22 +223,27 @@ export function CreateObjController(obj_model){
             this.placeOnGround(obj);
     } 
 
-
-    this.animate = (t, objs) => {
+    this.animate = (t, objs, menu_mode) => {
+        //return obj index to delete || -1
 
         // objs: obj_collection, list of objects
-        if (objs.length === 0)
+        //if (!this.active)
+
+        let delete_obj_idx = -1;
+        let selected_obj_idx = -1;
+        if(objs.length === 0 || menu_mode === 1)
             //obj_model.opacity(0.001);
-            return;
+            return [delete_obj_idx, selected_obj_idx];
+
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
         let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]
         let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
-
         // left and right controller select the same obj
         if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
             //press both trigger to resize obj
             if (this.isResize(t, resl[0] > -1 ? objs[resl[0]] : null, resl[0])) {
+
                 this.resizeObj(t);
             }
         }
@@ -254,7 +258,9 @@ export function CreateObjController(obj_model){
                 resr = this.hitByBeam(objs, 1);
                 if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
                     objs[resl[0]].setColor([0,0,0]); // for test
-                    this.deleteObj(objs[resl[0]], t);
+                    //this.deleteObj(objs[resl[0]], t);
+                    delete_obj_idx = resl[0];
+                    return [delete_obj_idx, selected_obj_idx];
                 }
             } 
         }
@@ -264,5 +270,8 @@ export function CreateObjController(obj_model){
 
         // TODO
         // this.walk();
+
+        //TODO Cand u put the index of the modifiled obj in selected_obj_idx?
+        return [delete_obj_idx, selected_obj_idx];
     }
 }

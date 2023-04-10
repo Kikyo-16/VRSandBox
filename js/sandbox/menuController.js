@@ -162,8 +162,9 @@ export class CreateMenuController {
       };
 
       this.animate = (t, model, require_mode) => {
-         let res = undefined;
          rt = buttonState.right[0].pressed;
+         let res = null;
+         let menu_mode = menuOpen? 1 : 0;
          // Object Mode
          if (require_mode > 0 || menuOpen) {
             // Create Menu - "X" button on left controller
@@ -227,11 +228,13 @@ export class CreateMenuController {
                   res = selectedObject;
                   model.remove(selectedObject);
                   selectedObject = null;
+                  menu_mode = 0;
                }
             }
 
             // Cancel Menu - Left Joystick Button
             if (buttonState.left[3].pressed) {
+               menu_mode = 2;
                if(menuOpen){
                   this.closeMenu(model);
                   if (selectedObject != null) {
@@ -244,7 +247,7 @@ export class CreateMenuController {
 
 
          rt_prev = rt;
-         return [menuOpen, res];
+         return [menu_mode, res];
       };
 
    }
