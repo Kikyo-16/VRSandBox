@@ -15,6 +15,7 @@ export function CreateBoxController(model, sandbox) {
     this.cursor = model.add("cube").scale(.1).color(1, 0, 0).move(-100, 0, 0);
     this.box_mode = 0;
     this.stick_len = 5;
+    this.require_mode = 0;
 
     let rod = model.add("tubeZ").color(1, 0, 1);
 
@@ -30,6 +31,18 @@ export function CreateBoxController(model, sandbox) {
     }
     let isRBt2 = () =>{
         return buttonState.right[1].pressed;
+    }
+    let isLY = () =>{
+        return buttonState.left[5].pressed;
+    }
+    let isLX = () =>{
+        return buttonState.left[4].pressed;
+    }
+    let isRB = () =>{
+        return buttonState.right[5].pressed;
+    }
+    let isRA = () =>{
+        return buttonState.right[4].pressed;
     }
 
 
@@ -82,18 +95,25 @@ export function CreateBoxController(model, sandbox) {
             this.isSpliting = 0;
 
         }
+        if(s !== 3 ){
+            this.require_mode = 0;
+
+        }
 
     }
     let split = () =>{
         let res = focusWall(1);
 
-        if(isRBt1()&&isRBt2()) {
-            //pop menu change color texture
-            clearStatus(0);
+        if(isLX()) {
+            this.require_mode = 3;
+            clearStatus(3);
+            sandbox.clear(0);
+            sandbox.clear(2);
             return true;
-        }if(isLBt1()&&isLBt2()){
+        }if(isRA()){
             let args = ["delete", null];
-            return delay(sandbox.reviseFocus, args, 2);
+            sandbox.reviseFocus(args);
+            return true;
         }else if(isRBt1()){
             if(this.isSpliting <= 1){
                 sandbox.clear(3);
@@ -110,10 +130,10 @@ export function CreateBoxController(model, sandbox) {
                 }
             }
             return false;
-        }else if(isRBt2()){
+        }else if(isRB()){
             sandbox.split();
             return false;
-        }else if(isLBt1()){
+        }else if(isLY()){
             sandbox.clear(0);
             sandbox.clear(2);
             sandbox.focus(res, false, this.box_mode, false);
@@ -149,20 +169,21 @@ export function CreateBoxController(model, sandbox) {
                 .turnZ(Math.PI/4).scale(.01);
             clearStatus(0);
             return false;
-        }else if(isLBt1() && isLBt2()) {
+        }else if(isRA()) {
             // Dive into the selected location marked by the cursor
             sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
             clearStatus(0);
             return true;
-        }else if(isRBt1()){
+        }else if(isLY()){
             // add a floor
             sandbox.addFloor();
             clearStatus(0);
             return true;
-        }else if(isRBt2()){
+        }else if(isLX()){
             // remove a floor
+            sandbox.removeFloor();
             clearStatus(1);
-            return delay(sandbox.removeFloor, null, 2);
+            return true;
         }else if(isLBt1()){
             // expand
             clearStatus(0);
@@ -188,13 +209,46 @@ export function CreateBoxController(model, sandbox) {
         //.005, .005, this.stick_len / 50
     }
 
+    this.recieveObj = (obj) =>{
+        let menu_open = obj[0];
+        let res = obj[1];
+        //if(!menu_open && this.require_mode >=3){
+        //   this.require_mode = 0;
+        //}
+        if(res !==null && res !== undefined){
+            if(this.require_mode === 0){
+                sandbox.addObj(res, 1);
+            }else if(this.require_mode === 3){
+                sandbox.reviseFocus(["texture", res]);
+            }
+            this.require_mode = 0;
+        }
+
+    }
+    this.getObjCollection = (modeID) =>{
+        if(modeID !== 1 && modeID !== 0) {
+            return sandbox.getObjCollection(1);
+        }else{
+            return [];
+        }
+    }
     this.animate = (t, modeID) =>{
         if(modeID !== 1 && modeID !== 0){
+            if(rcb.beam._opacity < .8){
+                rcb.beam.opacity(1);
+                rod.opacity(0.0001);
+                this.cursor.opacity(0.0001);
+            }
+            return 1;
+        }
+        if(this.require_mode > 0){
             rcb.beam.opacity(1);
             rod.opacity(0.0001);
             this.cursor.opacity(0.0001);
-            return
+            return this.require_mode;
         }
+
+
         sandbox.leaveRoom();
         rcb.beam.opacity(0.0001);
         rod.opacity(1);
@@ -205,7 +259,7 @@ export function CreateBoxController(model, sandbox) {
         fixRod();
         if(this.cold_down > 0){
             this.cold_down -= 1;
-            return;
+            return this.require_mode;
         }
         adjustRodLength(t);
         let flag = false;
@@ -217,7 +271,7 @@ export function CreateBoxController(model, sandbox) {
         if(flag){
             this.cold_down = CD;
         }
-
+        return this.require_mode;
 
     }
 }
