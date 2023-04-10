@@ -11,7 +11,7 @@ Press ***X*** to add a new floor;
 Press ***Y*** to remove the top floor; 
 Press ***Left_1*** to expand the building;  
 Press ***Left_2*** to collapse the building;  
-Press ***B*** to place a location cursor in a floor; 
+Press ***right_1*** & ***right_2*** to place a location cursor in a floor; 
 Press ***A*** to dive into the target floor; 
 
 ### Sandbox Edit Mode
