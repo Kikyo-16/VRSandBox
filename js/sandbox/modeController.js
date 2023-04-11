@@ -2,7 +2,6 @@ import {g2} from "../util/g2.js";
 
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
-import {BOX_OBJ} from "../sandbox/utils.js";
 
 
 
@@ -19,6 +18,7 @@ export function CreateModeController(model){
     let CD = 20;
     this.cold_down = -1;
     this.mode_id = 0;
+    this.switch_flag = false
     menu_button.text = "";
     menu_button.color = [1, 1, 1];
 
@@ -51,6 +51,10 @@ export function CreateModeController(model){
                 text = ut.TEXT_IS_DIVING;
                 color = ut.COLOR_IS_DIVING;
                 break;
+            case ut.ROOM_WALKING:
+                text = ut.TEXT_ROOM_WALKING;
+                color = ut.COLOR_ROOM_WALKING;
+                break;
             default:
                 let bug = "you got a bug here";
                 console.log(bug);
@@ -63,7 +67,8 @@ export function CreateModeController(model){
 
     let isInRoom = () =>{
         return this.mode_id === ut.ROOM_WITH_BOX ||
-            this.mode_id === ut.ROOM_WITHOUT_BOX;
+            this.mode_id === ut.ROOM_WITHOUT_BOX ||
+            this.mode_id === ut.ROOM_WALKING;
     }
     let isInBox = () =>{
         return this.mode_id === ut.BOX_VIEW ||
@@ -79,14 +84,17 @@ export function CreateModeController(model){
         return false;
     }
     let switchModeInRoom = () =>{
-        if(bc.isRA() && isInRoom()){
-            this.mode_id = this.mode_id === ut.ROOM_WITH_BOX ? ut.ROOM_WITHOUT_BOX : ut.ROOM_WITH_BOX;
+        if(isInRoom()){
+            let mid = this.mode_id + 1
+            if(mid > ut.ROOM_WITH_BOX)
+                mid = ut.ROOM_WITHOUT_BOX;
+            this.mode_id = mid;
             return true;
         }
         return false;
     }
     let switchModeInBox = () =>{
-        if(bc.isRA() && isInBox()){
+        if(isInBox()){
             let mid = this.mode_id + 1;
             if(mid > ut.BOX_OBJ)
                 mid = ut.BOX_VIEW;
@@ -97,14 +105,14 @@ export function CreateModeController(model){
     }
 
     this.parseCodeForMenu = (menu_id) =>{
-
-        return menu_id;
+        return (isInRoom() || this.mode_id === ut.BOX_OBJ
+            || this.mode_id === ut.BOX_EDIT ) && !this.switch_flag;
     }
 
 
     this.parseCodeForCrl = (menu_status) =>{
         return menu_status !== ut.MENU_OPEN &&
-            (isInRoom() || (isInBox() && this.mode_id === ut.BOX_OBJ))
+            ((isInRoom() && this.mode_id!== ut.ROOM_WALKING) || (isInBox() && this.mode_id === ut.BOX_OBJ))
 
     }
 
@@ -129,10 +137,11 @@ export function CreateModeController(model){
     }
 
     this.getCollectionCode = () =>{
-        return this.mode_id === ut.BOX_OBJ ? 0 : (isInRoom() ? 1: -2);
+        return this.mode_id === ut.BOX_OBJ ? 0 : (isInRoom() ? 1: -1);
     }
 
     this.animate = (t, mode_id, is_diving) =>{
+        this.switch_flag = false;
         this.mode_id = mode_id;
         if(!is_diving && this.mode_id === ut.IS_DIVING)
             this.mode_id = ut.ROOM_WITHOUT_BOX;
@@ -143,13 +152,11 @@ export function CreateModeController(model){
         }
         let flag = false;
         flag = changeGlobalMode() || flag;
-        if(!flag){
-            flag = switchModeInRoom() || flag;
-        }
-        if(!flag){
-            flag = switchModeInBox() || flag;
+        if(!flag && bc.isRA()){
+            flag = switchModeInRoom() || switchModeInBox();
         }
         if(flag){
+            this.switch_flag = true;
             this.cold_down = CD;
         }
         refresh(this.mode_id);

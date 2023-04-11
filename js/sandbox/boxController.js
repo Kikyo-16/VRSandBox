@@ -135,7 +135,7 @@ export function CreateBoxController(model, sandbox) {
             // Dive into the selected location marked by the cursor
             sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
             clearStatus(0);
-            return ut.IS_DIVING;
+            return 0;
         }else if(bc.isLY()){
             // add a floor
             sandbox.addFloor();
@@ -156,6 +156,11 @@ export function CreateBoxController(model, sandbox) {
             // collapse
             clearStatus(0);
             sandbox.collapse();
+            return 0;
+        }
+        if(bc.isRA()){
+            sandbox.clear(3);
+            clearStatus(0);
             return 0;
         }
         return -1;
@@ -189,9 +194,16 @@ export function CreateBoxController(model, sandbox) {
             restoreBeam();
             return [mode_id, menu_id]
         }
+        if(mode_id !== ut.MENU_REVISE_WALL) {
+            if (mode_id === ut.ROOM_WITH_BOX || mode_id === ut.ROOM_WITHOUT_BOX || mode_id === ut.BOX_OBJ) {
+                menu_id = ut.MENU_ADD_OBJ;
+            } else {
+                menu_id = ut.MENU_DISABLED;
+            }
+        }
+
         if(mode_id !== ut.BOX_EDIT && mode_id !== ut.BOX_VIEW){
             restoreBeam();
-            menu_id = ut.MENU_ADD_OBJ;
         }else{
             fixRod(mode_id);
             adjustRodLength(t);
@@ -204,17 +216,14 @@ export function CreateBoxController(model, sandbox) {
         let flag = false;
         if(mode_id === ut.BOX_VIEW){
             sandbox.leaveRoom();
-            let mid = box();
-            if(mid > -1){
-                flag = true;
-                mode_id = mid === ut.IS_DIVING ? ut.IS_DIVING : mode_id;
-            }
+            flag = box() === 0 || flag;
+
         }else if(mode_id === ut.BOX_EDIT){
             sandbox.leaveRoom();
             let nid = split();
             if(nid > -1){
                 flag = true;
-                menu_id = nid === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id;
+                menu_id = (nid === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id);
             }
         }else if(mode_id === ut.BOX_OBJ){
             sandbox.leaveRoom();
@@ -223,6 +232,8 @@ export function CreateBoxController(model, sandbox) {
         }else if(mode_id === ut.ROOM_WITHOUT_BOX){
             sandbox.mini_sandbox.flyAway();
         }
+        if(sandbox.is_diving)
+            mode_id = ut.IS_DIVING
 
         if(flag){
             this.cold_down = CD;

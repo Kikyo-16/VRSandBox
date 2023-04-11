@@ -56,6 +56,14 @@ export const init = async model => {
       res = sandbox.select(n1, s1, 0);
       console.log("done")
       sandbox.addObj(a, 0);
+      let objList = sandbox.getObjCollection(0);
+
+   objList[0].move(.2, 1, -1);
+      sandbox.addObj(a, 1);
+      objList = sandbox.getObjCollection(1);
+   //let obj2 = new Object();
+   //obj2.init(obj_model, 'cube', [0,1,.2], .1, 0);
+    objList[1].move(-.2, 1, -1);
       sandbox.addObj(a, 0);
       model.remove(a)
 
@@ -126,10 +134,7 @@ export const init = async model => {
    a.move(.1, 0, 0)*/
    let obj_model = model.add()
    let obj_controller = new CreateObjController(obj_model);
-   let objList = sandbox.getObjCollection(0);
-   //let obj2 = new Object();
-   //obj2.init(obj_model, 'cube', [0,1,.2], .1, 0);
-   objList[0].move(.2, 1, -1);
+
    console.log(objList)
    objList[0].setColor([1, 0, 0]);/**/
    objList = sandbox.removeObj(0, 0);

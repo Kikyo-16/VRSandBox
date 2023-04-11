@@ -57,6 +57,10 @@ export let mulScaler = (a, c) => {
 
 }
 
+export let onlyUnique = (value, index, array) =>{
+    return array.indexOf(value) === index;
+}
+
 export let copyVec = (v) =>{
     let nv = Array(0);
     for(let i =0 ; i < v.length; ++i){

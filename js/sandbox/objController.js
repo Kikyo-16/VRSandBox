@@ -132,6 +132,9 @@ export function CreateObjController(obj_model){
         }
         return;
     }
+    this.resizeObjByJoystick = (t) =>{
+
+    }
 
     this.moveObj = (obj, p) => {
         // 0: left ctr grab, 1: right ctr grab
@@ -156,9 +159,6 @@ export function CreateObjController(obj_model){
     //     obj.updateLoc([loc[0], s, loc[2]]);
     // }
 
-    this.deleteObj = (obj) => {
-        obj.delete();
-    }
 
     this.setMode = (mode) => {
         this.active = mode === 2;
@@ -204,8 +204,8 @@ export function CreateObjController(obj_model){
             }
         }
 
-        if (this.debug && hitObjIdx > -1)
-            objs[hitObjIdx].setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
+        //if (this.debug && hitObjIdx > -1)
+        //    objs[hitObjIdx].setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
         return [hitObjIdx, projectPoint];
     }
 
@@ -216,7 +216,7 @@ export function CreateObjController(obj_model){
 
         let objIdx = objInfo[0];
         let p = objInfo[1];
-        if (objIdx < -1) return;
+        if (objIdx < 0) return;
         
         let obj = objs[objIdx];
 
@@ -234,6 +234,8 @@ export function CreateObjController(obj_model){
 
             // use left joystick to rotate the object
             this.rotateObj(obj);
+
+
         }
 
         // press 'A' to place the object on ground
@@ -261,7 +263,7 @@ export function CreateObjController(obj_model){
         let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
         
         selected_obj_idx = resl[0] === -1 && resr[0] === -1 ? Array(0) :
-                       resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
+                       resl[0] === -1 ? [resr[0]] : resl[0] === resr[0] ? [resl[0]] : [resl[0], resr[0]];
 
         // left and right controller select the same obj
         if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
@@ -273,14 +275,15 @@ export function CreateObjController(obj_model){
         }
 
         if (!resize_lock) {
-            this.operateSingleObj(objs, resl, 0);
+
+            //this.operateSingleObj(objs, resl, 0);
             this.operateSingleObj(objs, resr, 1);
 
             // press both buttons to delect the Obj, both controller have to select the same object
             if (this.isDelete()) {
                 resl = this.hitByBeam(objs, 0);
                 resr = this.hitByBeam(objs, 1);
-                if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
+                if (resl[0] > -1 && resr[0] > -1 && resl[0] === resr[0]) {
                     if (this.debug)
                         objs[resl[0]].setColor([0,0,0]); // for test
                     //this.deleteObj(objs[resl[0]], t);

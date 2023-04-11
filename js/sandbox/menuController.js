@@ -162,7 +162,7 @@ export class CreateMenuController {
          menuOpen = false;
       };
 
-      this.animate = (t, model, menu_id) => {
+      this.animate = (t, model, menu_id, inactive) => {
          if(menu_id === ut.MENU_DISABLED)
             return ut.MENU_CLOSE;
 
@@ -171,7 +171,7 @@ export class CreateMenuController {
 
          // Object Mode
           // Create Menu - "X" button on left controller
-         let leftXButton = buttonState.left[4].pressed || menu_id !== ut.MENU_ADD_OBJ;
+         let leftXButton = buttonState.left[4].pressed || menu_id === ut.MENU_REVISE_WALL;
          if (leftXButton && !menuOpen) {
             this.openMenu(model);
          }
@@ -231,7 +231,7 @@ export class CreateMenuController {
                menu_status = ut.MENU_CLOSE;
             }
          }
-         if (buttonState.left[3].pressed) {
+         if (buttonState.left[3].pressed || inactive) {
             menu_status = ut.MENU_CANCEL;
             if (menuOpen) {
                this.closeMenu(model);
@@ -244,6 +244,8 @@ export class CreateMenuController {
 
 
          rt_prev = rt;
+         if(menuOpen)
+            menu_status = ut.MENU_OPEN;
          return [menu_status, res];
       };
 
