@@ -20,11 +20,6 @@ export let MENU_CLOSE = 3;
 
 
 
-
-
-
-
-
 /*
 * STATUS CODE
 * */

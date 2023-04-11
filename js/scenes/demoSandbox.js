@@ -27,9 +27,8 @@ export const init = async model => {
 
 
    let mode_id = ut.BOX_VIEW;
-   let menu_id = ut.MENU_ADD_OBJ;
+   let menu_id = ut.MENU_DISABLED;
    let menu_status = [ut.MENU_CLOSE, null];
-
    model.animate(() => {
       //Press 4 buttons to escape from a room
       //Press A to decide if show the sandbox while in a room
@@ -39,6 +38,7 @@ export const init = async model => {
       let res = box_controller.animate(model.time, mode_id, menu_id, menu_status[0]);
       mode_id = res[0];
       menu_id = res[1];
+      console.log(menu_id, ut.MENU_DISABLED)
 
       /* Pass menu_id:
          MENU_ADD_OBJ = 1;       ->normal status

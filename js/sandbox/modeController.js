@@ -97,6 +97,7 @@ export function CreateModeController(model){
     }
 
     this.parseCodeForMenu = (menu_id) =>{
+
         return menu_id;
     }
 
@@ -114,7 +115,8 @@ export function CreateModeController(model){
     this.clearMenuID = (sandbox, menu_id, menu_status) =>{
         if(menu_status[1] !== undefined && menu_status[1] !== null && menu_status[0] !== ut.MENU_OPEN){
             if(menu_id === ut.MENU_ADD_OBJ){
-                sandbox.addObj(menu_status[1], this.getCollectionCode());
+                if(menu_status[0] === ut.MENU_CLOSE)
+                    sandbox.addObj(menu_status[1], this.getCollectionCode());
             }else if(menu_id === ut.MENU_REVISE_WALL){
                 if(menu_status[0] === ut.MENU_CLOSE)
                     sandbox.reviseFocus(["texture", menu_status[1]])

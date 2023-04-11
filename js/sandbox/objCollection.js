@@ -15,8 +15,7 @@ export class Object{
     	this._form = form;
     	console.log("init??????")
     	this.model = model;
-        let obj_node = model.add(form);
-        this.obj_node = obj_node;
+        this.obj_node = model.add(form);
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
 
@@ -38,10 +37,10 @@ export class Object{
     	return this.obj_node !== null ? this.obj_node.getMatrix() : undefined;
     }
 
-    // setMatrix(m) {
-    // 	if (this.obj_node !== null)
-    // 		this.obj_node.setMatrix(m);
-    // }
+    setMatrix(m) {
+     	if (this.obj_node !== null)
+     		this.obj_node.setMatrix(m);
+     }
 
     getLoc(){ // return global location
     	return this.obj_node !== null ? this.obj_node.getGlobalMatrix().slice(12, 15) : [0,0,0];
