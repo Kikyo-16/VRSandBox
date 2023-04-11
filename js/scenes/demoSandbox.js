@@ -4,6 +4,7 @@ import {CreateBoxController}  from '../sandbox/boxController.js'
 import {CreateObjController}  from '../sandbox/objController.js'
 import {CreateMenuController}  from '../sandbox/menuController.js'
 import {CreateModeController}  from '../sandbox/modeController.js'
+import {CreateRoomController}  from '../sandbox/roomController.js'
 import * as ut from '../sandbox/utils.js'
 
 
@@ -15,6 +16,7 @@ export const init = async model => {
    let obj_model = model.add();
    let mode_model = model.add();
    let sandbox_model = model.add();
+   let room_model = model.add();
 
    let sandbox = new CreateVRSandbox(sandbox_model);
    sandbox.initialize()
@@ -24,21 +26,26 @@ export const init = async model => {
    let box_controller = new CreateBoxController(box_model, sandbox);
    let menu_controller = new CreateMenuController()
    let obj_controller = new CreateObjController(obj_model);
+   let room_controller = new CreateRoomController(sandbox);
 
 
    let mode_id = ut.BOX_VIEW;
    let menu_id = ut.MENU_DISABLED;
    let menu_status = [ut.MENU_CLOSE, null];
+
+   console.log(cg.mMultiply(views[0]._viewMatrix, cg.mTranslate(0, 0, 1)))
    model.animate(() => {
+
       //Press 4 buttons to escape from a room
       //Press A to decide if show the sandbox while in a room
       mode_id = mode_controller.animate(model.time, mode_id, sandbox.is_diving);
       menu_id = mode_controller.clearMenuID(sandbox, menu_id, menu_status);
 
+      room_controller.animate(model.time, mode_id);
+
       let res = box_controller.animate(model.time, mode_id, menu_id, menu_status[0]);
       mode_id = res[0];
       menu_id = res[1];
-      console.log(menu_id, ut.MENU_DISABLED)
 
       /* Pass menu_id:
          MENU_ADD_OBJ = 1;       ->normal status
@@ -51,7 +58,8 @@ export const init = async model => {
          MENU_OPEN = 1;
          MENU_CANCEL = 2;
          MENU_CLOSE = 3;*/
-      menu_status = menu_controller.animate(model.time, menu_model, menu_id);
+      let inactive = !mode_controller.parseCodeForMenu(menu_id);
+      menu_status = menu_controller.animate(model.time, menu_model, menu_id, inactive);
 
 
       let collection_mode = mode_controller.getCollectionCode();

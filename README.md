@@ -35,9 +35,17 @@ Press ***Left_1*** & ***Right_2*** to resize obj;
 Press ***Left_2*** & ***Right_2*** to delete obj;  
 Press ***A*** to turn to another sandbox sub mode;  
 
-### Object Mode
+### Object Mode Without Sandbox
 Press ***X*** to open ***NewObj*** menu;  
 Press ***Y*** to close menu and create a new obj;  
 Press ***Left_1*** to grab obj;  
 Press ***Left_1*** & ***Right_2*** to resize obj;  
 Press ***Left_2*** & ***Right_2*** to delete obj;  
+
+### Walking in Room
+***Joysticker*** (y-axis) to walk forwad / backward;  
+Press ***X*** to lower the speed;  
+Press ***Y*** to faster the speed;  
+Using your view direction to control the walking direction
+
+

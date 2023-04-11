@@ -476,12 +476,13 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
 }
 
 export function CreateSandbox(model){
-    let h = .1;
+    let h = .05;
     let d = .01;
     let edge = .02;
     let root = model.add();
     let node = root.add();
-    let box_model = node.add();
+    let walk = node.add();
+    let box_model = walk.add();
     this.boxes = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];
@@ -531,6 +532,7 @@ export function CreateSandbox(model){
 
 
     }
+
     this.collapse = (active_floor) =>{
         let dx = 0;
         if(active_floor >= 0){
@@ -571,6 +573,15 @@ export function CreateSandbox(model){
 
     this.getNodeMatrix = (p) =>{
         return ut.objMatrix(cg.mTranslate(p), node).slice(12, 15);
+    }
+    this.getWalkMPosition = (p) =>{
+        return ut.objMatrix(cg.mTranslate(p), walk).slice(12, 15);
+    }
+    this.getWalkPosition = (p) =>{
+        return walk.getGlobalMatrix().slice(12, 15);
+    }
+    this.walkAway = (rp) =>{
+        walk.identity().move(rp);
     }
 
     this.relocate = (p, floor, s) =>{
@@ -626,6 +637,7 @@ export function CreateSandbox(model){
 
 
 export function CreateVRSandbox(model){
+
     let mini_sandbox = new CreateSandbox(model);
     let room = new CreateSandbox(model);
     let effect = new CreateSandbox(model);
@@ -824,7 +836,7 @@ export function CreateVRSandbox(model){
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode === -1)
+        if(floor === -1 || mode < 0)
             return Array(0);
         if(mode === -2){
             return wrapped_model
@@ -851,7 +863,6 @@ export function CreateVRSandbox(model){
         boxes[mode].removeObj(floor, idx);
         boxes[1 - mode].removeObj(floor, idx);
         boxes[2].removeObj(floor, idx);
-        return this.getObjCollection(mode);
 
     }
 
@@ -859,7 +870,12 @@ export function CreateVRSandbox(model){
         let floor = this.active_floor;
         if(floor === -1 || mode < 0 || idx_lst.length === 0)
             return
+
+
+        idx_lst = idx_lst.filter(ut.onlyUnique);
         for(let i =0; i< idx_lst.length; ++ i){
+            if(idx_lst[i] === -1)
+                continue
             let obj = boxes[mode].getObj(floor, idx_lst[i]);
             boxes[1 - mode].reviseObj(floor, idx_lst[i], obj);
             boxes[2].reviseObj(floor, idx_lst[i], obj);
@@ -873,7 +889,7 @@ export function CreateVRSandbox(model){
             return;
         }
         let diving_limit = 50;
-        let sc = 20;
+        let sc = 80;
         if(this.diving_time === -1){
             this.diving_time = 0;
         }else if(this.diving_time > diving_limit){
@@ -899,6 +915,13 @@ export function CreateVRSandbox(model){
         mini_sandbox.comeBack();
         room.flyAway();
         effect.flyAway();
+    }
+    this.move = (pos) =>{
+        let rp = cg.add(room.getWalkPosition(), pos);
+        rp = room.getWalkMPosition(rp);
+        mini_sandbox.walkAway(rp);
+        room.walkAway(rp);
+        effect.walkAway(rp);
     }
     this.animate = (t) =>{
         this.divAnimation();
