@@ -1,9 +1,11 @@
 import {g2} from "../util/g2.js";
-import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
-import {MODES, SANDBOX_MODES} from "../sandbox/utils.js"
+
+import * as bc from "../sandbox/baseController.js"
+import * as ut from "../sandbox/utils.js"
+import {BOX_OBJ} from "../sandbox/utils.js";
 
 
-let COLORS = [[153/255, 204/255, 255/255], [153/255, 1, 153/255], [255/255, 153/255, 204/255]];
+
 export function CreateModeController(model){
     let node = model.add();
     let menu_button = node.add("cube").texture(() => {
@@ -17,69 +19,140 @@ export function CreateModeController(model){
     let CD = 20;
     this.cold_down = -1;
     this.mode_id = 0;
-    this.sub_mode_id = 0;
-    menu_button.text = SANDBOX_MODES[0];
-    menu_button.color = COLORS[0]
+    menu_button.text = "";
+    menu_button.color = [1, 1, 1];
 
-    let isLBt1 = () =>{
-        return buttonState.left[0].pressed;
-    }
-    let isLBt2 = () =>{
-        return buttonState.left[1].pressed;
-    }
-    let isRBt1 = () =>{
-        return buttonState.right[0].pressed;
-    }
-    let isRBt2 = () =>{
-        return buttonState.right[1].pressed;
-    }
-    let refresh = () =>{
-        if(this.mode_id === 0){
-            menu_button.text = SANDBOX_MODES[this.sub_mode_id];
-            menu_button.color = COLORS[this.sub_mode_id];
-        }else{
-            menu_button.text = MODES[1];
-            menu_button.color = COLORS[2];
+
+    let refresh = (mode) =>{
+        let text = "";
+        let color = [1, 1, 1];
+        switch(mode) {
+            case ut.ROOM_WITH_BOX:
+                text = ut.TEXT_ROOM_WITH_BOX;
+                color = ut.COLOR_ROOM_WITH_BOX;
+                break;
+            case ut.ROOM_WITHOUT_BOX:
+                text = ut.TEXT_ROOM_WITHOUT_BOX;
+                color = ut.COLOR_ROOM_WITHOUT_BOX;
+                break;
+            case ut.BOX_VIEW:
+                text = ut.TEXT_BOX_VIEW;
+                color = ut.COLOR_BOX_VIEW;
+                break;
+            case ut.BOX_EDIT:
+                text = ut.TEXT_BOX_EDIT;
+                color = ut.COLOR_BOX_EDIT;
+                break;
+            case ut.BOX_OBJ:
+                text = ut.TEXT_BOX_OBJ;
+                color = ut.COLOR_BOX_OBJ;
+                break;
+            case ut.IS_DIVING:
+                text = ut.TEXT_IS_DIVING;
+                color = ut.COLOR_IS_DIVING;
+                break;
+            default:
+                let bug = "you got a bug here";
+                console.log(bug);
         }
 
+        menu_button.color = color;
+        menu_button.text = text;
 
     }
-    let changeMode = () =>{
-        if(isLBt1() && isLBt2() && isRBt1() && isRBt2()){
-            this.turnSandboxMode(0);
+
+    let isInRoom = () =>{
+        return this.mode_id === ut.ROOM_WITH_BOX ||
+            this.mode_id === ut.ROOM_WITHOUT_BOX;
+    }
+    let isInBox = () =>{
+        return this.mode_id === ut.BOX_VIEW ||
+            this.mode_id === ut.BOX_EDIT ||
+            this.mode_id === ut.BOX_OBJ;
+    }
+
+    let changeGlobalMode = () =>{
+        if(bc.isLBt1() && bc.isLBt2() && bc.isRBt1() && bc.isRBt2() && isInRoom()){
+            this.mode_id = ut.BOX_VIEW;
+            return true;
+        }
+        return false;
+    }
+    let switchModeInRoom = () =>{
+        if(bc.isRA() && isInRoom()){
+            this.mode_id = this.mode_id === ut.ROOM_WITH_BOX ? ut.ROOM_WITHOUT_BOX : ut.ROOM_WITH_BOX;
+            return true;
+        }
+        return false;
+    }
+    let switchModeInBox = () =>{
+        if(bc.isRA() && isInBox()){
+            let mid = this.mode_id + 1;
+            if(mid > ut.BOX_OBJ)
+                mid = ut.BOX_VIEW;
+            this.mode_id = mid;
             return true;
         }
         return false;
     }
 
-    this.getModeID = () =>{
-          return this.mode_id;
+    this.parseCodeForMenu = (menu_id) =>{
+        return menu_id;
     }
-    this.turnObjMode = () =>{
-        this.mode_id = 1;
-        refresh();
-    }
-    this.turnSandboxMode = (sub_id) =>{
-        this.mode_id = 0;
-        this.sub_mode_id = sub_id;
-        refresh();
-    }
-    this.animate = (t, in_room, sub_id) =>{
-        if(in_room){
-            this.turnObjMode();
 
-        }else{
-            this.turnSandboxMode(sub_id);
+
+    this.parseCodeForCrl = (menu_status) =>{
+        return menu_status !== ut.MENU_OPEN &&
+            (isInRoom() || (isInBox() && this.mode_id === ut.BOX_OBJ))
+
+    }
+
+    this.parseCodeForBox = () =>{
+        return isInBox();
+    }
+
+    this.clearMenuID = (sandbox, menu_id, menu_status) =>{
+        if(menu_status[1] !== undefined && menu_status[1] !== null && menu_status[0] !== ut.MENU_OPEN){
+            if(menu_id === ut.MENU_ADD_OBJ){
+                sandbox.addObj(menu_status[1], this.getCollectionCode());
+            }else if(menu_id === ut.MENU_REVISE_WALL){
+                if(menu_status[0] === ut.MENU_CLOSE)
+                    sandbox.reviseFocus(["texture", menu_status[1]])
+                menu_id = ut.MENU_DISABLED;
+            }
+            return menu_id
+
         }
+        return menu_id;
+    }
+
+    this.getCollectionCode = () =>{
+        return this.mode_id === ut.BOX_OBJ ? 0 : (isInRoom() ? 1: -2);
+    }
+
+    this.animate = (t, mode_id, is_diving) =>{
+        this.mode_id = mode_id;
+        if(!is_diving && this.mode_id === ut.IS_DIVING)
+            this.mode_id = ut.ROOM_WITHOUT_BOX;
         menu_button.identity().hud().move(-.2, .5, -.1).scale(.2, .2, .001);
         if(this.cold_down > 0){
               this.cold_down -= 1;
-              return
+              return this.mode_id
         }
-        let flag = changeMode();
+        let flag = false;
+        flag = changeGlobalMode() || flag;
+        if(!flag){
+            flag = switchModeInRoom() || flag;
+        }
+        if(!flag){
+            flag = switchModeInBox() || flag;
+        }
         if(flag){
-              this.cold_down = CD;
+            this.cold_down = CD;
         }
+        refresh(this.mode_id);
+
+        return this.mode_id;
 
       }
 

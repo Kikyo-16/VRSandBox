@@ -1,14 +1,61 @@
 import * as cg from "../render/core/cg.js";
 
-export let MODES = ["Sandbox->View", "Room->Object"];
-export let SANDBOX_MODES = ["Sandbox->View", "Sandbox->Edit", "Sandbox->Object"]
-export let SANDBOX_OBJ = 2;
-export let NON_ACTION = 0;
-export let REQUIRE_NEW_OBJ = 1;
-export let REQUIRE_WALL_PROP = 3;
+
+
+/*
+* Menu CODE
+* */
+
+export let MENU_ADD_OBJ = 1;
+export let MENU_REVISE_WALL = 2;
+export let MENU_REVISE_OBJ = 3;
+export let MENU_REVISE_BOX = 4;
+export let MENU_DISABLED = 4;
+
+
+export let MENU_OPEN = 1;
+export let MENU_CANCEL = 2;
+export let MENU_CLOSE = 3;
 
 
 
+
+
+
+
+
+
+/*
+* STATUS CODE
+* */
+//Room MODE
+export let ROOM_GLOBAL = 1;
+export let ROOM_WITH_BOX = 2;
+export let ROOM_WITHOUT_BOX = 3;
+
+
+//Sandbox MODE
+export let BOX_GLOBAL = 11;
+export let BOX_VIEW = 12;
+export let BOX_EDIT = 13;
+export let BOX_OBJ = 14;
+export let IS_DIVING = 15;
+
+
+export let TEXT_ROOM_WITH_BOX = "Room->Click to hidden Sandbox";
+export let TEXT_ROOM_WITHOUT_BOX = "Room->Click to show Sandbox";
+export let TEXT_BOX_VIEW = "Sandbox->View";
+export let TEXT_BOX_EDIT = "Sandbox->Edit";
+export let TEXT_BOX_OBJ = "Sandbox->Object";
+export let TEXT_IS_DIVING = "Diving to Room...";
+
+
+export let COLOR_ROOM_WITH_BOX = [153/255, 204/255, 255/255];
+export let COLOR_ROOM_WITHOUT_BOX = [153/255, 1, 153/255];
+export let COLOR_BOX_VIEW = [255/255, 153/255, 204/255];
+export let COLOR_BOX_EDIT = [153/255, 204/255, 255/255];
+export let COLOR_BOX_OBJ = [153/255, 1, 153/255];
+export let COLOR_IS_DIVING = [255/255, 153/255, 204/255];
 
 export let isObj = (obj) => {
     return obj._form !== undefined && obj.status === 0;

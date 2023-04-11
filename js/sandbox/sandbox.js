@@ -631,6 +631,11 @@ export function CreateVRSandbox(model){
     let effect = new CreateSandbox(model);
     let boxes = [mini_sandbox, room, effect];
     let wrapped_model = new Object();
+
+    this.mini_sandbox = mini_sandbox;
+    this.room = room;
+    this.effect = effect;
+
     wrapped_model.vallinaInit(model)
     this.is_diving = false;
     this.diving_time = -1;
@@ -829,7 +834,7 @@ export function CreateVRSandbox(model){
 
     this.addObj = (obj, mode) =>{
         let floor = this.active_floor;
-        if(floor === -1)
+        if(floor === -1 || mode < 0)
             return
         let m = obj.getGlobalMatrix();
         let rm = ut.objMatrix(m, boxes[mode].boxes[floor].obj_model);
@@ -850,14 +855,15 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.refreshObj = (mode, idx) =>{
+    this.refreshObj = (mode, idx_lst) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode < 0 || idx < 0)
+        if(floor === -1 || mode < 0 || idx_lst.length === 0)
             return
-        let obj = boxes[mode].getObj(floor, idx);
-        boxes[1 - mode].reviseObj(floor, idx, obj);
-        boxes[2].reviseObj(floor, idx, obj);
-        return this.getObjCollection(mode);
+        for(let i =0; i< idx_lst.length; ++ i){
+            let obj = boxes[mode].getObj(floor, idx_lst[i]);
+            boxes[1 - mode].reviseObj(floor, idx_lst[i], obj);
+            boxes[2].reviseObj(floor, idx_lst[i], obj);
+        }
 
     }
 

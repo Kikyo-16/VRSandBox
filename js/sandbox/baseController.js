@@ -1,50 +1,26 @@
-import {isObj} from '../sandbox/utils.js'
+import {buttonState} from "../render/core/controllerInput.js";
 
-
-let checkInside = (obj, mode) => {
-    //mode : String = {"left" | "right"}
-    //manipulate only valid clays
-    if(!isObj(obj._form))
-        return false;
-
-    //TODO
-    return false
-}
-let isInObj = (obj, mode) => {
-    let res = undefined;
-    for(let i = 0; i < obj.nChildren(); ++i){
-        res = isInObj(obj.child(i), mode);
-        if (res !== undefined){
-            return res;
-        }
+export let isLBt1 = () =>{
+        return buttonState.left[0].pressed;
     }
-    if (checkInside(obj, mode))
-        return obj;
-    return undefined;
-}
-
-let deleteObj = (obj) =>{
-    for(let i = 0; i < obj.nChildren(); ++i){
-       deleteObj(obj[i]);
+    export let isLBt2 = () =>{
+        return buttonState.left[1].pressed;
     }
-    if (obj._parent !== undefined)
-        obj._parent.remove(obj);
-}
-export let unselectAll = (obj) =>{
-    for(let i = 0; i < obj.nChildren(); ++i){
-       unselectAll(obj[i]);
+    export let isRBt1 = () =>{
+        return buttonState.right[0].pressed;
     }
-    obj.capacity(1);
-}
-let select = (obj) => {
-    if(obj !== undefined)
-        obj.capacity(.5);
-}
-
-export let getSelectedObj = (model) => {
-    let l_obj = isInObj(model, "left");
-    let r_obj = isInObj(model, "right");
-    select(l_obj);
-    select(r_obj);
-    return [l_obj, r_obj];
-}
+    export let isRBt2 = () =>{
+        return buttonState.right[1].pressed;
+    }
+    export let isLY = () =>{
+        return buttonState.left[5].pressed;
+    }
+    export let isLX = () =>{
+        return buttonState.left[4].pressed;
+    }
+    export let isRB = () =>{
+        return buttonState.right[5].pressed;
+    }
+    export let isRA = () =>{
+        return buttonState.right[4].pressed;
+    }

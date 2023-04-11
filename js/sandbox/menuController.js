@@ -2,6 +2,7 @@ import { g2 } from "../util/g2.js";
 import * as cg from "../render/core/cg.js";
 import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import { lcb, rcb } from '../handle_scenes.js';
+import * as ut from "../sandbox/utils.js"
 
 export class CreateMenuController {
    constructor() {
@@ -161,93 +162,89 @@ export class CreateMenuController {
          menuOpen = false;
       };
 
-      this.animate = (t, model, require_mode) => {
+      this.animate = (t, model, menu_id) => {
+         if(menu_id === ut.MENU_DISABLED)
+            return ut.MENU_CLOSE;
+
          rt = buttonState.right[0].pressed;
          let res = null;
-         let menu_mode = menuOpen? 1 : 0;
+
          // Object Mode
-         if (require_mode > 0 || menuOpen) {
-            // Create Menu - "X" button on left controller
-            //let leftXButton = true; //buttonState.left[4].pressed;
-            let leftXButton = buttonState.left[4].pressed || require_mode >= 3;
-            //console.log("here")
-            if (leftXButton && !menuOpen) {
-               this.openMenu(model);
-            } 
-            if (menuOpen) {
-               // Menu interaction
-               let rotationSpeedDivider = 2000;
-               let selectedObjectScale = 0.2;
+          // Create Menu - "X" button on left controller
+         let leftXButton = buttonState.left[4].pressed || menu_id !== ut.MENU_ADD_OBJ;
+         if (leftXButton && !menuOpen) {
+            this.openMenu(model);
+         }
+         if (menuOpen) {
+            // Menu interaction
+            let rotationSpeedDivider = 2000;
+            let selectedObjectScale = 0.2;
 
-               selectedColor = [colorPicker.colorR, colorPicker.colorG, colorPicker.colorB];
+            selectedColor = [colorPicker.colorR, colorPicker.colorG, colorPicker.colorB];
 
-               for (let i = 0; i < objectList.length; i++) {
-                  objectList[i].turnY(t / rotationSpeedDivider).turnX(t / rotationSpeedDivider).turnZ(t / rotationSpeedDivider);
-               }
-
-               // Display selected object
-               if (selectedObject == null) {
-                  if (selectedTextureIndex > 0) {
-                     selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).texture(textureList[selectedTextureIndex]).scale(selectedObjectScale);
-                  } else {
-                     selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).scale(selectedObjectScale);
-                  }
-
-
-               } else {
-                  selectedObject.identity().hud().color(selectedColor).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
-               }
-
-               colorPicker.identity().hud().move(-0.7, 0, 0).turnY(0.4).scale(0.3, 0.3, .0001);
-               texturePicker.identity().hud().move(0.7, 0, 0).turnY(-0.4).scale(0.4, 0.4, 0.0001);
-               objectPicker.identity().hud().move(objectPickerLeftOffset, -0.5, 0).scale(0.2);
-               // Debug Panel
-               //debugPanel.identity().hud().move(0,0.1, 0).turnY(0.4).scale(0.3,0.3,.0001);
-               let hitRadius = 0.04;
-
-               // BEAM INTERSECTION FOR TEXTURE PICKER
-               let newSelectedTextureIndex = this.getBeamIntersectionWithObjects(texturePreviewObjects, hitRadius, rt, rt_prev, selectedTextureIndex);
-               if (newSelectedTextureIndex != selectedTextureIndex) {
-                  model.remove(selectedObject);
-                  selectedObject = null;
-                  selectedTextureIndex = newSelectedTextureIndex;
-               }
-               // BEAM INTERSECTION FOR OBJECT PICKER
-               let newSelectedObjectMeshIndex = this.getBeamIntersectionWithObjects(objectList, hitRadius, rt, rt_prev, selectedObjectMeshIndex);
-               if (newSelectedObjectMeshIndex != selectedObjectMeshIndex) {
-                  model.remove(selectedObject);
-                  selectedObject = null;
-                  selectedObjectMeshIndex = newSelectedObjectMeshIndex;
-               }
+            for (let i = 0; i < objectList.length; i++) {
+               objectList[i].turnY(t / rotationSpeedDivider).turnX(t / rotationSpeedDivider).turnZ(t / rotationSpeedDivider);
             }
-         
-            // Close Menu - "Y" Button
-            if (buttonState.left[5].pressed) {
+
+            // Display selected object
+            if (selectedObject == null) {
+               if (selectedTextureIndex > 0) {
+                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).texture(textureList[selectedTextureIndex]).scale(selectedObjectScale);
+               } else {
+                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).scale(selectedObjectScale);
+               }
+
+
+            } else {
+               selectedObject.identity().hud().color(selectedColor).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
+            }
+
+            colorPicker.identity().hud().move(-0.7, 0, 0).turnY(0.4).scale(0.3, 0.3, .0001);
+            texturePicker.identity().hud().move(0.7, 0, 0).turnY(-0.4).scale(0.4, 0.4, 0.0001);
+            objectPicker.identity().hud().move(objectPickerLeftOffset, -0.5, 0).scale(0.2);
+            // Debug Panel
+            //debugPanel.identity().hud().move(0,0.1, 0).turnY(0.4).scale(0.3,0.3,.0001);
+            let hitRadius = 0.04;
+
+            // BEAM INTERSECTION FOR TEXTURE PICKER
+            let newSelectedTextureIndex = this.getBeamIntersectionWithObjects(texturePreviewObjects, hitRadius, rt, rt_prev, selectedTextureIndex);
+            if (newSelectedTextureIndex != selectedTextureIndex) {
+               model.remove(selectedObject);
+               selectedObject = null;
+               selectedTextureIndex = newSelectedTextureIndex;
+            }
+            // BEAM INTERSECTION FOR OBJECT PICKER
+            let newSelectedObjectMeshIndex = this.getBeamIntersectionWithObjects(objectList, hitRadius, rt, rt_prev, selectedObjectMeshIndex);
+            if (newSelectedObjectMeshIndex != selectedObjectMeshIndex) {
+               model.remove(selectedObject);
+               selectedObject = null;
+               selectedObjectMeshIndex = newSelectedObjectMeshIndex;
+            }
+         }
+         let menu_status = menuOpen? ut.MENU_OPEN : ut.MENU_CLOSE;
+         if (buttonState.left[5].pressed) {
+            this.closeMenu(model);
+            if (selectedObject != null) {
+               res = selectedObject;
+               model.remove(selectedObject);
+               selectedObject = null;
+               menu_status = ut.MENU_CLOSE;
+            }
+         }
+         if (buttonState.left[3].pressed) {
+            menu_status = ut.MENU_CANCEL;
+            if (menuOpen) {
                this.closeMenu(model);
                if (selectedObject != null) {
-                  res = selectedObject;
                   model.remove(selectedObject);
                   selectedObject = null;
-                  menu_mode = 0;
-               }
-            }
-
-            // Cancel Menu - Left Joystick Button
-            if (buttonState.left[3].pressed) {
-               menu_mode = 2;
-               if(menuOpen){
-                  this.closeMenu(model);
-                  if (selectedObject != null) {
-                     model.remove(selectedObject);
-                     selectedObject = null;
-                  }
                }
             }
          }
 
 
          rt_prev = rt;
-         return [menu_mode, res];
+         return [menu_status, res];
       };
 
    }

@@ -241,7 +241,7 @@ export function CreateObjController(obj_model){
         //     this.placeOnGround(obj);
     } 
 
-    this.animate = (t, objs, menu_mode) => {
+    this.animate = (t, objs, active) => {
         //return obj index to delete || -1
 
         // objs: obj_collection, list of objects
@@ -249,7 +249,7 @@ export function CreateObjController(obj_model){
 
         let delete_obj_idx = -1;
         let selected_obj_idx = Array(0);
-        if(objs.length === 0 || menu_mode === 1)
+        if(objs.length === 0 || !active)
             //obj_model.opacity(0.001);
             return [delete_obj_idx, selected_obj_idx];
 
