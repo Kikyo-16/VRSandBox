@@ -14,58 +14,15 @@ import * as wut from '../sandbox/wei_utils.js';
 import {controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 
-// function insideObj(obj, p) {
-//     // check if a point is inside an obj
-//     // manipulate only valid clays
-//     if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
-//         return false;
-    
-//     let c = obj.getLoc();
-//     let scale = obj.getScale();
-//     let inside = false;
-//     if (obj._form === 'cube') {
-//         inside = p[0] > c[0] - scale && p[0] < c[0] + scale &&
-//                  p[1] > c[1] - scale && p[1] < c[1] + scale &&
-//                  p[2] > c[2] - scale && p[2] < c[2] + scale;
-//     } else if (obj._form === 'sphere') {
-//         inside = cg.norm(cg.subtract(c, p)) < scale;
-//     } else if (obj._form === 'donut') {
-//         inside = cg.norm(c[2] - p[2]) < scale*.25 && cg.norm(cg.subtract([c[0], c[1]], [p[0], p[1]])) < scale;
-//     }
-//     return inside;
-// }
-
-function insideObj(obj, p) {
-    // check if a point is inside an obj
-    // manipulate only valid clays
-    if (obj === undefined || obj._form === null) // TODO ? undefined ? null ?
-        return false;
-
-    let mGA = obj.getGlobalMatrix();
-    let m = cg.mTransform(cg.mInverse(mGA), p);
-    let inside = false;
-    if (obj._form === 'cube') {
-        inside = m[0] > - 1 && m[0] < 1 &&
-                 m[1] > - 1 && m[1] < 1 &&
-                 m[2] > - 1 && m[2] < 1;
-    } else if (obj._form === 'sphere') {
-        inside = cg.norm(m) < 1;
-    } else if (obj._form === 'donut') {
-        inside = Math.abs(m[2]) < .25 && cg.norm([m[0], m[1]]) < 1;
-    }
-    return inside;
-}
-
 function beamHitObj(obj, ctr, cb) {
     let center = obj.getLoc();
     let point = cb.projectOntoBeam(center);
     let dist = cg.norm(cg.subtract(ctr, point));
-    //console.log("center", center, point, ctr, dist);
-    return [insideObj(obj, point), dist, point];
+    return [obj.inside(point), dist, point];
 }
 
 export function CreateObjController(obj_model){
-    this.active = true;
+    //let copied_obj = null;
 
 	this.m = controllerMatrix;
     this.bs = buttonState;
@@ -83,102 +40,37 @@ export function CreateObjController(obj_model){
     let rotate_speed = 3.14/400;
     let move_speed = .025;
 
+    let copy_t = 0;
     //
-    this.debug = true;
-
-    // press both trigger to resize, both ctr select the same obj, ctr does not have to be inside obj
-	this.isResize = (t, obj, idx) => {
-        let press = this.bs.right[0].pressed && this.bs.left[0].pressed;
-        let state = !triggerPressedPrev && press ? 'press':
-                    !press & triggerPressedPrev ? 'release' : press ? 'drag' : 'move';
-        triggerPressedPrev = press;
-        if (state === 'press') {
-            resize_lock = true;
-            resize_obj = obj;
-            resize_obj_idx = idx;
-            resize_obj.setColor([1,1,0]); //for testing
-            norm_prev = cg.norm(cg.subtract(this.m.left.slice(12, 15), this.m.right.slice(12, 15)));
-            norm_t = t;
-        }
-        if (state === 'release') { //reset
-            norm_prev = -1;
-            norm_t = 0;
-            resize_lock = false;
-            resize_obj_idx = -1;
-            resize_obj = null;
-            if (this.debug)
-                resize_obj.setColor([0,1,1]);
-        }
-        return state === 'drag' || state === 'press';
-    }
+    this.debug = false;
 
     // press either trigger to grab an obj, ctr has to intersect with the obj
     this.isLeftTriggerPressed = () => this.bs.left[0].pressed; 
     this.isRightTriggerPressed = () => this.bs.right[0].pressed;
-    
-    // press both thrumb buttons to delete
-    this.isDelete = () => this.bs.left[1].pressed && this.bs.right[1].pressed;
-    
-    this.resizeObj = (t) => {
-        if (norm_prev < 0 || resize_obj === null || t - norm_t < 0.15) {
+
+    this.resizeObj = (obj, t) => {
+        if (t - norm_t < 0.15) {
             return;
         }
-        let curNorm = cg.norm(cg.subtract(this.m.left.slice(12, 15), this.m.right.slice(12, 15)));
-        let ratio = curNorm / norm_prev;
-        if (ratio - 1 > 0.01 || ratio - 1 < -0.01){
-            resize_obj.updateScale(ratio);
-            norm_prev = cg.norm(cg.subtract(this.m.left.slice(12, 15), this.m.right.slice(12, 15)));
-            norm_t = t;
-        }
-        return;
+        let ratio = 1;
+        if (this.js.left.y > .1)
+            ratio = 1.05;
+        if (this.js.left.y < -.1)
+            ratio = 0.95;
+        obj.updateScale(ratio);
+        norm_t = t;
     }
 
     this.moveObj = (obj, p) => {
-        // 0: left ctr grab, 1: right ctr grab
         obj.updateLoc(p);
     }
 
     this.moveObjAlongBeam = (obj, hand) => {
-        let direction = cg.normalize(hand === 0 ? lcb.beamMatrix().slice(8,11) : rcb.beamMatrix().slice(8,11));
-        this.moveObj(obj, cg.add(obj.getLoc(), cg.scale(direction, this.js.right.y*move_speed)));
-    }
-
-    this.rotateObj = (obj) => {
-        // up down to rotate along X, left right to rotate along Y
-        let thetaX = this.js.left.y*rotate_speed;
-        let thetaY = this.js.left.x*rotate_speed;
-        obj.rotate(thetaX, thetaY);
-    }
-
-    // this.placeOnGround = (obj) => {
-    //     let s = obj.getScale();
-    //     let loc = obj.getLoc();
-    //     obj.updateLoc([loc[0], s, loc[2]]);
-    // }
-
-    this.deleteObj = (obj) => {
-        obj.delete();
-    }
-
-    this.setMode = (mode) => {
-        this.active = mode === 2;
-    }
-
-    this.walk = () => {
-        obj_model.move(-this.js.right.x*move_speed, -0, -this.js.right.y*move_speed);
-    }
-
-    this.moveObjWCtr = (obj, mode, p) => {
-        // 0: left ctr grab, 1: right ctr grab
-        let ml = this.m.left.slice(12, 15);
-        let mr = this.m.right.slice(12, 15);
-        let offset = [0, 0, -obj.getScale()/2];
-        obj.updateLoc(cg.add(mode ? ml : mr, offset));
+        let direction = cg.normalize(lcb.beamMatrix().slice(8,11));
+        obj.updateLoc(cg.add(obj.getLoc(), cg.scale(direction, this.js.right.y*move_speed)));
     }
 
     this.hitByBeam = (objs, hand) => {
-        // hand: 0 for left, 1 for right
-        // return index of the closest hit obj, -1 if not hit any obj
         let minDist = 1000;
         let hitObjIdx = -1;
         let projectPoint = null;
@@ -192,8 +84,7 @@ export function CreateObjController(obj_model){
                     minDist = hit[1];
                 }
             }
-        }
-        if (hand === 1) {
+        } else {
             for (let i = 0; i < objs.length; ++i) {
                 let hit = beamHitObj(objs[i], this.m.right.slice(12, 15), rcb);
                 if (hit[0] && hit[1] < minDist) {
@@ -209,91 +100,29 @@ export function CreateObjController(obj_model){
         return [hitObjIdx, projectPoint];
     }
 
-    this.operateSingleObj = (objs, objInfo, hand) => {
-        // obj: [obj, project point on beam]
-        // hand: 0 for left, 1 for right
-        // place/rotate/place on ground
-
-        let objIdx = objInfo[0];
-        let p = objInfo[1];
-        if (objIdx < -1) return;
-        
-        let obj = objs[objIdx];
-
-        let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
-        if (obj !== null && triggerPressed) {
-
-            if (this.debug)
-                obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
-            
-            // press one left/right trigger to grab objects with ctr
-            this.moveObj(obj, p); //
-
-            // use right joystick to move along the beam
-            this.moveObjAlongBeam(obj, hand);
-
-            // use left joystick to rotate the object
-            this.rotateObj(obj);
-        }
-
-        // press 'A' to place the object on ground
-        // if (obj !== null && this.bs.right[4].pressed)
-        //     this.placeOnGround(obj);
-    } 
 
     this.animate = (t, objs, active) => {
-        //return obj index to delete || -1
-
-        // objs: obj_collection, list of objects
-        //if (!this.active)
-
         let delete_obj_idx = -1;
         let selected_obj_idx = Array(0);
+
         if(objs.length === 0 || !active)
-            //obj_model.opacity(0.001);
             return [delete_obj_idx, selected_obj_idx];
 
-        // let resl = this.hitByBeam(objs, 0);
-        // let resr = this.hitByBeam(objs, 1);
+        let resl = this.hitByBeam(objs, 0);
 
-        // select (grab) obj, press one left/right trigger to grab objects with ctr
-        let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]
-        let resr = resize_lock ? [resize_obj_idx, null] : this.isRightTriggerPressed() ? this.hitByBeam(objs, 1) : [-1, null];
-        
-        selected_obj_idx = resl[0] === -1 && resr[0] === -1 ? Array(0) :
-                       resl[0] === -1 ? [resr[0]] : resl[0] == resr[0] ? [resl[0]] : [resl[0], resr[0]];
-
-        // left and right controller select the same obj
-        if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
-            //press both trigger to resize obj
-            if (this.isResize(t, resl[0] > -1 ? objs[resl[0]] : null, resl[0])) {
-
-                this.resizeObj(t);
+        if (resl[0] > -1) {
+            let obj = objs[resl[0]];
+            let p = resl[1];
+            if (this.isLeftTriggerPressed()) {
+                this.moveObj(obj, p);
+                this.moveObjAlongBeam(obj, 0);
+                this.resizeObj(obj, t);
+                selected_obj_idx = [resl[0]];
+            } else if (this.isLeftTriggerPressed() && this.bs.left[1].pressed) {
+                delete_obj_idx = resl[0];
             }
         }
-
-        if (!resize_lock) {
-            this.operateSingleObj(objs, resl, 0);
-            this.operateSingleObj(objs, resr, 1);
-
-            // press both buttons to delect the Obj, both controller have to select the same object
-            if (this.isDelete()) {
-                resl = this.hitByBeam(objs, 0);
-                resr = this.hitByBeam(objs, 1);
-                if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
-                    if (this.debug)
-                        objs[resl[0]].setColor([0,0,0]); // for test
-                    //this.deleteObj(objs[resl[0]], t);
-                    delete_obj_idx = resl[0];
-                    return [delete_obj_idx, selected_obj_idx];
-                }
-            } 
-        }
-
-        // TODO
-        // this.walk();
         
-        //TODO Cand u put the index of the modifiled obj in selected_obj_idx?
         return [delete_obj_idx, selected_obj_idx];
     }
 }
