@@ -42,8 +42,8 @@ export let BOX_OBJ = 14;
 export let IS_DIVING = 15;
 
 
-export let TEXT_ROOM_WITH_BOX = "Room->Click to hidden Sandbox";
-export let TEXT_ROOM_WITHOUT_BOX = "Room->Click to show Sandbox";
+export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";
+export let TEXT_ROOM_WITHOUT_BOX = "Click to show Sandbox";
 export let TEXT_BOX_VIEW = "Sandbox->View";
 export let TEXT_BOX_EDIT = "Sandbox->Edit";
 export let TEXT_BOX_OBJ = "Sandbox->Object";
@@ -57,7 +57,7 @@ export let COLOR_ROOM_WALKING = [255/255, 204/255, 102/255];
 export let COLOR_BOX_VIEW = [255/255, 153/255, 204/255];
 export let COLOR_BOX_EDIT = [153/255, 204/255, 255/255];
 export let COLOR_BOX_OBJ = [153/255, 1, 153/255];
-export let COLOR_IS_DIVING = [255/255, 204/255, 102/255];
+export let COLOR_IS_DIVING = [201/255, 176/255, 255/255];
 
 
 export let isObj = (obj) => {

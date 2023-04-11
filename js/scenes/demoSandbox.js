@@ -16,6 +16,7 @@ export const init = async model => {
    let obj_model = model.add();
    let mode_model = model.add();
    let sandbox_model = model.add();
+   let room_model = model.add();
 
    let sandbox = new CreateVRSandbox(sandbox_model);
    sandbox.initialize()
@@ -32,8 +33,9 @@ export const init = async model => {
    let menu_id = ut.MENU_DISABLED;
    let menu_status = [ut.MENU_CLOSE, null];
 
-
+   console.log(cg.mMultiply(views[0]._viewMatrix, cg.mTranslate(0, 0, 1)))
    model.animate(() => {
+
       //Press 4 buttons to escape from a room
       //Press A to decide if show the sandbox while in a room
       mode_id = mode_controller.animate(model.time, mode_id, sandbox.is_diving);

@@ -1,7 +1,9 @@
 import * as ut from "../sandbox/utils.js"
 import * as wu from "../sandbox/wei_utils.js"
 import {joyStickState} from "../render/core/controllerInput.js";
+import {lcb, rcb} from '../handle_scenes.js';
 import * as bc from "../sandbox/baseController.js"
+import * as cg from "../render/core/cg.js";
 
 
 
@@ -18,12 +20,7 @@ export function CreateRoomController(sandbox) {
         }else if(y < -.1){
             direct = ut.WALKING_BACKWARD;
         }
-        let x= joyStickState.right.x;
-        if(x > .1){
-            direct = ut.WALKING_LEFT;
-        }else if(x < -.1){
-            direct = ut.WALKING_RIGHT;
-        }
+
         return direct;
     }
 
@@ -40,18 +37,17 @@ export function CreateRoomController(sandbox) {
     }
 
     let walking = () => {
-        let n = [0, 0, 1];//TODO
-        let ln = [1, 0, 0];//TODO
+        let end = cg.mMultiply(views[0]._viewMatrix, cg.mTranslate(0, 0, 1)).slice(12, 15);
+        let origin = views[1]._viewMatrix.slice(12, 15);
+        let front = cg.subtract(end, origin);
+        front[1] = 0;
+        front[0] = -front[0];
         let direct = getDirect();
         let sc = this.speed * .01;
         if(direct === ut.WALKING_BACKWARD){
-            sandbox.move(wu.mulScaler(n, sc));
+            sandbox.move(wu.mulScaler(front, sc));
         }else if(direct === ut.WALKING_FORWARD){
-            sandbox.move(wu.mulScaler(n, -sc));
-        }else if(direct === ut.WALKING_RIGHT){
-            sandbox.move(wu.mulScaler(ln, sc));
-        }else if(direct === ut.WALKING_LEFT){
-            sandbox.move(wu.mulScaler(ln, -sc));
+            sandbox.move(wu.mulScaler(front, -sc));
         }else {
             return false;
         }

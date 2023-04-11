@@ -476,7 +476,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
 }
 
 export function CreateSandbox(model){
-    let h = .1;
+    let h = .05;
     let d = .01;
     let edge = .02;
     let root = model.add();
@@ -889,7 +889,7 @@ export function CreateVRSandbox(model){
             return;
         }
         let diving_limit = 50;
-        let sc = 20;
+        let sc = 80;
         if(this.diving_time === -1){
             this.diving_time = 0;
         }else if(this.diving_time > diving_limit){
