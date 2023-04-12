@@ -1,6 +1,6 @@
 
 import * as cg from "../render/core/cg.js";
-import {Object, ObjectCollection}  from '../sandbox/objCollection.js'
+import {Object}  from '../sandbox/objCollection.js'
 import {CreateObjController}  from '../sandbox/objController.js'
 
 
@@ -26,7 +26,7 @@ export const init = async model => {
    let o2 = o1.add('sphere')
    o2.move(.5, .5, 0).color(.5, 0, 0);
 
-   let obj4 = new ObjectCollection();
+   let obj4 = new Object();
    obj4.vallinaInit(o2);
    let obj_collection = [obj, obj1, obj2, obj3, obj4];
 

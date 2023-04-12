@@ -25,6 +25,7 @@ export const init = async model => {
    let mode_controller = new CreateModeController(mode_model);
    let box_controller = new CreateBoxController(box_model, sandbox);
    let menu_controller = new CreateMenuController()
+   menu_controller.init(menu_model);
    let obj_controller = new CreateObjController(obj_model);
    let room_controller = new CreateRoomController(sandbox);
 
