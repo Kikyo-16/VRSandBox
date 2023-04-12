@@ -6,12 +6,11 @@ import * as ut from "../sandbox/utils.js"
 
 export class CreateMenuController {
    constructor() {
-
       let mode = 0;
-      let menu = undefined;
       let menuOpen = false;
 
       // Menu items
+      let menu = undefined;
       let colorPicker = undefined;
       let texturePicker = undefined;
       let objectPicker = undefined;
@@ -41,6 +40,11 @@ export class CreateMenuController {
       let objectPickerLeftOffset = -0.2;
       let objectMeshList = ['cube', 'sphere', 'donut'];
 
+      // Menu interaction
+      let rotationSpeedDivider = 2000;
+      let selectedObjectScale = 0.2;
+      let hitRadius = 0.04;
+
       this.getBeamIntersectionWithObjects = (objectList, intersectionRadius, rt, rt_prev, currentSelection) => {
          for (let i = 0; i < objectList.length; i++) {
             let center = objectList[i].getGlobalMatrix().slice(12, 15);
@@ -56,24 +60,20 @@ export class CreateMenuController {
          }
          return currentSelection;
       };
-
-      // Create Debug Panel
-      this.createDebugPanel = (model, objOfInterest) => {
-         let debugPanel = model.add('cube').texture(() => {
-            g2.setColor('black');
-            g2.textHeight(0.07);
-            g2.fillText('' + objOfInterest, .5, .92, 'center');
-         });
-      };
-
       /*
          JS = buttonState.left[3].pressed
          X  = buttonState.left[4].pressed
          Y  = buttonState.left[5].pressed
       */
-      // Create Color Picker Panel
-      this.createColorPicker = (model) => {
-         colorPicker = model.add('cube').texture(() => {
+
+      // model.move(0,0,0.3);
+      this.setMode = (currentMode) => {
+         mode = currentMode;
+      };
+
+      this.init = (model) => {
+         menu = model.add('cube').opacity(.0001);
+         colorPicker = menu.add('cube').texture(() => {
             g2.setColor('white');
             g2.fillRect(0.2, 0, 0.6, 1);
             g2.setColor([colorPicker.colorR, colorPicker.colorG, colorPicker.colorB]);
@@ -89,17 +89,8 @@ export class CreateMenuController {
          g2.addWidget(colorPicker, 'slider', .5, .268, '#ff0000', 'RED', value => colorPicker.colorR = value);
          g2.addWidget(colorPicker, 'slider', .5, .168, '#00ff00', 'GREEN', value => colorPicker.colorG = value);
          g2.addWidget(colorPicker, 'slider', .5, .068, '#0000ff', 'BLUE', value => colorPicker.colorB = value);
-      };
 
-      // Delete Color Picker Panel
-      this.deleteColorPicker = (model) => {
-         model.remove(colorPicker);
-         colorPicker = undefined;
-      };
-
-      // Create Texture picker Panel
-      this.createTexturePicker = (model) => {
-         texturePicker = model.add('cube').texture(() => {
+         texturePicker = menu.add('cube').texture(() => {
             g2.setColor('#FFFFFF');
             g2.fillRect(0.25, 0, 0.5, 1);
             g2.textHeight(0.06);
@@ -111,58 +102,34 @@ export class CreateMenuController {
             let texturePanelItem = texturePicker.add('cube').move(0, yLoc, 0.83).scale(textureScale).texture(textureList[i]);
             texturePreviewObjects.push(texturePanelItem);
          }
-      };
 
-      // Delete Texture picker Panel
-      this.deleteTexturePicker = (model) => {
-         model.remove(texturePicker);
-         texturePicker = undefined;
-         // clear texturePreviewObjects
-         while (texturePreviewObjects.length > 0) {
-            texturePreviewObjects.pop();
-         }
-      };
-
-
-      // Create Object Picker Bottom Panel
-      this.createObjectPicker = (model) => {
-         objectPicker = model.add();
+         objectPicker = menu.add();
          let spaceBetweenObjects = 1;
          for (let i = 0; i < objectMeshList.length; i++) {
             let objectPickerItem = objectPicker.add(objectMeshList[i]).move(spaceBetweenObjects * i, 0, 0).scale(0.3);
             objectList.push(objectPickerItem);
          }
-      };
 
-      this.deleteObjectPicker = (model) => {
-         model.remove(objectPicker);
-         objectPicker = undefined;
-         // clear objectList
-         while (objectList.length > 0) {
-            objectList.pop();
-         }
-      };
-
-      // model.move(0,0,0.3);
-      this.setMode = (currentMode) => {
-         mode = currentMode;
-      };
+         menu.move(0, 0, 0);
+         colorPicker.move(-.7, 0, 0).turnY(0.4).scale(0.3, 0.3, .0001);
+         texturePicker.move(.7, 0, 0).turnY(-0.4).scale(0.4, 0.4, 0.0001);
+         objectPicker.move(objectPickerLeftOffset, -0.5, 0).scale(0.2);
+         console.log("menu created")
+      }
 
       this.openMenu = (model) => {
          selectedObject = null;
-         this.createColorPicker(model);
-         this.createTexturePicker(model);
-         this.createObjectPicker(model);
          menuOpen = true;
-      };
+      }
+
       this.closeMenu = (model) => {
-         this.deleteColorPicker(model);
-         this.deleteTexturePicker(model);
-         this.deleteObjectPicker(model);
          menuOpen = false;
-      };
+      }
 
       this.animate = (t, model, menu_id, inactive) => {
+         // console.log("menu_id",  menu_id);
+         // console.log("inactive", inactive);
+
          if(menu_id === ut.MENU_DISABLED)
             return ut.MENU_CLOSE;
 
@@ -170,16 +137,21 @@ export class CreateMenuController {
          let res = null;
 
          // Object Mode
-          // Create Menu - "X" button on left controller
+         // Create Menu - "X" button on left controller
          let leftXButton = buttonState.left[4].pressed || menu_id === ut.MENU_REVISE_WALL;
          if (leftXButton && !menuOpen) {
+            console.log("open menu")
             this.openMenu(model);
          }
-         if (menuOpen) {
-            // Menu interaction
-            let rotationSpeedDivider = 2000;
-            let selectedObjectScale = 0.2;
 
+         // visualize menu
+         menu.identity().hud();
+         colorPicker.opacity(menuOpen ? 1 : .001);
+         texturePicker.opacity(menuOpen ? 1 : .001);
+         objectPicker.opacity(menuOpen ? 1 : .001);
+
+         if (menuOpen) {
+            console.log("menu is on")
             selectedColor = [colorPicker.colorR, colorPicker.colorG, colorPicker.colorB];
 
             for (let i = 0; i < objectList.length; i++) {
@@ -193,18 +165,9 @@ export class CreateMenuController {
                } else {
                   selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).scale(selectedObjectScale);
                }
-
-
             } else {
                selectedObject.identity().hud().color(selectedColor).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
             }
-
-            colorPicker.identity().hud().move(-0.7, 0, 0).turnY(0.4).scale(0.3, 0.3, .0001);
-            texturePicker.identity().hud().move(0.7, 0, 0).turnY(-0.4).scale(0.4, 0.4, 0.0001);
-            objectPicker.identity().hud().move(objectPickerLeftOffset, -0.5, 0).scale(0.2);
-            // Debug Panel
-            //debugPanel.identity().hud().move(0,0.1, 0).turnY(0.4).scale(0.3,0.3,.0001);
-            let hitRadius = 0.04;
 
             // BEAM INTERSECTION FOR TEXTURE PICKER
             let newSelectedTextureIndex = this.getBeamIntersectionWithObjects(texturePreviewObjects, hitRadius, rt, rt_prev, selectedTextureIndex);
@@ -221,8 +184,11 @@ export class CreateMenuController {
                selectedObjectMeshIndex = newSelectedObjectMeshIndex;
             }
          }
-         let menu_status = menuOpen? ut.MENU_OPEN : ut.MENU_CLOSE;
+
+         let menu_status = menuOpen ? ut.MENU_OPEN : ut.MENU_CLOSE;
          if (buttonState.left[5].pressed) {
+            console.log("close menu");
+            console.log("selected obj: ", selectedObject);
             this.closeMenu(model);
             if (selectedObject != null) {
                res = selectedObject;
@@ -230,6 +196,7 @@ export class CreateMenuController {
                selectedObject = null;
                menu_status = ut.MENU_CLOSE;
             }
+            console.log("results: ", res);
          }
          if (buttonState.left[3].pressed || inactive) {
             menu_status = ut.MENU_CANCEL;
@@ -241,7 +208,6 @@ export class CreateMenuController {
                }
             }
          }
-
 
          rt_prev = rt;
          if(menuOpen)
