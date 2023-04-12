@@ -194,7 +194,7 @@ export function CreateBoxController(model, sandbox) {
             restoreBeam();
             return [mode_id, menu_id]
         }
-        if(mode_id !== ut.MENU_REVISE_WALL) {
+        if(menu_id !== ut.MENU_REVISE_WALL) {
             if (mode_id === ut.ROOM_WITH_BOX || mode_id === ut.ROOM_WITHOUT_BOX || mode_id === ut.BOX_OBJ) {
                 menu_id = ut.MENU_ADD_OBJ;
             } else {
