@@ -6,6 +6,21 @@ import * as cg from "../render/core/cg.js";
 * Menu CODE
 * */
 
+export let NON_ACTION_MSG = "non-action"
+export let ADD_FLOOR_MSG = "add-floor"
+export let REMOVE_FLOOR_MSG = "remove-floor"
+//export let EXPAND_FLOOR_MSG = "expand-floor"
+//export let COLLAPSE_FLOOR_MSG = "collapse-floor"
+export let ADD_OBJ_MSG = "add-obj"
+export let REMOVE_OBJ_MSG = "remove-obj"
+export let REVISE_OBJ_MSG = "revise-obj"
+export let SPLIT_WALL_MSG = "split-wall"
+export let REVISE_WALL_MSG = "revise-wall-msg"
+
+export let REQURE_SCENE_MSG = "require-scene-msg"
+export let SET_SCENE_MSG = "set-scene-msg"
+
+
 export let MENU_ADD_OBJ = 1;
 export let MENU_REVISE_WALL = 2;
 export let MENU_REVISE_OBJ = 3;

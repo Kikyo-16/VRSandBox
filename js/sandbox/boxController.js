@@ -3,6 +3,7 @@ import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
+import {NON_ACTION_MSG} from "../sandbox/utils.js";
 
 
 
@@ -79,7 +80,7 @@ export function CreateBoxController(model, sandbox) {
 
         if(bc.isLX()) {
             clearStatus(3);
-            return ut.MENU_REVISE_WALL;
+            return [ut.MENU_REVISE_WALL, ut.NON_ACTION_MSG];
         }if(bc.isRBt2()){
             let args = ["delete", null];
             return delay(sandbox.reviseFocus, args, 2) ? 0 : -1;
@@ -98,22 +99,23 @@ export function CreateBoxController(model, sandbox) {
                     sandbox.spliting(getEndPoint(), this.box_mode);
                 }
             }
-            return -1;
+            return [-1, ut.NON_ACTION_MSG];
         }else if(bc.isRB()){
-            sandbox.split();
-            return 0;
+            //sandbox.split();
+            return [0, ut.SPLIT_WALL_MSG];
         }else if(bc.isLY()){
             sandbox.clear(0);
             sandbox.clear(2);
             sandbox.focus(res, false, this.box_mode, false);
             clearStatus(0);
-            return 0;
+            return [0, ut.NON_ACTION_MSG];
         }else{
             clearStatus(0);
             sandbox.focus(res, false, this.box_mode, true);
+
         }
 
-        return -1;
+        return [-1, ut.NON_ACTION_MSG];
     }
 
     let getEndPoint = () =>{
@@ -130,40 +132,40 @@ export function CreateBoxController(model, sandbox) {
             this.cursor.identity().move(getEndPoint()).turnX(Math.PI/4)
                 .turnZ(Math.PI/4).scale(.01);
             clearStatus(0);
-            return -1;
+            return [-1, ut.NON_ACTION_MSG];
         }else if(bc.isRB()) {
             // Dive into the selected location marked by the cursor
             sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
             clearStatus(0);
-            return 0;
+            return [0, ut.NON_ACTION_MSG];
         }else if(bc.isLY()){
             // add a floor
-            sandbox.addFloor();
+            //sandbox.addFloor();
             clearStatus(0);
-            return 0;
+            return [0, ut.ADD_FLOOR_MSG];
         }else if(bc.isLX()){
             // remove a floor
-            sandbox.removeFloor();
+            //sandbox.removeFloor();
             clearStatus(1);
-            return 0;
+            return [0, ut.REMOVE_FLOOR_MSG];
         }else if(bc.isLBt1()){
             // expand
             clearStatus(0);
             sandbox.expand();
-            return 0;
+            return [0, ut.NON_ACTION_MSG];
         }else if(bc.isLBt2()){
 
             // collapse
             clearStatus(0);
             sandbox.collapse();
-            return 0;
+            return [0, ut.NON_ACTION_MSG];
         }
         if(bc.isRA()){
             sandbox.clear(3);
             clearStatus(0);
-            return 0;
+            return [0, ut.NON_ACTION_MSG];
         }
-        return -1;
+        return [-1, ut.NON_ACTION_MSG];
 
     }
     let fixRod = (mode_id) =>{
@@ -192,7 +194,7 @@ export function CreateBoxController(model, sandbox) {
     this.animate = (t, mode_id, menu_id, menu_status) =>{
         if(menu_status === ut.MENU_OPEN || mode_id === ut.IS_DIVING){
             restoreBeam();
-            return [mode_id, menu_id]
+            return [mode_id, menu_id, ut.NON_ACTION_MSG]
         }
         if(menu_id !== ut.MENU_REVISE_WALL) {
             if (mode_id === ut.ROOM_WITH_BOX || mode_id === ut.ROOM_WITHOUT_BOX || mode_id === ut.BOX_OBJ) {
@@ -211,20 +213,24 @@ export function CreateBoxController(model, sandbox) {
 
         if(this.cold_down > 0){
             this.cold_down -= 1;
-            return [mode_id, menu_id];
+            return [mode_id, menu_id, ut.NON_ACTION_MSG];
         }
         let flag = false;
+        let msg = ut.NON_ACTION_MSG;
         if(mode_id === ut.BOX_VIEW){
             sandbox.leaveRoom();
-            flag = box() === 0 || flag;
+            let res = box()
+            flag = res[0] === 0 || flag;
+            msg = res[1];
 
         }else if(mode_id === ut.BOX_EDIT){
             sandbox.leaveRoom();
-            let nid = split();
-            if(nid > -1){
+            let res = split();
+            if(res[0] > -1){
                 flag = true;
-                menu_id = (nid === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id);
+                menu_id = (res[0] === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id);
             }
+            msg = res[1];
         }else if(mode_id === ut.BOX_OBJ){
             sandbox.leaveRoom();
         }else if(mode_id === ut.ROOM_WITH_BOX){
@@ -238,7 +244,7 @@ export function CreateBoxController(model, sandbox) {
         if(flag){
             this.cold_down = CD;
         }
-        return [mode_id, menu_id];
+        return [mode_id, menu_id, msg];
 
     }
 }

@@ -1,6 +1,8 @@
 import * as cg from "../render/core/cg.js";
-import * as ut from "../sandbox/wei_utils.js"
+import * as wu from "../sandbox/wei_utils.js"
+import * as ut from "../sandbox/utils.js"
 import {Object} from "../sandbox/objCollection.js"
+import {isNull} from "../sandbox/wei_utils.js";
 
 let COLORS = [
     [255/255, 153/255, 204/255],
@@ -96,17 +98,17 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
     }
 
     this.getPoly = () =>{
-        let p3 = ut.copyVec(p1), p4 = ut.copyVec(p2);
+        let p3 = wu.copyVec(p1), p4 = wu.copyVec(p2);
         p3[1] = 0;
         p4[1] = 0;
         return [p1, p3, p4, p2];
     }
 
     this.getMPosition = (p) =>{
-        return ut.objMatrix(cg.mTranslate(p), inner).slice(12, 15);
+        return wu.objMatrix(cg.mTranslate(p), inner).slice(12, 15);
     }
     this.getGPosition = (p) =>{
-        return ut.objGlobalMatrix(cg.mTranslate(p), inner).slice(12, 15);
+        return wu.objGlobalMatrix(cg.mTranslate(p), inner).slice(12, 15);
     }
     this.setColor = (c) =>{
         if(c !== undefined && c !== null){
@@ -124,10 +126,10 @@ function MakeWall(model, p1, p2, h, d, ddt, level){
 
     }
     this.getWallGPosition = (p) =>{
-        return ut.objGlobalMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
+        return wu.objGlobalMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
     }
     this.getWallMPosition = (p) =>{
-        return ut.objMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
+        return wu.objMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
     }
 }
 
@@ -163,8 +165,8 @@ function WallCollection(model, level, h, d){
         let t = -rp1[2] / rn[2];
         if(t <=0)
             return undefined
-        let interp = cg.add(rp1, ut.mulScaler(rn, t));
-        if(ut.pointInSquare(interp, [[-1, 1, 0], [-1, -1, 0], [1, -1, 0], [1, 1, 0]])){
+        let interp = cg.add(rp1, wu.mulScaler(rn, t));
+        if(wu.pointInSquare(interp, [[-1, 1, 0], [-1, -1, 0], [1, -1, 0], [1, 1, 0]])){
             return w.getGPosition(interp);
         }
 
@@ -309,7 +311,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         node_2.move(x, y, z);
     }
     this.isInbox = (p) =>{
-        let pos = ut.objMatrix(cg.mTranslate(p), box).slice(12, 15);
+        let pos = wu.objMatrix(cg.mTranslate(p), box).slice(12, 15);
         return !(pos[0] < p1[0] || pos[0] > p3[0] ||
             pos[1] < 0 || pos[1] > h * 2 ||
             pos[2] < p1[2] || pos[2] > p3[2]);
@@ -346,10 +348,10 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
     this.getMPosition = (p) =>{
-        return ut.objMatrix(cg.mTranslate(p), box).slice(12, 15);
+        return wu.objMatrix(cg.mTranslate(p), box).slice(12, 15);
     }
     this.getGPosition = (p) =>{
-        return ut.objGlobalMatrix(cg.mTranslate(p), box).slice(12, 15);
+        return wu.objGlobalMatrix(cg.mTranslate(p), box).slice(12, 15);
     }
 
     this.focus = (w, p, clean, tmp) => {
@@ -572,10 +574,10 @@ export function CreateSandbox(model){
     }
 
     this.getNodeMatrix = (p) =>{
-        return ut.objMatrix(cg.mTranslate(p), node).slice(12, 15);
+        return wu.objMatrix(cg.mTranslate(p), node).slice(12, 15);
     }
     this.getWalkMPosition = (p) =>{
-        return ut.objMatrix(cg.mTranslate(p), walk).slice(12, 15);
+        return wu.objMatrix(cg.mTranslate(p), walk).slice(12, 15);
     }
     this.getWalkPosition = (p) =>{
         return walk.getGlobalMatrix().slice(12, 15);
@@ -849,7 +851,7 @@ export function CreateVRSandbox(model){
         if(floor === -1 || mode < 0)
             return
         let m = obj.getGlobalMatrix();
-        let rm = ut.objMatrix(m, boxes[mode].boxes[floor].obj_model);
+        let rm = wu.objMatrix(m, boxes[mode].boxes[floor].obj_model);
 
         boxes[1 - mode].newObj(floor, obj, rm);
         boxes[2].newObj(floor, obj, rm);
@@ -866,13 +868,119 @@ export function CreateVRSandbox(model){
 
     }
 
+    this.wrapOP = (op, args) => {
+
+        let code = op;
+        switch(code) {
+            case ut.ADD_FLOOR_MSG:
+
+                break;
+            case ut.REMOVE_FLOOR_MSG:
+
+                break;
+            case ut.ADD_OBJ_MSG:
+
+                break;
+            case ut.REMOVE_OBJ_MSG:
+                if(args[0] === -1){
+                    code = ut.NON_ACTION_MSG;
+                }
+
+                break;
+            case ut.REVISE_OBJ_MSG:
+                if(args[0] === -1){
+                    code = ut.NON_ACTION_MSG;
+                }
+
+                break;
+            case ut.SPLIT_WALL_MSG:
+
+                break;
+            case ut.REVISE_WALL_MSG:
+
+                break;
+            case ut.REQURE_SCENE_MSG:
+
+                break;
+            case ut.SET_SCENE_MSG:
+
+                break;
+            case ut.NON_ACTION_MSG:
+
+                break;
+            default:
+                let bug = "you got a bug here";
+                console.log(bug);
+        }
+
+        if(code === ut.NON_ACTION_MSG)
+            return null;
+        console.log("send", code);
+        return {
+            code: code,
+            args: args,
+
+        }
+    }
+
+    this.executeOP = (msg) =>{
+        if(msg === null || msg === undefined)
+            return
+
+        console.log("execute", msg);
+
+        let code = msg.code;
+        let args = msg.args;
+        let send_msg = null;
+        switch(code) {
+            case ut.ADD_FLOOR_MSG:
+                this.addFloor();
+                break;
+            case ut.REMOVE_FLOOR_MSG:
+                this.removeFloor();
+                break;
+            case ut.ADD_OBJ_MSG:
+
+                break;
+            case ut.REMOVE_OBJ_MSG:
+                break;
+            case ut.REVISE_OBJ_MSG:
+
+                break;
+            case ut.SPLIT_WALL_MSG:
+
+                break;
+            case ut.REVISE_WALL_MSG:
+                break;
+
+            case ut.REQURE_SCENE_MSG:
+                args.scene = this.getScene();
+                send_msg = {
+                    code: ut.SET_SCENE_MSG,
+                    args : args,
+                }
+                break;
+            case ut.SET_SCENE_MSG:
+
+
+                break;
+            default:
+                let bug = "you got a bug here";
+                console.log(bug);
+        }
+
+
+        return send_msg;
+
+    }
+
     this.refreshObj = (mode, idx_lst) =>{
         let floor = this.active_floor;
         if(floor === -1 || mode < 0 || idx_lst.length === 0)
             return
 
 
-        idx_lst = idx_lst.filter(ut.onlyUnique);
+        idx_lst = idx_lst.filter(wu.onlyUnique);
         for(let i =0; i< idx_lst.length; ++ i){
             if(idx_lst[i] === -1)
                 continue
@@ -925,6 +1033,15 @@ export function CreateVRSandbox(model){
     }
     this.animate = (t) =>{
         this.divAnimation();
+    }
+
+    this.getScene = () =>{
+        let scene = 0;
+        return scene;
+    }
+
+    this.setScene = (msg) =>{
+
     }
 
 
