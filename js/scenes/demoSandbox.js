@@ -7,7 +7,7 @@ import {CreateMenuController}  from '../sandbox/menuController.js'
 import {CreateModeController}  from '../sandbox/modeController.js'
 import {CreateRoomController}  from '../sandbox/roomController.js'
 import * as ut from '../sandbox/utils.js'
-import {getOPs, sendOPs, refreshScene, register} from '../sandbox/croquetlib.js'
+import {getOPs, sendOPs, register} from '../sandbox/croquetlib.js'
 
 
 export const init = async model => {
@@ -30,34 +30,33 @@ export const init = async model => {
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
     let cur = 0;
-    register("SanboxV0.2")
+    register("SanboxV0.04")
     let mode_id = ut.BOX_VIEW;
     let menu_id = ut.MENU_DISABLED;
     let menu_status = [ut.MENU_CLOSE, null];
-    //let action_msg = ut.NON_ACTION_MSG;
+    let action_msg = ut.NON_ACTION_MSG;
 
-    let debug = false;
+    let debug = model.add("cube").color(1, 0, 0).scale(.2);
     model.animate(() => {
 
         let rev_msg = getOPs();
         let send_msg = sandbox.executeOP(rev_msg);
-        if(!wu.isNull(send_msg))
-            sendOPs(sandbox.wrapOP(send_msg.code, send_msg.args));
+        sendOPs(sandbox.wrapOP(send_msg));
 
         mode_id = mode_controller.animate(model.time, mode_id, sandbox.is_diving);
-        menu_id = mode_controller.clearMenuID(sandbox, menu_id, menu_status);
+        let res = mode_controller.clearMenuID(sandbox, menu_id, menu_status);
+        menu_id = res[0]
+        send_msg = res[1]
+        if(sendOPs(sandbox.wrapOP(send_msg)))
+            debug.move(0, 0, -1);
 
         room_controller.animate(model.time, mode_id);
 
-        let res = box_controller.animate(model.time, mode_id, menu_id, menu_status[0]);
+        res = box_controller.animate(model.time, mode_id, menu_id, menu_status[0]);
         mode_id = res[0];
         menu_id = res[1];
 
-        sendOPs(sandbox.wrapOP(res[2], null))
-        if(debug){
-            sendOPs(sandbox.wrapOP(ut.ADD_FLOOR_MSG, null))
-            debug = false;
-        }
+        sendOPs(sandbox.wrapOP(res[2]))
 
         let inactive = !mode_controller.parseCodeForMenu(menu_id);
         menu_status = menu_controller.animate(model.time, menu_model, menu_id, inactive);
@@ -71,10 +70,10 @@ export const init = async model => {
 
         // Remove selected object if any selection
         //sandbox.removeObj(collection_mode, obj_index[0]);
-        sendOPs(sandbox.wrapOP(ut.REMOVE_OBJ_MSG, [collection_mode, obj_index[0]]))
+        //sendOPs(sandbox.wrapOP({code:ut.REMOVE_OBJ_MSG, args:[collection_mode, obj_index[0]]}))
         // Modify selected object if any selection
         //sandbox.refreshObj(collection_mode, obj_index[1]);
-        sendOPs(sandbox.wrapOP(ut.REVISE_OBJ_MSG, [collection_mode, obj_index[1]]))
+        sendOPs(sandbox.wrapOP({code: ut.REVISE_OBJ_MSG, args: [collection_mode, obj_index[1]]}))
         // Diving animation
 
         sandbox.animate(model.time);

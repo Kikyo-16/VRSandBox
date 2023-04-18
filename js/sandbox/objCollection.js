@@ -39,6 +39,10 @@ export class Object{
     	return this.obj_node !== null ? this.obj_node.getMatrix() : undefined;
     }
 
+    setName(n){
+        this._name = n;
+    }
+
     setMatrix(m) {
      	if (this.obj_node !== null)
      		this.obj_node.setMatrix(m);

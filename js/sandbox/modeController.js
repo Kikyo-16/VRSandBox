@@ -121,19 +121,36 @@ export function CreateModeController(model){
     }
 
     this.clearMenuID = (sandbox, menu_id, menu_status) =>{
+        let msg = null;
         if(menu_status[1] !== undefined && menu_status[1] !== null && menu_status[0] !== ut.MENU_OPEN){
             if(menu_id === ut.MENU_ADD_OBJ){
-                if(menu_status[0] === ut.MENU_CLOSE)
-                    sandbox.addObj(menu_status[1], this.getCollectionCode());
+                if(menu_status[0] === ut.MENU_CLOSE){
+                    let m = menu_status[1].getGlobalMatrix();
+                    let c = this.getCollectionCode();
+                    msg = {
+                        code: ut.ADD_OBJ_MSG,
+                        args: {
+                            _form: menu_status[1]._form,
+                            _color: menu_status[1]._color,
+                            _texture: menu_status[1]._texture,
+                            _global_matrix: m,
+                            collection_code: c,
+                            _rm : sandbox.getRPosition(c, m),
+                            _name: (new Date()).getMilliseconds().toString() + "_"+Math.random().toString()
+                        }
+                    }
+                }
+
+                    //sandbox.addObj(menu_status[1], this.getCollectionCode());
             }else if(menu_id === ut.MENU_REVISE_WALL){
                 if(menu_status[0] === ut.MENU_CLOSE)
                     sandbox.reviseFocus(["texture", menu_status[1]])
                 menu_id = ut.MENU_DISABLED;
             }
-            return menu_id
+            return [menu_id, msg]
 
         }
-        return menu_id;
+        return [menu_id, msg]
     }
 
     this.getCollectionCode = () =>{

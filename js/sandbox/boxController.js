@@ -10,7 +10,7 @@ import {NON_ACTION_MSG} from "../sandbox/utils.js";
 export function CreateBoxController(model, sandbox) {
     // split-merge / box
 
-    let CD = 15;
+    let CD = 10;
     this.remove_cnt = -1;
     this.cold_down = -1;
     this.isSpliting = 0;
@@ -194,7 +194,7 @@ export function CreateBoxController(model, sandbox) {
     this.animate = (t, mode_id, menu_id, menu_status) =>{
         if(menu_status === ut.MENU_OPEN || mode_id === ut.IS_DIVING){
             restoreBeam();
-            return [mode_id, menu_id, ut.NON_ACTION_MSG]
+            return [mode_id, menu_id, null]
         }
         if(menu_id !== ut.MENU_REVISE_WALL) {
             if (mode_id === ut.ROOM_WITH_BOX || mode_id === ut.ROOM_WITHOUT_BOX || mode_id === ut.BOX_OBJ) {
@@ -213,15 +213,16 @@ export function CreateBoxController(model, sandbox) {
 
         if(this.cold_down > 0){
             this.cold_down -= 1;
-            return [mode_id, menu_id, ut.NON_ACTION_MSG];
+            return [mode_id, menu_id, null];
         }
         let flag = false;
-        let msg = ut.NON_ACTION_MSG;
+        let msg = null;
         if(mode_id === ut.BOX_VIEW){
             sandbox.leaveRoom();
             let res = box()
             flag = res[0] === 0 || flag;
-            msg = res[1];
+            msg = { code : res[1],
+                    args : null}
 
         }else if(mode_id === ut.BOX_EDIT){
             sandbox.leaveRoom();
@@ -230,7 +231,8 @@ export function CreateBoxController(model, sandbox) {
                 flag = true;
                 menu_id = (res[0] === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id);
             }
-            msg = res[1];
+            msg = { code : res[1],
+                    args : null}
         }else if(mode_id === ut.BOX_OBJ){
             sandbox.leaveRoom();
         }else if(mode_id === ut.ROOM_WITH_BOX){
