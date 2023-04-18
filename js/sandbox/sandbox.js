@@ -56,6 +56,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
     this.remove = () =>{
         model.remove(node_1);
+        this.objCollection = Array(0);
     }
     this.resetPos = (active_floor) =>{
         node_2.identity().move(active_floor, y, z);
@@ -235,7 +236,18 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
             this.tmp_focus = undefined;
         }
     }
-
+    this.getCollectionState = () =>{
+        let collections = Array(0);
+        for(let i = 0; i < this.objCollection; ++ i){
+            collections.push({
+                _color: this.objCollection[i].getColor(),
+                _texture: this.objCollection[i].getTexture(),
+                _rm: this.objCollection[i].getMatrix(),
+                _name: this.objCollection[i].getName(),
+            })
+        }
+        return collections
+    }
 
 }
 
@@ -245,6 +257,7 @@ export function CreateSandbox(model){
     let edge = .02;
     let root = model.add();
     let node = root.add();
+    let robot = root.add();
     let walk = node.add();
     let box_model = walk.add();
     this.boxes = Array(0);
@@ -272,10 +285,7 @@ export function CreateSandbox(model){
         if(this.boxes.length === 0)
             return false;
         this.boxes[this.boxes.length - 1].remove();
-        let new_boxes = Array(0);
-        for(let i = 0; i < this.boxes.length - 1; ++i)
-            new_boxes.push(this.boxes[i]);
-        this.boxes = new_boxes;
+        this.boxes.pop();
         return true;
     }
 
@@ -341,6 +351,11 @@ export function CreateSandbox(model){
     this.getWalkMPosition = (p) =>{
         return wu.objMatrix(cg.mTranslate(p), walk).slice(12, 15);
     }
+
+    this.getRobotMPosition = (p) =>{
+        return wu.objMatrix(cg.mTranslate(p), robot).slice(12, 15);
+    }
+
     this.getWalkPosition = (p) =>{
         return walk.getGlobalMatrix().slice(12, 15);
     }
@@ -401,6 +416,27 @@ export function CreateSandbox(model){
     }
 
     this.animation = (t) =>{
+
+    }
+
+    this.getScene = () => {
+        let collections = Array(0);
+        for(let i = 0; i < this.boxes.length; ++ i){
+            collections.push(this.boxes[i].getCollectionState());
+        }
+        return {
+            num_floors : this.boxes.length,
+            collections : collections
+        }
+    }
+    this.setScene = (args) =>{
+        for(let i = 0; i < args.numFloors; ++ i){
+            this.addFloor();
+            for(let j = 0; j < args.collections[i].length; ++ j){
+                this.newObj(i, args.collections[i][j], args.collections[i][j]._rm);
+            }
+
+        }
 
     }
 
@@ -747,15 +783,15 @@ export function CreateVRSandbox(model){
                 break;
 
             case ut.REQURE_SCENE_MSG:
-                args.scene = this.getScene();
                 send_msg = {
                     code: ut.SET_SCENE_MSG,
-                    args : args,
+                    args : this.mini_sandbox.getScene(),
+                    user_id : msg.user_id,
+                    view_id : msg.view_id,
                 }
                 break;
             case ut.SET_SCENE_MSG:
-
-
+                this.setScene(args);
                 break;
             default:
                 let bug = "you got a bug here";
@@ -820,15 +856,16 @@ export function CreateVRSandbox(model){
     this.animate = (t) =>{
         this.divAnimation();
     }
-
-    this.getScene = () =>{
-        let scene = 0;
-        return scene;
+    this.setScene = (args) =>{
+        this.mini_sandbox.remove();
+        this.room.remove();
+        this.effect.remove();
+        this.mini_sandbox.setScene(args);
+        this.room.setScene(args);
+        this.effect.setScene(args);
     }
 
-    this.setScene = (msg) =>{
 
-    }
 
 
 }

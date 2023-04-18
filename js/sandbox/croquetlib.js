@@ -61,12 +61,13 @@ class View extends Croquet.View {
         super(model);
         this.time = model.time;
         this.model = model;
-        this.sent_scene = false;
+        this.has_init = false;
         this.subscribe("viewInfo", "refresh", this.refreshViewInfo);
         //this.publish("init", "scene", {viewId: this.viewId, time : (new Date()).getMilliseconds()});
         this.subscribe("scene", 'require', this.sendScene)
         this.subscribe("ops", 'distribution', this.setOPsDistribution);
         this.checkOPs();
+        status.setViewId(this.viewId);
         //console.log("init view", this.viewId);
 
     }
@@ -80,7 +81,7 @@ class View extends Croquet.View {
 
     }
     sendScene(viewId){
-        if(this.viewId === viewId || this.sent_scene)
+        if(this.viewId === viewId)
             return
         status.requireScene(this.viewId, viewId);
         this.sent_scene = true;

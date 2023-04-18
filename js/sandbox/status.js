@@ -37,6 +37,12 @@ export function Status() {
     this.setOPs = (msg) => {
         if(wu.isNull(msg))
             return false;
+
+        if(msg.code === ut.SET_SCENE_MSG && (this.has_init || msg.userId !== this._viewId))
+            return false;
+        if(msg.code === ut.SET_SCENE_MSG && !this.has_init){
+            this.has_init = true;
+        }
         this.rec_ops.push(msg);
         return true
     }
@@ -44,7 +50,8 @@ export function Status() {
     this.sendOPs = (msg) => {
         if(wu.isNull(msg))
             return false;
-        //console.log(msg)
+
+
         this.send_ops.push(msg);
         return true
     }
@@ -53,6 +60,10 @@ export function Status() {
             return this.send_ops.shift();
         }
         return null;
+    }
+
+    this.setViewId = (viewId) =>{
+        this._viewId = viewId
     }
 
 
