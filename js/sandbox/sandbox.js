@@ -482,6 +482,7 @@ export function CreateSandbox(model){
     let root = model.add();
     let node = root.add();
     let walk = node.add();
+    this.robot = walk.add();
     let box_model = walk.add();
     this.boxes = Array(0);
     let p1 = [0, 0, 0];
@@ -670,8 +671,6 @@ export function CreateVRSandbox(model){
         this.in_room = true;
         this.is_diving = false;
         this.leaveRoom();
-
-
     }
 
     let deleteTmpFocus = () =>{
