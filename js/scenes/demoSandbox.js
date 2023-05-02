@@ -90,7 +90,7 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_3.21');
+    croquet.register('croquetDemo_3.23');
     //let debug = model.add("cube").color(1, 0, 0).scale(.2);
 
     //sandbox.addNewObj(0, debug);

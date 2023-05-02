@@ -27,7 +27,7 @@ export function CreateMultiplayerController(model, sandbox){
 
     }
     this.updateScene = (e) =>{
-        if(this.scene !== null && e.scene._name !== sandbox._name){
+        if(e.scene !== null && e.scene._name !== sandbox._name){
             console.log("aw", sandbox._name, e.scene._name, e.scene.latest, this.latest_version, e.scene);
             if(e.scene !== null && e.scene.latest >this.latest_version){
                 sandbox.setScene(e.scene)
