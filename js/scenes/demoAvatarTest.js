@@ -37,10 +37,10 @@ export const init = async model => {
 
     let local_user = 'sam';
     let msg = new Map();
-    msg.set('sam', new Map([['ID', 0],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, Math.random()*1, .00, 1.25, 0]],['VM', null]]));
-    msg.set('tom', new Map([['ID', 1],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .5, .00, .5, 0]],['VM', null]]));
-    msg.set('tim', new Map([['ID', 2],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .25, .00, .25, 0]],['VM', null]]));
-    msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25, .00, .25, 0]],['VM', null]]));
+    msg.set('sam', new Map([['ID', 0],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, Math.random()*1, .0, 1.25, 0]],['VM', null]]));
+    msg.set('tom', new Map([['ID', 1],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .5, .0, .5, 0]],['VM', null]]));
+    msg.set('tim', new Map([['ID', 2],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .25, .0, .25, 0]],['VM', null]]));
+    msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25, .0, .25, 0]],['VM', null]]));
     console.log("msg", msg);
     avatar_controller.initialize(msg, local_user, sandbox.room, sandbox.mini_sandbox);
     console.log("avatars initialized");
@@ -64,10 +64,11 @@ export const init = async model => {
             // console.log(msg);
             msg.set('tom', new Map([['ID', 1],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .5 - Math.random()*.25, .08, .5, 0]],['VM', null]]));
             msg.set('tim', new Map([['ID', 2],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, Math.random()*.25+.25, .08, .25, 0]],['VM', null]]));
-            msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.3-Math.random()*.1, .00, .25, 0]],['VM', null]]));
+            // msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.3-Math.random()*.1, .00, .25, 0]],['VM', null]]));
             
             // msg.set('sam', new Map([['ID', 1],['IN_BOX', false], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25+.1*Math.random(), .08, .25, 0, 0]],['VM', null]]));
-            msg.set('sam', msg.get('tom'));
+            //msg.set('sam', msg.get('tom'));
+            msg.set('sam', msg.get('jay'));
             avatar_controller.animate(msg, sandbox);
         }
 
