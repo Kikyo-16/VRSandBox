@@ -4,6 +4,7 @@ export function CreateMultiplayerController(model, sandbox){
     this.player = 3;
     this.viewID = null;
     this.latest_version = -1;
+    this.player_list = {}
 
 
     this.getPlayer = (in_room) =>{
@@ -27,7 +28,9 @@ export function CreateMultiplayerController(model, sandbox){
 
     }
     this.updateScene = (e) =>{
-        if(e.scene !== null && e.scene._name !== sandbox._name){
+        if(e.name === null || e.name === undefined)
+            return
+        if(e.scene !== null && e.name !== sandbox._name){
             console.log("aw", sandbox._name, e.scene._name, e.scene.latest, this.latest_version, e.scene);
             if(e.scene !== null && e.scene.latest >this.latest_version){
                 sandbox.setScene(e.scene)
@@ -36,11 +39,12 @@ export function CreateMultiplayerController(model, sandbox){
             }
         }
 
-
+        this.player_list[e.name] = e.player;
     };
 
     this.animate = (t, in_room) =>{
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
+        console.log(this.player_list);
     }
 }

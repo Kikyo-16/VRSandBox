@@ -4,6 +4,7 @@ import * as ut from "../sandbox/utils.js"
 import {Object} from "../sandbox/objCollection.js"
 import {CreateSandbox} from "../sandbox/sandbox.js"
 
+let NAME_LIST = ["Mike"];
 
 export function CreateVRSandbox(model){
 
@@ -13,7 +14,7 @@ export function CreateVRSandbox(model){
     let boxes = [mini_sandbox, room, effect];
     let wrapped_model = new Object();
     this.latest = -1;
-    this._name = (new Date()).toString() + "_" + Math.round(Math.random() * 10000).toString();
+    this._name = NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString();
 
     this.mini_sandbox = mini_sandbox;
     this.room = room;

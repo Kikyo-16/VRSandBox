@@ -189,6 +189,7 @@ export class View extends Croquet.View {
        //let msg = parseMsg();
        //console.log(msg);
        let scene = window.clay.model.multi_controller.scene;
+       let name_sandbox = scene._name;
        let scene_to_update = null;
        if(this.latest < scene.latest){
            console.log("kkk", this.latest, scene.latest)
@@ -198,7 +199,8 @@ export class View extends Croquet.View {
        }
        this.updateScene({who : this.viewId,
                                 scene : scene_to_update,
-                                player : window.clay.model.multi_controller.player});
+                                player : window.clay.model.multi_controller.player,
+                                name: name_sandbox});
 
        this.future(50).event();
 
