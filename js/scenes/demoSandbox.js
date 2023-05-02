@@ -93,12 +93,17 @@ export const init = async model => {
         return s;
     }
 
+    let name_selected = null;
+
     croquet.register('croquetDemo_3.23');
     //let debug = model.add("cube").color(1, 0, 0).scale(.2);
 
     //sandbox.addNewObj(0, debug);
     //console.log(sandbox.latest)
     model.animate(() => {
+
+        name_selected = login_controller.animate(model);
+
         state_msg.RESUME =true;
         let state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
@@ -119,7 +124,6 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
-        login_controller.animate(model);
 
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
         state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
@@ -131,7 +135,6 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
 
         multi_controller.animate(model.time, state_msg.MODE.IN_ROOM);
-
 
    });
 

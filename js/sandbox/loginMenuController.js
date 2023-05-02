@@ -50,7 +50,7 @@ export class CreateLoginMenuController {
                 name_banner.move(-0.3,0.5,0.1).scale(0.6, 0.35, .001).color(1,0,0);
                 name_banner.opacity(1);
             }
-
+            return login_menu.name_selected;
         }
     }
 }
