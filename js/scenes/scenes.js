@@ -13,6 +13,7 @@ export default () => {
          { name: "DemoSandBox"        , path: "./demoSandbox.js"      },
          { name: "DemoSandBoxTest"    , path: "./demoSandboxTest.js"      },
          { name: "DemoMenu"           , path: "./demoMenu.js"      },
+         { name: "DemoAvatarTest"           , path: "./DemoAvatarTest.js"      },
       ]
    };
 }
