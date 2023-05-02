@@ -369,6 +369,10 @@ export function CreateVRSandbox(model){
         return scene;
     }
 
+    this.setName = (n) =>{
+        this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+    }
+
 
 
 

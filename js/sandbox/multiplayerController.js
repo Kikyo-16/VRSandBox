@@ -1,22 +1,35 @@
+import {CreateAvatarController} from "../sandbox/avatarController.js";
 
 export function CreateMultiplayerController(model, sandbox){
-    this.scene = 2;
-    this.player = 3;
+    let avatar_controller = new CreateAvatarController(model);
+
+
+    this.scene = 0;
+    this.player = 0;
     this.viewID = null;
     this.latest_version = -1;
-    this.player_list = {}
+    this.player_list = new Map();
 
+    this.init =(in_room) =>{
+        let name = sandbox._name;
+        this.player = this.getPlayer(in_room);
+        this.scene = sandbox.getScene();
+        this.player_list.set(name, this.player)
+        avatar_controller.initialize(this.player_list,
+            sandbox._name, sandbox.room, sandbox.mini_sandbox);
+    }
 
     this.getPlayer = (in_room) =>{
         let vm = window.views[0]._viewMatrix;
         let pos = vm.slice(12, 15);
         let rm = sandbox.getRPosition(in_room?1:0, pos);
-        return {
-            VM : vm,
-            RM : rm,
-            IN_BOX: in_room,
-            FLOOR: sandbox.active_floor,
-        }
+        let msg = new Map();
+        msg.set("VM", vm);
+        msg.set("RM", rm);
+        msg.set("IN_BOX", in_room);
+        msg.set("FLOOR", sandbox.active_floor);
+
+        return msg;
 
     }
     this.getScene = () =>{
@@ -39,12 +52,15 @@ export function CreateMultiplayerController(model, sandbox){
             }
         }
 
-        this.player_list[e.name] = e.player;
+        this.player_list.set(e.name, e.player);
+        if(avatar_controller.local_user !== null)
+            avatar_controller.animate(this.player_list, sandbox);
     };
 
     this.animate = (t, in_room) =>{
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
+
         console.log(this.player_list);
     }
 }

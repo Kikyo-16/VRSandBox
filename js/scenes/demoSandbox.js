@@ -42,11 +42,10 @@ export const init = async model => {
     let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
 
-    let login_controller = new CreateLoginMenuController();
-    login_controller.init(login_menu_model);
+    //let login_controller = new CreateLoginMenuController();
+    //login_controller.init(login_menu_model);
 
-    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
-    model.multi_controller = multi_controller;
+
 
     let state_msg = {
         RESUME: true,
@@ -86,6 +85,11 @@ export const init = async model => {
 
     }
 
+
+    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
+    multi_controller.init(state_msg.MODE.IN_ROOM);
+    model.multi_controller = multi_controller;
+
     let checkStateCode = (state) =>{
         let s = state[1];
         s.RESUME = !state[0];
@@ -93,7 +97,7 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_3.23');
+    croquet.register('croquetDemo_3.29');
     //let debug = model.add("cube").color(1, 0, 0).scale(.2);
 
     //sandbox.addNewObj(0, debug);
@@ -119,7 +123,7 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
-        login_controller.animate(model);
+        //login_controller.animate(model);
 
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
         state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);

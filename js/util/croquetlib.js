@@ -87,16 +87,16 @@ export class Actor extends Croquet.Model {
         "joyStickState": null,
         "VR": null,
       }
-      this.future(500).tick();
-      this.subscribe(viewId, "updatePos", this.updatePos);
+      //this.future(500).tick();
+      //this.subscribe(viewId, "updatePos", this.updatePos);
    }
    updatePos(avatarPos) {
     //   this.mousePos = mousePos;
-    this.avatarPos = avatarPos;
+    //this.avatarPos = avatarPos;
    }
    tick() {
-      this.publish(this.id, "moved", this.now());
-      this.future(500).tick();
+      //this.publish(this.id, "moved", this.now());
+      //this.future(500).tick();
    }
 }
 Actor.register("Actor");
@@ -218,7 +218,7 @@ export class Pawn extends Croquet.View {
       this.actor = actor;
    }
    update(viewState) {
-      drawAvatar(this.actor);
+      //drawAvatar(this.actor);
    }
 }
 
