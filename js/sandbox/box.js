@@ -87,6 +87,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         n_obj.setTexture(obj._texture);
         n_obj.setMatrix(m);
         n_obj.setName(obj._name);
+        n_obj._revised = obj._revised;
         this.objCollection.push(n_obj);
         return n_obj;
     }
@@ -239,15 +240,19 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         }
     }
     this.getCollectionState = () =>{
-        let collections = {};
+        let collections = Array(0);
         for(let i = 0; i < this.objCollection.length; ++ i){
-            collections[this.objCollection[i]._name] = {
-                _color: this.objCollection[i].getColor(),
-                _texture: this.objCollection[i].getTexture(),
-                _rm: this.objCollection[i].getMatrix(),
-                _name: this.objCollection[i].getName(),
-                _form: this.objCollection[i].getForm()
+            if(this.objCollection[i]._revised){
+                collections.push({
+                    _color: this.objCollection[i].getColor(),
+                    _texture: this.objCollection[i].getTexture(),
+                    _rm: this.objCollection[i].getMatrix(),
+                    _name: this.objCollection[i]._name,
+                    _form: this.objCollection[i].getForm(),
+                    _latest: this.objCollection[i]._latest,
+                })
             }
+
         }
         return collections
     }

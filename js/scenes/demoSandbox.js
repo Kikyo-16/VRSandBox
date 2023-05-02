@@ -1,21 +1,21 @@
-import * as cg from "../render/core/cg.js";
-import * as wu from '../sandbox/wei_utils.js'
 import {CreateVRSandbox} from '../sandbox/vr_sandbox.js'
-import {CreateBoxController}  from '../sandbox/boxController.js'
-import {CreateObjController}  from '../sandbox/objController.js'
-import {CreateMenuController}  from '../sandbox/menuController.js'
-import {CreateModeController}  from '../sandbox/modeController.js'
-import {CreateRoomController}  from '../sandbox/roomController.js'
-import {Object} from "../sandbox/objCollection.js";
+import {CreateBoxController} from '../sandbox/boxController.js'
+import {CreateObjController} from '../sandbox/objController.js'
+import {CreateMenuController} from '../sandbox/menuController.js'
+import {CreateModeController} from '../sandbox/modeController.js'
+import {CreateRoomController} from '../sandbox/roomController.js'
+import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import * as ut from '../sandbox/utils.js'
 
 import * as croquet from "../util/croquetlib.js";
 
 export let updateModel = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.updateScene(msg);
+        console.log("update");
+        window.clay.model.multi_controller.updateScene(msg);
     }
 }
+
 
 export const init = async model => {
 
@@ -27,6 +27,7 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
+    let multi_model = model.add()
     //let room_model = model.add();
 
 
@@ -40,8 +41,9 @@ export const init = async model => {
     let menu_controller = new CreateMenuController()
     menu_controller.init(menu_model);
 
-    //register("SanboxV0.43")
 
+    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
+    model.multi_controller = multi_controller;
 
     let state_msg = {
         RESUME: true,
@@ -81,7 +83,6 @@ export const init = async model => {
 
     }
 
-
     let checkStateCode = (state) =>{
         let s = state[1];
         s.RESUME = !state[0];
@@ -89,11 +90,11 @@ export const init = async model => {
         return s;
     }
 
-    model.updateScene = (e) =>{
-
-    };
-    croquet.register('croquetDemo_1.0');
+    croquet.register('croquetDemo_3.21');
     //let debug = model.add("cube").color(1, 0, 0).scale(.2);
+
+    //sandbox.addNewObj(0, debug);
+    //console.log(sandbox.latest)
     model.animate(() => {
         state_msg.RESUME =true;
         let state_code = mode_controller.animate(model.time, state_msg);
@@ -124,6 +125,8 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
+
+        multi_controller.animate(model.time, state_msg.MODE.IN_ROOM);
 
 
    });

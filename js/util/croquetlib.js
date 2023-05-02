@@ -109,24 +109,15 @@ export class View extends Croquet.View {
       this.state = croquetModel.actorStates.get(this.viewId);
       this.color = window.color; // assign a unique color to each user for them to create their cubes in demoCroquet
       this.pawns = new Map();
+      this.latest = -1;
       croquetModel.actors.forEach(actor => this.addPawn(actor));
 
       this.subscribe("actor", "join", this.addPawn);
       this.subscribe("actor", "exit", this.removePawn);
-      this.future(50).tick();
+      //this.future(50).tick();
+      this.future(50).event();
 
-      let eToXY = e => {
-         const r = window.canvas.getBoundingClientRect();
-         const scale = window.canvas.width / Math.min(r.width, r.height);
-         const x = (e.clientX - r.left) / window.canvas.width * 2 - 1;
-         const y = 1 - (e.clientY - r.top) / window.canvas.width * 2;
-         return {x:x, y:y};
-      }
-      onmousedown = e => { this.mouseDown(eToXY(e)); }
-      onmouseup   = e => { this.mouseUp  (eToXY(e)); }
-      onmousemove = e => { this.mouseMove(eToXY(e));
-         // this.publish(this.viewId, "updatePos", eToXY(e));
-      }
+
    }
 
    tick() {    
@@ -194,13 +185,27 @@ export class View extends Croquet.View {
    initScene  (info) { this.publish("scene", "initScene"  , info); }
    updateScene(info) { this.publish("scene", "updateScene", info); }
 
-   event(state, pos, info) { this.updateScene({who : this.viewId,
-                                         what : state,
-                                         where : pos,
-                                         info: info}); }
-   mouseDown(p) { this.isDown = true ; this.event('press', p); }
-   mouseMove(p) { this.event(this.isDown ? 'drag' : 'move', p); }
-   mouseUp(p)   { this.isDown = false; this.event('release', p, this.color); }
+   event() {
+       //let msg = parseMsg();
+       //console.log(msg);
+       let scene = window.clay.model.multi_controller.scene;
+       if(this.latest < scene.latest){
+           console.log("kkk", this.latest, scene.latest)
+           this.updateScene({who : this.viewId,
+                                scene : window.clay.model.multi_controller.scene,
+                                player : window.clay.model.multi_controller.player});
+           this.latest = scene.latest;
+
+       }
+
+       this.future(50).event();
+
+
+   }
+
+   //mouseDown(p) { this.isDown = true ; this.event('press', p); }
+   //mouseMove(p) { this.event(this.isDown ? 'drag' : 'move', p); }
+   //mouseUp(p)   { this.isDown = false; this.event('release', p, this.color); }
 }
 
 export class Pawn extends Croquet.View {

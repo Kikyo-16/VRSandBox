@@ -179,7 +179,7 @@ export function CreateBoxController(model, sandbox) {
                 state.MODE["MODE"] = ut.DIVING_MSG;
                 break;
             case ut.ADD_FLOOR_MSG:
-                sandbox.addFloor();
+                sandbox.addFloor(true);
                 this.cold_down = CD;
                 break;
             case ut.REMOVE_FLOOR_MSG:

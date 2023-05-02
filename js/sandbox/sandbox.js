@@ -17,13 +17,20 @@ export function CreateSandbox(model){
     let p3 = [1, 0, 1];
     let p4 = [1, 0, 0];
 
+    this.latest = -1;
+
 
     this.getNodeMatrix = () =>{
         return node.getMatrix();
     }
 
+    let update = () =>{
+        this.latest = (new Date()).getTime();
+    }
 
-    this.addFloor = () =>{
+    this.addFloor = (flag) =>{
+        if(flag)
+            update();
         let new_level = this.boxes.length;
         let e = 0;
         if(new_level === 0){
@@ -35,6 +42,7 @@ export function CreateSandbox(model){
     this.removeFloor = () =>{
         if(this.boxes.length === 0)
             return false;
+        this.latest = (new Date).getTime();
         this.boxes[this.boxes.length - 1].remove();
         this.boxes.pop();
         return true;
@@ -144,11 +152,20 @@ export function CreateSandbox(model){
 
     this.reviseObj = (floor, obj_state) =>{
         let target = this.getObjByName(floor, obj_state._name);
+        if(target === null)
+            return 0;
+        if(target._latest >= obj_state._latest){
+            return 1;
+        }
         if(!wu.isNull(target)){
             target.setMatrix(obj_state._rm);
             target.setColor(obj_state._color);
             target.setTexture(obj_state._texture);
+            target._latest = (new Date).getTime();
+            target._revised = obj_state._revised;
+            return 2;
         }
+        return 1;
 
     }
 
@@ -179,44 +196,31 @@ export function CreateSandbox(model){
 
         return {
             numFloors : this.boxes.length,
-            collections : collections
+            collections : collections,
+            latest: this.latest,
         }
     }
     this.setScene = (args) =>{
         let i = 0;
+        this.latest = args.latest;
         while(this.boxes.length < args.numFloors) {
             this.addFloor();
             i += 1;
-            //ole.log("init", "addfloor", i)
         }
         while(this.boxes.length > args.numFloors) {
             this.removeFloor();
-            i += 1;
-            //console.log("init", "removefloor", i)
+            i -= 1;
         }
-        let add_obj = Array(0);
+
+
         for(let i = 0; i < args.numFloors; ++ i){
-
-            for(let j = 0; j < this.boxes[i].objCollection.length; ++ j){
-
-                let name = this.boxes[i].objCollection[j]._name;
-
-                if(name in args.collections[i]){
-                    add_obj.push(name);
-
-
-                }
-            }
-            for(const n in args.collections[i]){
-                let obj = args.collections[i][n];
-                if(n in add_obj){
-                    this.reviseObj(i, obj);
-                }else{
-                    let obj = args.collections[i][n];
+            for(let j = 0; j < args.collections[i].length; ++ j){
+               let obj = args.collections[i][j];
+               obj._revised = false;
+               let res = this.reviseObj(i, obj);
+               if(res === 0){
                     this.newObj(i, obj, obj._rm);
-
-                    //console.log("here", n, obj);
-                }
+               }
 
             }
 

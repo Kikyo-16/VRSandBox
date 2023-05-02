@@ -28,6 +28,7 @@ export class Object{
         this.updateLoc(loc);
         this._color = this.obj_node._color;
         this._texture = this.obj_node._texture;
+        this._latest = -1;
     }
 
     vallinaInit(obj){

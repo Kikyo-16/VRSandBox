@@ -12,6 +12,8 @@ export function CreateVRSandbox(model){
     let effect = new CreateSandbox(model);
     let boxes = [mini_sandbox, room, effect];
     let wrapped_model = new Object();
+    this.latest = -1;
+    this._name = (new Date()).toString() + "_" + Math.round(Math.random() * 10000).toString();
 
     this.mini_sandbox = mini_sandbox;
     this.room = room;
@@ -31,7 +33,7 @@ export function CreateVRSandbox(model){
 
     this.initialize = (p) =>{
         model.move(0, .8, -.4);
-        this.addFloor();
+        this.addFloor(false);
         this.active_floor = 0;
         mini_sandbox.activeFloor(this.active_floor);
         room.activeFloor(this.active_floor);
@@ -132,16 +134,22 @@ export function CreateVRSandbox(model){
         boxes[2].boxes[floor].reviseFocus(args);
         deleteTmpFocus();
     }
-
-    this.addFloor = () =>{
+    let update = () =>{
+        this.latest = (new Date()).getTime();
+        return this.latest;
+    }
+    this.addFloor = (flag) =>{
         console.log("addFloor");
-        boxes[0].addFloor();
-        boxes[1].addFloor();
-        boxes[2].addFloor();
+        if(flag)
+            update();
+        boxes[0].addFloor(flag);
+        boxes[1].addFloor(flag);
+        boxes[2].addFloor(flag);
     }
     this.removeFloor = () =>{
         if(this.numFloors()<= 1)
             return;
+        update();
         boxes[0].removeFloor();
         boxes[1].removeFloor();
         boxes[2].removeFloor();
@@ -210,8 +218,8 @@ export function CreateVRSandbox(model){
         return boxes[mode].boxes[floor].objCollection;
     }
 
-    this.getRPosition = (mode, m) =>{
-        return wu.objMatrix(m, boxes[mode].boxes[this.active_floor].obj_model);
+    this.getRPosition = (mode, p) =>{
+        return boxes[mode].getMPosition(p, this.active_floor);
     }
     this.addObj = (obj, floor) =>{
         boxes[0].newObj(floor, obj, obj._rm);
@@ -221,8 +229,10 @@ export function CreateVRSandbox(model){
     this.addNewObj = (mode, obj) =>{
         if(this.active_floor < 0)
             return
+        update();
         obj._rm = wu.objMatrix(obj.getGlobalMatrix(), boxes[mode].boxes[this.active_floor].obj_model);
         obj._name = (new Date()).getTime().toString() + "_" + Math.round(Math.random() * 10000).toString();
+        obj._revised = true;
         this.addObj(obj, this.active_floor);
     }
 
@@ -238,30 +248,40 @@ export function CreateVRSandbox(model){
 
     this.refreshObjByIdx = (idx_lst, collection_mode) =>{
         let floor = this.active_floor;
-        if(floor < 0)
+        if(floor < 0 || idx_lst.length === 0)
             return
         let obj_state = Array(0);
+        let latest = null;
         for(let i = 0; i < idx_lst.length; ++ i){
             let obj = boxes[collection_mode].getObj(floor, idx_lst[i]);
+            if(latest === null){
+                latest = update();
+            }
             obj_state.push({
                 _form: obj._form,
                 _color: obj._color,
                 _texture: obj._texture,
                 _name: obj._name,
                 _rm: obj.getMatrix(),
+                _latest: latest,
+                _revised: true,
             })
         }
         this.refreshObj(floor, obj_state);
+
+
     }
 
 
 
     this.refreshObj = (floor, obj_state) =>{
+        let flag = false;
         for(let i =0; i< obj_state.length; ++ i){
-            boxes[0].reviseObj(floor, obj_state[i]);
+            flag = flag || boxes[0].reviseObj(floor, obj_state[i]) === 2;
             boxes[1].reviseObj(floor, obj_state[i]);
             boxes[2].reviseObj(floor, obj_state[i]);
         }
+        return flag;
 
     }
 
@@ -310,12 +330,14 @@ export function CreateVRSandbox(model){
         return this.divAnimation(state)
     }
     this.setScene = (args) =>{
+        this.latest = args.latest;
         this.mini_sandbox.setScene(args);
         this.room.setScene(args);
         this.effect.setScene(args);
         if(this.active_floor >= this.mini_sandbox.boxes.length){
             this.active_floor = 0;
         }
+
         console.log("set scene")
         /*this.mini_sandbox.remove();
         this.room.remove();
@@ -336,6 +358,14 @@ export function CreateVRSandbox(model){
         if(floor < 0)
             return false;
         return mini_sandbox.boxes[floor].focus_walls.length > 0;
+    }
+
+    this.getScene = () => {
+        let scene = this.mini_sandbox.getScene();
+        scene.latest = this.latest;
+        scene._name = this._name;
+        //console.log("---", this.latest);
+        return scene;
     }
 
 
