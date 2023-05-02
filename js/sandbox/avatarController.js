@@ -14,6 +14,7 @@ export function CreateAvatarController(model){
 	let prevInboxes = new Map();
 	let num_users = 0;
 	this.local_user = null;
+	let debug = model.add("cube").color(1, 0, 0);
 	
 	this.initialize = (msg, local_user, room, mini_box) => {
 		// msg: {NAME: {ID, IN_BOX, RM, VM}}, include local user, RM: relative to mini sandbox
@@ -39,6 +40,20 @@ export function CreateAvatarController(model){
 		// update visualization of a given avatar
 		let box_center = box.robot.getGlobalMatrix().slice(12, 15); // further left corner
 		let mini_box_center = mini_box.robot.getGlobalMatrix().slice(12, 15);
+
+		//let avatar = this.avatars.get(name);
+		//if(avatar !== undefined&& avatar!==null)
+		//	return
+		/*let p = rm.slice(12, 15);
+		p[1] = 0;
+		let x = mini_box.robot.identity().move(p).getGlobalMatrix();
+
+		//x = cg.add(x, rm.slice(12, 15));
+		debug.setMatrix(cg.mTranslate(x.slice(12, 15)))
+		debug.scale(.1);
+		console.log("avatar", name, rm.slice(12, 15), debug.getGlobalMatrix().slice(12, 15));*/
+
+
 		// console.log("Box: ", box_center);
 		// console.log("miniBox: ", mini_box_center);
 		let prevInBox = prevInboxes.get(name);
@@ -53,9 +68,8 @@ export function CreateAvatarController(model){
 		} else {
 			loc = cg.add(box_center, cg.scale(rLoc, sc));
 			loc_mini = cg.add(mini_box_center, rLoc);
-		}
 
-		this.mini_avatars.get(name).updateLoc(loc_mini);
+		}
 
 
 		if (name === this.local_user) {
@@ -95,16 +109,16 @@ export function CreateAvatarController(model){
 		if (prevInBox && inBox) { // from inbox to inbox
 			// translate sandbox to updated global location
 			let move = cg.subtract([-box_center[0], -box_center[1], -box_center[2]], cg.scale(rLoc, sc));
-			//sandbox.move(move);
+			sandbox.move(move);
 		} else if (!prevInBox && !inBox) { // from outside to outside
 			let move = cg.subtract([-mini_box_center[0], -mini_box_center[1], -mini_box_center[2]], [-rLoc[0], -rLoc[1], -rLoc[2]]);
-			//sandbox.move(move);
+			sandbox.move(move);
 		} else if (!prevInBox && inBox) { // from outside to inbox
 			let loc = cg.add(mini_box_center, rLoc);
-			//sandbox.div(loc);
+			sandbox.div(loc);
 			prevInboxes.set(this.local_user, true);
 		} else { // from inbox to outside
-			//sandbox.leaveRoom();
+			sandbox.leaveRoom();
 			prevInboxes.set(this.local_user, false);
 		}
 
@@ -130,6 +144,7 @@ export function CreateAvatarController(model){
 	}
 
 	this.refresh = (msg, sandbox) => {
+
 		// msg: {NAME: {ID, IN_BOX, RM, VM}}
 
 		let room = sandbox.room, mini_box = sandbox.mini_sandbox;
@@ -144,8 +159,9 @@ export function CreateAvatarController(model){
 		this.destroy(inactivate_avatars);
 
 		// move sandbox to update local avatar
-		let info = msg.get(this.local_user);
-		this.updateLocal(info.get('IN_BOX'), info.get('RM'), info.get('VM'), sandbox);
+		//let info = msg.get(this.local_user);
+		//wei comment here
+		//this.updateLocal(info.get('IN_BOX'), info.get('RM'), info.get('VM'), sandbox);
 
 		// update other avatars
 		for (const [name, info] of msg) {
@@ -158,7 +174,12 @@ export function CreateAvatarController(model){
 					this.mini_avatars.set(name, mini_avatar);
 					prevInboxes.set(name, false);
 					this.num_users++;
+
+
+					mini_avatar.hidden();
+					avatar.hidden();
 				}
+				//console.log(name, "vm", info.get('VM'));
 				this.update(name, info.get('IN_BOX'), info.get('RM'), room, mini_box);
 			}
 		}
@@ -174,6 +195,7 @@ export function CreateAvatarController(model){
 		}
 
 		for (const [name, avatar] of this.avatars) {
+			//console.log("in", name, msg.get(name).get("VM"));
 			this.avatars.get(name).animate();
 			this.mini_avatars.get(name).animate();
 		}

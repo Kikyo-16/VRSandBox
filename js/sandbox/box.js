@@ -15,6 +15,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     let node_1 = model.add().move(0, (h*2 + .01)*level, 0);
     let node_2 = node_1.add();
     let box = node_2.add();
+    let robot = box.add();
     let upper = box.add();
     let bottom = box.add();
     let obj_model = box.add();
@@ -24,6 +25,8 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     this.wall_to_split = undefined;
     this.focus_walls = Array(0);
     this.obj_model = obj_model;
+
+    this.robot = robot;
 
 
     this.objCollection = Array(0);
@@ -112,6 +115,9 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         this.objCollection = n_objCollection;
     }
 
+    this.getRM = (p) =>{
+        return wu.objMatrix(cg.mTranslate(p), box);
+    }
     this.getMPosition = (p) =>{
         return wu.objMatrix(cg.mTranslate(p), box).slice(12, 15);
     }

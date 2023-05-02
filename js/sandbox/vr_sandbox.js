@@ -222,6 +222,9 @@ export function CreateVRSandbox(model){
     this.getRPosition = (mode, p) =>{
         return boxes[mode].getMPosition(p, this.active_floor);
     }
+    this.getRM = (mode, p) =>{
+        return boxes[mode].getRM(p, this.active_floor);
+    }
     this.addObj = (obj, floor) =>{
         boxes[0].newObj(floor, obj, obj._rm);
         boxes[1].newObj(floor, obj, obj._rm);

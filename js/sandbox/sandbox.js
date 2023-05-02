@@ -97,6 +97,10 @@ export function CreateSandbox(model){
         return undefined
     }
 
+    this.getRM = (p, floor) =>{
+        return this.boxes[floor].getRM(p);
+
+    }
     this.getMPosition = (p, floor) =>{
         return this.boxes[floor].getMPosition(p);
 
