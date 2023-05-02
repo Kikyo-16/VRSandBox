@@ -11,10 +11,13 @@ export class Object{
         this.obj_node = null;
         this.time = null;
         this.rid = null;
+
     }
 
     init(model, form, loc, scale, time){
     	this._form = form;
+        this._time = (new Date()).getTime();
+        this._name = this._time.toString() + "_" + Math.round(Math.random() * 10000).toString();
     	this.parent = model;
         this.obj_node = this.parent.add(form);
         this.time = time;
@@ -23,6 +26,8 @@ export class Object{
         this.updateScale(scale);
         this.loc = loc; 
         this.updateLoc(loc);
+        this._color = this.obj_node._color;
+        this._texture = this.obj_node._texture;
     }
 
     vallinaInit(obj){
@@ -80,15 +85,22 @@ export class Object{
     	}
     }
 
+    getForm(){
+        return this._form;
+
+    }
+
     setColor(c) {
     	if (this.obj_node !== null && c !== null && c !== undefined) {
     		this.obj_node.color(c);
+            this._color = c;
     	}
     }
 
     setTexture(v) {
     	if (this.obj_node !== null && v !== null && v !== undefined) {
     		this.obj_node.texture(v);
+            this._texture = v;
     	}
     }
 

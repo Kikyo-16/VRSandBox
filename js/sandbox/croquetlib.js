@@ -11,10 +11,16 @@ export class SandboxModel extends Croquet.Model {
     init(options={})  {
         this.participants = 0;
         this.time = 0;
+        this.max_time = -1;
         this.views = new Map();
+        this.states = {
+            numFloors : 1,
+            collections : Array(0),
+        }
         this.subscribe(this.sessionId, "view-join", this.viewJoin);
         this.subscribe(this.sessionId, "view-exit", this.viewExit);
         this.subscribe("ops", 'center', this.setOPs);
+        //this.update()
         //console.log("init Model", this.sessionId, this.time);
 
     }
@@ -28,9 +34,9 @@ export class SandboxModel extends Croquet.Model {
         }
         this.participants++;
         if(this.participants > 1){
-            this.publish("scene", 'require', viewId);
+            //this.publish("scene", 'require', viewId);
         }
-        this.publish("viewInfo", "refresh");
+        //this.publish("viewInfo", "refresh");
     }
     viewExit(viewId) {
         this.participants--;
@@ -42,8 +48,15 @@ export class SandboxModel extends Croquet.Model {
 
     setOPs(msg) {
         this.time += 1;
-        if(!wu.isNull(msg))
+
+        if(!wu.isNull(msg)){
+             this.max_time = msg.time;
+            this.states = msg;
+            //console.log("center", msg)
+
             this.publish("ops", 'distribution', msg);
+        }
+
 
     }
 
@@ -62,6 +75,7 @@ class View extends Croquet.View {
         this.time = model.time;
         this.model = model;
         this.has_init = false;
+        console.log("viewId", this.viewId);
         this.subscribe("viewInfo", "refresh", this.refreshViewInfo);
         //this.publish("init", "scene", {viewId: this.viewId, time : (new Date()).getMilliseconds()});
         this.subscribe("scene", 'require', this.sendScene)
@@ -76,26 +90,29 @@ class View extends Croquet.View {
 
     }
     setOPsDistribution(msg) {
-        if(msg.time >= this.time)
+        console.log("allrev", msg)
+        if(msg.viewId !== this.viewId){
             status.setOPs(msg);
+            console.log("rev", msg)
+        }
+
 
     }
     sendScene(viewId){
-        if(this.viewId === viewId)
-            return
-        status.requireScene(this.viewId, viewId);
-        this.sent_scene = true;
+        //if(this.viewId === viewId)
+        //    return
+        //status.requireScene(this.viewId, viewId);
+        //this.sent_scene = true;
     }
 
     checkOPs() {
         let msg = status.checkOPs();
         if(!wu.isNull(msg)){
             msg.viewId = this.viewId;
-            console.log("opscenter", msg)
-            msg.time = this.model.time;
+            msg.viewTime = this.model.time;
             this.publish("ops", 'center', msg);
         }
-        this.future(10).checkOPs();
+        this.future(5).checkOPs();
     }
 
 

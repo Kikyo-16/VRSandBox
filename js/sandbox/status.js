@@ -3,84 +3,51 @@ import * as wu from "../sandbox/wei_utils.js";
 
 
 export function Status() {
-    this.has_init = false;
-    this.init_scene = null;
 
-    this.scene_request = false;
-    this.required_scene = null;
+    this.rec_ops = null;
+    this.send_ops = null;
 
-    this.rec_ops = Array(0);
-    this.send_ops = Array(0);
+    this.max_send_time = -1
+    this.max_rev_time = -1
 
     this.getOPs = () => {
-        if(this.rec_ops.length > 0){
-            let flag = true;
-            let op = null;
-            while(flag){
-                op = this.rec_ops.shift();
-                if(op.code === ut.REVISE_OBJ_MSG && this.rec_ops.length > 0) {
-                    if(this.rec_ops[this.rec_ops.length - 1].code === ut.REVISE_OBJ_MSG &&
-                        this.rec_ops[this.rec_ops.length - 1].args._name === op.args._name){
-                        console.log("here");
-                    }else{
-                        flag = false;
-                    }
-                }else{
-                    flag = false;
-                }
-            }
-            return op;
-        }
-        return null;
+        let op = this.rec_ops;
+        this.rec_ops = null;
+        return op;
     }
 
     this.setOPs = (msg) => {
         if(wu.isNull(msg))
             return false;
-
-        if(msg.code === ut.SET_SCENE_MSG && (this.has_init || msg.userId !== this._viewId))
-            return false;
-        if(msg.code === ut.SET_SCENE_MSG && !this.has_init){
-            this.has_init = true;
+        if(this.rec_ops !== null){
+            console.log("setOps", this.rec_ops.time, msg.time);
         }
-        this.rec_ops.push(msg);
+        if(this.max_rev_time < msg.time){
+            this.max_rev_time = msg.time;
+            this.rec_ops = msg;
+        }
         return true
     }
 
     this.sendOPs = (msg) => {
         if(wu.isNull(msg))
             return false;
-
-
-        this.send_ops.push(msg);
+        this.send_ops = msg;
+        if(this.max_send_time < msg.time){
+            this.max_send_time = msg.time;
+            this.send_ops = msg;
+        }
         return true
     }
     this.checkOPs = () => {
-        if(this.send_ops.length > 0){
-            return this.send_ops.shift();
-        }
-        return null;
+        //return this.send_ops;
+        let op = this.send_ops;
+        this.send_ops = null;
+        return op;
     }
 
     this.setViewId = (viewId) =>{
         this._viewId = viewId
     }
-
-
-
-    this.requireScene = (viewId, userId) =>{
-        let msg = {
-            code : ut.REQURE_SCENE_MSG,
-            args : {
-                viewId : viewId,
-                userId : userId,
-            },
-
-        }
-        this.setOPs(msg);
-
-    }
-
-
 
 }
