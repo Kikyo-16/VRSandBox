@@ -5,6 +5,7 @@ import {CreateMenuController} from '../sandbox/menuController.js'
 import {CreateModeController} from '../sandbox/modeController.js'
 import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
+import { CreateLoginMenuController } from '../sandbox/loginMenuController.js'
 import * as ut from '../sandbox/utils.js'
 
 import * as croquet from "../util/croquetlib.js";
@@ -29,7 +30,7 @@ export const init = async model => {
     let sandbox_model = model.add();
     let multi_model = model.add()
     //let room_model = model.add();
-
+    let login_menu_model = model.add();
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
@@ -38,9 +39,11 @@ export const init = async model => {
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
 
-    let menu_controller = new CreateMenuController()
+    let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
 
+    let login_controller = new CreateLoginMenuController();
+    login_controller.init(login_menu_model);
 
     let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
     model.multi_controller = multi_controller;
@@ -116,6 +119,7 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
+        login_controller.animate(model);
 
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
         state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
