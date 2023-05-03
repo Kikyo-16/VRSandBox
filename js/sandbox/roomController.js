@@ -25,15 +25,19 @@ export function CreateRoomController(sandbox) {
     }
 
     let getSpeed = () =>{
+        let flag = false;
         if(bc.isLY()){
             this.speed += 1;
+            flag = true;
         }else if(bc.isLX()){
             this.speed -= 1;
+            flag = true;
         }
         if(this.speed < 1)
             this.speed = 1;
         if(this.speed > 20)
             this.speed = 20;
+        return flag;
     }
 
     let walking = () => {
@@ -55,17 +59,28 @@ export function CreateRoomController(sandbox) {
 
     }
 
+    this.clearState = (t, state) =>{
+        return state;
 
-    this.animate = (t, mode_id) => {
-        if (mode_id !== ut.ROOM_WALKING)
-            return;
+    }
+
+
+
+    this.animate = (t, state) => {
+        if (state.ROOM.WALKING.DISABLED)
+            return [false, state];
 
         if (cold_down > 0) {
             cold_down -= 1;
-            return
+            return [false, state];
         }
-        getSpeed();
-        if(walking())
+        let flag = false;
+        flag = flag || getSpeed();
+        if(walking()){
             cold_down = CD;
+            flag = true;
+        }
+
+        return [flag, state]
     }
 }

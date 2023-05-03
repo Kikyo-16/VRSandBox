@@ -1,101 +1,153 @@
-import * as cg from "../render/core/cg.js";
-import * as wu from '../sandbox/wei_utils.js'
-import {CreateVRSandbox} from '../sandbox/sandbox.js'
-import {CreateBoxController}  from '../sandbox/boxController.js'
-import {CreateObjController}  from '../sandbox/objController.js'
-import {CreateMenuController}  from '../sandbox/menuController.js'
-import {CreateModeController}  from '../sandbox/modeController.js'
-import {CreateRoomController}  from '../sandbox/roomController.js'
-import {CreateAvatarController}  from '../sandbox/avatarController.js'
+import {CreateVRSandbox} from '../sandbox/vr_sandbox.js'
+import {CreateBoxController} from '../sandbox/boxController.js'
+import {CreateObjController} from '../sandbox/objController.js'
+import {CreateMenuController} from '../sandbox/menuController.js'
+import {CreateModeController} from '../sandbox/modeController.js'
+import {CreateRoomController} from '../sandbox/roomController.js'
+import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
+import {CreateLoginMenuController } from '../sandbox/loginMenuController.js'
 import * as ut from '../sandbox/utils.js'
+
+import * as croquet from "../util/croquetlib.js";
+
+export let updateModel = msg => {
+    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
+        console.log("update");
+        window.clay.model.multi_controller.updateScene(msg);
+    }
+}
 
 
 export const init = async model => {
+
     model.setTable(false);
     model.setRoom(false);
 
+    console.log(model.getGlobalMatrix());
+    
     let menu_model = model.add();
     let box_model = model.add();
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let room_model = model.add();
-    let avatar_model = model.add();
+    let multi_model = model.add()
+    //let room_model = model.add();
+    let login_menu_model = model.add();
+
+    console.log(sandbox_model.getGlobalMatrix());
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
-
     let mode_controller = new CreateModeController(mode_model);
     let box_controller = new CreateBoxController(box_model, sandbox);
-    let menu_controller = new CreateMenuController()
-    menu_controller.init(menu_model);
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
-    
-    let avatar_controller = new CreateAvatarController(sandbox_model);
-    console.log("ctrs created");
 
-    let local_user = 'sam';
-    let msg = new Map();
-    msg.set('sam', new Map([['ID', 0],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, Math.random()*1, .08, 1.25, 0]],['VM', null]]));
-    msg.set('tom', new Map([['ID', 1],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .5, .08, .5, 0]],['VM', null]]));
-    msg.set('tim', new Map([['ID', 2],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .25, .08, .25, 0]],['VM', null]]));
-    msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25, .08, .25, 0]],['VM', null]]));
-    console.log("msg", msg);
-    avatar_controller.initialize(msg, local_user, sandbox.room, sandbox.mini_sandbox);
-    console.log("avatars initialized");
+    let menu_controller = new CreateMenuController();
+    menu_controller.init(menu_model);
 
-    let mode_id = ut.BOX_VIEW;
-    let menu_id = ut.MENU_DISABLED;
-    let menu_status = [ut.MENU_CLOSE, null];
+    //let login_controller = new CreateLoginMenuController();
+    //login_controller.init(login_menu_model);
 
-    let t = model.time;
 
-    // mode_controller.debugInRoom();
-    model.animate(() => {
 
-        mode_id = mode_controller.animate(model.time, mode_id, sandbox.is_diving);
-        menu_id = mode_controller.clearMenuID(sandbox, menu_id, menu_status);
+    let state_msg = {
+        RESUME: true,
+        MODE: {
+            DISABLED: false,
+            SWITCH: false,
+            IN_ROOM: false,
+            MODE: ut.BOX_VIEW_MSG,
+        },
+        MENU: {
+            INACTIVE: true,
+            OPEN: false,
+            SELECT: null,
+            REQUIRE: false,
 
-        if (model.time - t >= 20) {
-            console.log("add user");
-            msg.set('ray', new Map([['ID', 4],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.3-Math.random()*.1, .08, -.25, 0]],['VM', null]]));
-            // msg.delete('tom');
-            // console.log(msg);
-            // msg.set('tom', new Map([['ID', 1],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, .5 - Math.random()*.25, .08, .5, 0]],['VM', null]]));
-            // msg.set('tim', new Map([['ID', 2],['IN_BOX', true], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, Math.random()*.25+.25, .08, .25, 0]],['VM', null]]));
-            msg.set('jay', new Map([['ID', 3],['IN_BOX', false], ['RM', [1,0,0,0, 0,1,0,0, 0,0,1,0, -.3-Math.random()*.1, .08, .25, 0]],['VM', null]]));
-            
-            // msg.set('sam', new Map([['ID', 1],['IN_BOX', false], ['RM',  [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25+.1*Math.random(), .08, .25, 0, 0]],['VM', null]]));
-            msg.set('sam', msg.get('tom'));
-            avatar_controller.animate(msg, sandbox);
+        },
+        ROOM: {
+            WALKING: {
+                DISABLED: true
+            }
+        },
+        BOX: {
+            DISABLED: false,
+            ACTION: {
+                MSG: ut.NON_ACTION_MSG,
+                ARG: null,
+            }
+        },
+
+        OBJ: {
+            INACTIVE: true,
+            ACTION: {
+                DELETE: Array(0),
+                REVISE: Array(0),
+            }
+        },
+
+        PERSPECTIVE: {
+            ACTION: {
+                MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
+                ARG: null,
+            }
         }
 
-        //avatar_controller.animate(msg, sandbox);
+    }
 
-        room_controller.animate(model.time, mode_id);
 
-        let res = box_controller.animate(model.time, mode_id, menu_id, menu_status[0]);
-        mode_id = res[0];
-        menu_id = res[1];
+    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
+    multi_controller.init(state_msg.MODE.IN_ROOM);
+    model.multi_controller = multi_controller;
 
-        let inactive = !mode_controller.parseCodeForMenu(menu_id);
-        menu_status = menu_controller.animate(model.time, menu_model, menu_id, inactive);
+    let checkStateCode = (state) =>{
+        let s = state[1];
+        s.RESUME = !state[0];
 
-        let collection_mode = mode_controller.getCollectionCode();
-        let obj_collection = sandbox.getObjCollection(collection_mode);
-        let ctrl_code = mode_controller.parseCodeForCrl(menu_status[0]);
+        return s;
+    }
 
-        let obj_index = obj_controller.animate(model.time, obj_collection, ctrl_code);
+    croquet.register('croquetDemo_5.01');
+    //let debug = model.add("cube").color(1, 0, 0).scale(.2);
 
-        // Remove selected object if any selection
-        sandbox.removeObj(collection_mode, obj_index[0]);
-        // Modify selected object if any selection
-        sandbox.refreshObj(collection_mode, obj_index[1]);
-        // Diving animation
+    //sandbox.addNewObj(0, debug);
+    //console.log(sandbox.latest)
+    model.animate(() => {
+        state_msg.RESUME =true;
+        let state_code = mode_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
 
-        sandbox.animate(model.time);
 
+        state_code = room_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = room_controller.clearState(model.time, state_msg);
+
+
+        state_code = box_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = box_controller.clearState(model.time, state_msg, sandbox);
+
+
+        state_code = menu_controller.animate(model.time, menu_model, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
+
+        //login_controller.animate(model);
+
+        let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
+        state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = obj_controller.clearState(model.time, state_msg, sandbox, box_mode);
+
+        // console.log("in room", state_msg.MODE.IN_ROOM)
+        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
+        state_msg = checkStateCode(state_code);
+
+
+        state_code = sandbox.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
 
    });
 
