@@ -3,9 +3,45 @@ import * as cg from "../render/core/cg.js";
 
 
 /*
-* Menu CODE
+* STATUS CODE
 * */
 
+export let BOX_VIEW_MSG = "box-view"
+export let BOX_EDIT_MSG = "box-edit"
+export let BOX_OBJ_MSG = "box-obj"
+export let ROOM_WITH_BOX_MSG = "room-with-box"
+export let ROOM_WITHOUT_BOX_MSG = "room-without-box"
+export let ROOM_WALKING_MSG = "room-walking"
+export let DIVING_MSG = "diving"
+
+
+export let NON_ACTION_MSG = "non-action"
+export let ADD_FLOOR_MSG = "add-floor"
+export let REMOVE_FLOOR_MSG = "remove-floor"
+export let EXPAND_FLOOR_MSG = "expand-floor"
+export let COLLAPSE_FLOOR_MSG = "collapse-floor"
+export let PICK_LOCATION_MSG = "pick-a-location"
+
+
+export let ADD_OBJ_MSG = "add-obj"
+export let REMOVE_OBJ_MSG = "remove-obj"
+export let REVISE_OBJ_MSG = "revise-obj"
+export let SPLIT_WALL_MSG = "split-wall"
+export let REVISE_WALL_MSG = "revise-wall"
+export let DELETE_WALL_MSG = "delete-wall"
+export let FOCUS_WALL_MSG = "focus-wall"
+export let SPLITTING_FOCUS_WALL_MSG = "splitting-focus-wall"
+export let SPLITTING_WALL_MSG = "splitting-wall"
+export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
+
+
+export let PERSPECTIVE_SHARE_MSG = "perspective-share"
+export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
+
+
+/*
+* Menu CODE
+* */
 export let MENU_ADD_OBJ = 1;
 export let MENU_REVISE_WALL = 2;
 export let MENU_REVISE_OBJ = 3;
@@ -23,23 +59,8 @@ export let WALKING_BACKWARD = 2;
 export let WALKING_LEFT = 3;
 export let WALKING_RIGHT = 4;
 
-/*
-* STATUS CODE
-* */
-//Room MODE
-export let ROOM_GLOBAL = 1;
-export let ROOM_WITHOUT_BOX = 2;
-export let ROOM_WALKING = 3;
-export let ROOM_WITH_BOX = 4;
 
 
-
-//Sandbox MODE
-export let BOX_GLOBAL = 11;
-export let BOX_VIEW = 12;
-export let BOX_EDIT = 13;
-export let BOX_OBJ = 14;
-export let IS_DIVING = 15;
 
 
 export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";

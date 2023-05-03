@@ -1,7 +1,7 @@
 import * as cg from "../render/core/cg.js";
 
-export let isObj = (obj) => {
-    return obj._form !== undefined && obj.status === 0;
+export let isNull = (x) => {
+    return x === null || x === undefined;
 }
 
 export let ensemble = (parent, obj_list) =>{

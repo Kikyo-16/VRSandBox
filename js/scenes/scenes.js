@@ -7,13 +7,14 @@ export default () => {
    })).name = "backGround";
 
    return {
-      enableSceneReloading: true,
+      enableSceneReloading: false,
       scenes: [ 
-         { name: "DemoObjCtrTest"     , path: "./demoObjCtrTest.js"      },
+         // { name: "DemoObjCtrTest"     , path: "./demoObjCtrTest.js"      },
          { name: "DemoSandBox"        , path: "./demoSandbox.js"      },
-         { name: "DemoSandBoxTest"    , path: "./demoSandboxTest.js"      },
-         { name: "DemoMenu"           , path: "./demoMenu.js"      },
+         // { name: "DemoSandBoxTest"    , path: "./demoSandboxTest.js"      },
+         // { name: "DemoMenu"           , path: "./demoMenu.js"      },
          { name: "DemoAvatarTest"           , path: "./DemoAvatarTest.js"      },
+         // { name: "DemoSandbox"        , path: "./demoSandbox.js"      },
       ]
    };
 }

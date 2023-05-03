@@ -182,14 +182,16 @@ export function CreateObjController(obj_model){
     //     return obj.copy();
     // }
 
-    this.animate = (t, objs, active) => {
+    this.animate = (t, objs, state) => {
         // objs: obj_collection, list of objects
         //return obj index to delete || -1
+
+        if(state.OBJ.INACTIVE || objs.length === 0)
+            return [false, state]
+
         let delete_obj_idx = -1;
         let selected_obj_idx = Array(0);
         //let copied_obj = null;
-        if(objs.length === 0 || !active)
-            return [delete_obj_idx, selected_obj_idx];
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
         let resl = resize_lock ? [resize_obj_idx, null] : this.isLeftTriggerPressed() ? this.hitByBeam(objs, 0) : [-1, null]; //[obj idx, project point]
@@ -226,7 +228,21 @@ export function CreateObjController(obj_model){
             this.operateSingleObj(objs, resr, 1); 
         }
 
-        return [delete_obj_idx, selected_obj_idx];
+        state.OBJ.ACTION["DELETE"] = delete_obj_idx;
+        state.OBJ.ACTION["REVISE"] = selected_obj_idx;
+
+        return [false, state]
+
         // return [delete_obj_idx, selected_obj_idx, copied_obj];
+    }
+
+    this.clearState = (t, state, sandbox, collection_mode) =>{
+        let revised_index = state.OBJ.ACTION.REVISE;
+        sandbox.refreshObjByIdx(revised_index, collection_mode);
+        state.OBJ.ACTION["REVISE"] = Array(0);
+
+
+        //sandbox.removeObj(collection_mode, obj_index[0]);
+        return state
     }
 }

@@ -126,21 +126,20 @@ export class CreateMenuController {
          menuOpen = false;
       }
 
-      this.animate = (t, model, menu_id, inactive) => {
+      this.animate = (t, model, state) => {
          // console.log("menu_id",  menu_id);
          // console.log("inactive", inactive);
-
-         if(menu_id === ut.MENU_DISABLED)
-            return ut.MENU_CLOSE;
+         let inactive = state.MENU.INACTIVE && !state.MENU.REQUIRE;
+         //let inactive = false;
 
          rt = buttonState.right[0].pressed;
          let res = null;
 
          // Object Mode
          // Create Menu - "X" button on left controller
-         let leftXButton = buttonState.left[4].pressed || menu_id === ut.MENU_REVISE_WALL;
-         if (leftXButton && !menuOpen) {
-            console.log("open menu")
+         let leftXButton = buttonState.left[4].pressed;
+         if (leftXButton && !menuOpen && !inactive) {
+            console.log("open menu");
             this.openMenu(model);
          }
 
@@ -185,8 +184,8 @@ export class CreateMenuController {
             }
          }
 
-         let menu_status = menuOpen ? ut.MENU_OPEN : ut.MENU_CLOSE;
          if (buttonState.left[5].pressed) {
+            state.MENU.REQUIRE = false;
             console.log("close menu");
             console.log("selected obj: ", selectedObject);
             this.closeMenu(model);
@@ -194,12 +193,11 @@ export class CreateMenuController {
                res = selectedObject;
                model.remove(selectedObject);
                selectedObject = null;
-               menu_status = ut.MENU_CLOSE;
             }
             console.log("results: ", res);
          }
          if (buttonState.left[3].pressed || inactive) {
-            menu_status = ut.MENU_CANCEL;
+            state.MENU.REQUIRE = false;
             if (menuOpen) {
                this.closeMenu(model);
                if (selectedObject != null) {
@@ -208,12 +206,27 @@ export class CreateMenuController {
                }
             }
          }
-
+         state.MENU.OPEN = menuOpen;
+         state.MENU.SELECT = res;
          rt_prev = rt;
-         if(menuOpen)
-            menu_status = ut.MENU_OPEN;
-         return [menu_status, res];
+         return [menuOpen, state];
       };
+
+
+      this.clearState = (t, state, sandbox)=>{
+         if(!state.MENU.OPEN && state.MENU.SELECT!== null){
+            if(state.MODE.MODE === ut.BOX_EDIT_MSG){
+               sandbox.reviseFocus(["revise", state.MENU.SELECT]);
+            }else if(state.MODE.MODE === ut.BOX_OBJ_MSG){
+               sandbox.addNewObj(0, state.MENU.SELECT);
+            }else if(state.MODE.MODE === ut.ROOM_WITHOUT_BOX_MSG || state.MODE.MODE === ut.ROOM_WITH_BOX_MSG){
+               sandbox.addNewObj(1, state.MENU.SELECT);
+            }
+            state.MENU.SELECT = null;
+         }
+         return state;
+
+      }
 
    }
 }

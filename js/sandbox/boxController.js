@@ -3,19 +3,21 @@ import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
+import {COLLAPSE_FLOOR_MSG, FOCUS_WALL_MSG, SPLITTING_FOCUS_WALL_MSG} from "../sandbox/utils.js";
 
 
 
 export function CreateBoxController(model, sandbox) {
     // split-merge / box
 
-    let CD = 15;
+    let CD = 10;
     this.remove_cnt = -1;
     this.cold_down = -1;
     this.isSpliting = 0;
     this.cursor = model.add("cube").scale(.1).color(1, 0, 0).move(-100, 0, 0);
     this.box_mode = 0;
     this.stick_len = 5;
+    this.multi_select = 0;
     this.collection_mode = 0;
     this.menu_id = ut.MENU_DISABLED;
 
@@ -25,15 +27,19 @@ export function CreateBoxController(model, sandbox) {
 
     let adjustRodLength = (t) =>{
         let y = joyStickState.right.y;
+        let flag = false;
         if(y > .1){
             this.stick_len -= .1;
+            flag = true;
         }else if(y < -.1){
             this.stick_len += .1;
+            flag = true;
         }
         if(this.stick_len > 20)
             this.stick_len = 20
         if(this.stick_len < 1)
             this.stick_len = 1;
+        return flag;
     }
 
 
@@ -46,74 +52,57 @@ export function CreateBoxController(model, sandbox) {
         return sandbox.select(res[0], res[1], this.box_mode);
     }
 
-    let delay = (fn, args, sc) => {
-        console.log(this.remove_cnt);
-        if(this.remove_cnt <0) {
-            this.remove_cnt = CD*sc;
-            return false;
-        }
-        else if(this.remove_cnt >5) {
-            this.remove_cnt -= 1;
-            return false;
-        }else{
-            this.remove_cnt = -1;
-            if(args === null || args === undefined)
-                fn();
-            else
-                fn(args);
-            return true;
-        }
-    }
-    let clearStatus = (s) =>{
-        if(s !== 1)
-            this.remove_cnt = -1;
-        if(s !== 2 ){
+
+    let clearStatus = (idx)=>{
+        if(idx === 0 || idx >=2)
             this.isSpliting = 0;
-
-        }
-
-
+        if(idx >=1)
+            this.multi_select = 0
     }
+
     let split = () =>{
         let res = focusWall(1);
 
-        if(bc.isLX()) {
-            clearStatus(3);
-            return ut.MENU_REVISE_WALL;
-        }if(bc.isRBt2()){
-            let args = ["delete", null];
-            return delay(sandbox.reviseFocus, args, 2) ? 0 : -1;
+        if(bc.isLY()){
+            clearStatus(2);
+            return [ut.DELETE_WALL_MSG, null];
         }else if(bc.isRBt1()){
+            clearStatus(1);
             if(this.isSpliting <= 1){
-                sandbox.clear(3);
                 if(res[0] !== undefined){
-                    sandbox.focus(res, true, this.box_mode, false);
                     this.isSpliting = 2;
+                    return [ut.FOCUS_WALL_MSG, [res, true, this.box_mode, false]]
                 }
             }else{
                 if(res[0] !== undefined){
-                    sandbox.splitingFocus(res, this.box_mode);
+                    return [ut.SPLITTING_FOCUS_WALL_MSG, res]
+                    //sandbox.splitingFocus(res, this.box_mode);
                 } else{
                     this.isSpliting = 3;
-                    sandbox.spliting(getEndPoint(), this.box_mode);
+                    return [ut.SPLITTING_WALL_MSG, getEndPoint()]
+                    //sandbox.spliting(getEndPoint(), this.box_mode);
                 }
             }
-            return -1;
+
         }else if(bc.isRB()){
-            sandbox.split();
-            return 0;
-        }else if(bc.isLY()){
-            sandbox.clear(0);
-            sandbox.clear(2);
-            sandbox.focus(res, false, this.box_mode, false);
+            clearStatus(2);
+            return [ut.SPLIT_WALL_MSG, null];
+        }else if(bc.isRBt2()){
             clearStatus(0);
-            return 0;
+            this.multi_select += 1;
+            return [ut.MULTI_FOCUS_WALL_MSG, [res, false, this.box_mode, false]];
+        }else if(bc.isLX()) {
+            //clearStatus(2);
+            return [ut.REVISE_WALL_MSG, null];
+        }else if(bc.isRB()) {
+            return [ut.BOX_OBJ_MSG, null];
+
         }else{
             clearStatus(0);
-            sandbox.focus(res, false, this.box_mode, true);
-        }
+            return [ut.FOCUS_WALL_MSG, [res, false, this.box_mode, true]];
 
-        return -1;
+        }
+        return [ut.NON_ACTION_MSG, null];
     }
 
     let getEndPoint = () =>{
@@ -123,47 +112,32 @@ export function CreateBoxController(model, sandbox) {
     }
 
     let box = () =>{
-        clearStatus(1);
-        sandbox.clear(3);
+
+        clearStatus(2);
         if(bc.isRBt1() && bc.isRBt2()) {
             // Pick a location
             this.cursor.identity().move(getEndPoint()).turnX(Math.PI/4)
                 .turnZ(Math.PI/4).scale(.01);
-            clearStatus(0);
-            return -1;
+            return [ut.PICK_LOCATION_MSG, null];
         }else if(bc.isRB()) {
             // Dive into the selected location marked by the cursor
-            sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
-            clearStatus(0);
-            return 0;
+            //sandbox.div(this.cursor.getGlobalMatrix().slice(12, 15));
+            return [ut.DIVING_MSG, this.cursor.getGlobalMatrix().slice(12, 15)];
         }else if(bc.isLY()){
             // add a floor
-            sandbox.addFloor();
-            clearStatus(0);
-            return 0;
+            return [ut.ADD_FLOOR_MSG, null];
         }else if(bc.isLX()){
             // remove a floor
-            sandbox.removeFloor();
-            clearStatus(1);
-            return 0;
+            //sandbox.removeFloor();
+            return [ut.REMOVE_FLOOR_MSG, null];
         }else if(bc.isLBt1()){
             // expand
-            clearStatus(0);
-            sandbox.expand();
-            return 0;
+            return [ut.EXPAND_FLOOR_MSG, null];
         }else if(bc.isLBt2()){
-
             // collapse
-            clearStatus(0);
-            sandbox.collapse();
-            return 0;
+            return [ut.COLLAPSE_FLOOR_MSG, null];
         }
-        if(bc.isRA()){
-            sandbox.clear(3);
-            clearStatus(0);
-            return 0;
-        }
-        return -1;
+        return [ut.NON_ACTION_MSG, null];
 
     }
     let fixRod = (mode_id) =>{
@@ -175,7 +149,7 @@ export function CreateBoxController(model, sandbox) {
         rod.setMatrix(m);
         rcb.beam.opacity(0.0001);
         rod.opacity(1);
-        if(mode_id === ut.BOX_VIEW)
+        if(mode_id === ut.BOX_VIEW_MSG)
             this.cursor.opacity(1);
         else
             this.cursor.opacity(0.0001)
@@ -189,56 +163,118 @@ export function CreateBoxController(model, sandbox) {
         this.cursor.opacity(0.0001);
     }
 
-    this.animate = (t, mode_id, menu_id, menu_status) =>{
-        if(menu_status === ut.MENU_OPEN || mode_id === ut.IS_DIVING){
-            restoreBeam();
-            return [mode_id, menu_id]
-        }
-        if(menu_id !== ut.MENU_REVISE_WALL) {
-            if (mode_id === ut.ROOM_WITH_BOX || mode_id === ut.ROOM_WITHOUT_BOX || mode_id === ut.BOX_OBJ) {
-                menu_id = ut.MENU_ADD_OBJ;
-            } else {
-                menu_id = ut.MENU_DISABLED;
-            }
-        }
+    let reset = (sandbox, idx) =>{
+        sandbox.clear(idx);
+        this.isSpliting = 0;
+    }
 
-        if(mode_id !== ut.BOX_EDIT && mode_id !== ut.BOX_VIEW){
+    this.clearState = (t, state, sandbox) =>{
+        let action = state.BOX.ACTION;
+        let act_code = action.MSG;
+        let clear = true;
+        let args = action.ARG;
+        switch(act_code) {
+            case ut.DIVING_MSG:
+                sandbox.div(args);
+                state.MODE["MODE"] = ut.DIVING_MSG;
+                break;
+            case ut.ADD_FLOOR_MSG:
+                sandbox.addFloor(true);
+                this.cold_down = CD;
+                break;
+            case ut.REMOVE_FLOOR_MSG:
+                sandbox.removeFloor();
+                this.cold_down = CD;
+                break;
+            case ut.EXPAND_FLOOR_MSG:
+                sandbox.expand();
+                break;
+            case ut.COLLAPSE_FLOOR_MSG:
+                sandbox.collapse();
+                break;
+            case ut.DELETE_WALL_MSG:
+                sandbox.reviseFocus(["delete", null]);
+                this.cold_down = CD;
+                break;
+            case ut.FOCUS_WALL_MSG:
+                sandbox.focus(args[0], args[1], args[2], args[3]);
+                clear = false;
+                break;
+            case ut.MULTI_FOCUS_WALL_MSG:
+                if(this.multi_select === 1)
+                    reset(sandbox, 4)
+
+                sandbox.focus(args[0], args[1], args[2], args[3]);
+                this.cold_down = CD;
+                clear = false;
+                break;
+            case ut.SPLITTING_WALL_MSG:
+
+                sandbox.spliting(args, this.box_mode)
+                clear = false;
+                break;
+            case ut.SPLITTING_FOCUS_WALL_MSG:
+                sandbox.splitingFocus(args, this.box_mode);
+                clear = false;
+                break;
+            case ut.SPLIT_WALL_MSG:
+                sandbox.split();
+                break;
+            case ut.REVISE_WALL_MSG:
+                if(sandbox.hasFocus()){
+                    state.MENU.INACTIVE = false;
+                    state.MENU.REQUIRE = true;
+                    this.cold_down = CD;
+                }
+                clear = false;
+                break;
+            default:
+        }
+        state.BOX.ACTION = {
+            MSG: ut.NON_ACTION_MSG,
+            ARG: null,
+        }
+        if(this.multi_select > 0)
+            clear = false;
+        if(clear)
+            reset(sandbox, 4);
+        return state;
+    }
+
+    this.animate = (t, state) =>{
+        if(state.BOX.DISABLED){
             restoreBeam();
-        }else{
-            fixRod(mode_id);
+            return [false, state];
+        }
+        let flag = false;
+        if(state.MODE.MODE === ut.BOX_OBJ_MSG || state.MODE.MODE === ut.DIVING_MSG){
+            restoreBeam();
+            clearStatus(2);
+        }
+        else{
+            fixRod(state.MODE.MODE);
             adjustRodLength(t);
         }
 
+
         if(this.cold_down > 0){
             this.cold_down -= 1;
-            return [mode_id, menu_id];
+            return [flag, state];
         }
-        let flag = false;
-        if(mode_id === ut.BOX_VIEW){
-            sandbox.leaveRoom();
-            flag = box() === 0 || flag;
-
-        }else if(mode_id === ut.BOX_EDIT){
-            sandbox.leaveRoom();
-            let nid = split();
-            if(nid > -1){
-                flag = true;
-                menu_id = (nid === ut.MENU_REVISE_WALL ? ut.MENU_REVISE_WALL : menu_id);
+        if(!flag){
+            let res = [ut.NON_ACTION_MSG, null];
+            if(state.MODE.MODE === ut.BOX_VIEW_MSG)
+                res = box();
+            if(res[0] === ut.NON_ACTION_MSG && state.MODE.MODE === ut.BOX_EDIT_MSG) {
+                res = split();
             }
-        }else if(mode_id === ut.BOX_OBJ){
-            sandbox.leaveRoom();
-        }else if(mode_id === ut.ROOM_WITH_BOX){
-            sandbox.mini_sandbox.comeBack();
-        }else if(mode_id === ut.ROOM_WITHOUT_BOX){
-            sandbox.mini_sandbox.flyAway();
-        }
-        if(sandbox.is_diving)
-            mode_id = ut.IS_DIVING
+            state.BOX.ACTION = {
+                MSG: res[0],
+                ARG: res[1]
+            }
+            flag = res[0] !== ut.NON_ACTION_MSG;
 
-        if(flag){
-            this.cold_down = CD;
         }
-        return [mode_id, menu_id];
-
+        return [flag, state];
     }
 }

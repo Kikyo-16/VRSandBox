@@ -4,6 +4,7 @@ import * as cg from "../render/core/cg.js";
 
 const sc = 80;
 const s_in_out = 2;
+
 const floor_offset = [0, .01, 0];
 const wall_h = .05;
 const init_dist = 1.25;
@@ -19,31 +20,27 @@ export function CreateAvatarController(model){
 	this.model = model;
 	this.avatars = new Map(); //{NAME: [avatar, prevInsideBox]}
 	this.mini_avatars = new Map();
-	let prevInboxes = new Map();
-	let num_users = 0;
 	this.local_user = null;
+
+	let prevInBox = false;
+	let prev_rp = null;
+
+	// debug
+	let t = model.time;
 	
-	this.initialize = (msg, local_user, room, mini_box) => {
+	this.initialize = (msg, local_user, sandbox) => {
 		// msg: {NAME: {ID, IN_BOX, FLOOR, RM, VM}}, include local user, RM: relative to mini sandbox
-		// local user initialize to global location [0,.8,0] and outside of box
+		// local user initialize to outside of box
 		this.local_user = local_user;
 		for (const [name, info] of msg) {
-			this.num_users++;
-			let rm = null;
 			if (name !== this.local_user) {
 				let avatar = new CreateAvatar(this.model, name, SCALE_OUT);
 				this.avatars.set(name, avatar);
-				rm = info.get("RM");
-			} else {
-				rm = [1,0,0,0, 0,1,0,0, 0,0,1,0, -.25+1.25*Math.random(), 0, 1.1+.25*Math.random(), 0];
 			}
 			let mini_avatar = new CreateAvatar(this.model, name, MINI_SCALE_OUT);
 			this.mini_avatars.set(name, mini_avatar);
-			prevInboxes.set(name, false);
-
-			if (rm !== null)
-				this.update(name, info.get("IN_BOX"), rm, room, mini_box);
 		}
+		this.mini_avatars.get(this.local_user).setColor([1,0,0]);
 	}
 
 	//debug = model.add('cube').color(1,0,0);
@@ -52,63 +49,74 @@ export function CreateAvatarController(model){
 		// update visualization of a given avatar
 		let box_center = cg.add(box.robot.getGlobalMatrix().slice(12, 15), cg.scale(floor_offset, sc)); // further left corner
 		let mini_box_center = cg.add(mini_box.robot.getGlobalMatrix().slice(12, 15), floor_offset);
-		let prevInBox = prevInboxes.get(name);
 
-		let rLoc = rm.slice(12, 15); // [x,y,z] relative location in box w.r.t. box center
+		let rLoc = rm.slice(12, 15);
 		// global location
 		let loc = cg.add(box_center, cg.scale(rLoc, sc));
 		let loc_mini = cg.add(mini_box_center, rLoc);
 
-		// console.log(name, "box", box_center, "mini box", mini_box_center, "rLoc", rLoc);
-		
-		let s = (prevInBox && !inBox) ? s_in_out : (!prevInBox && inBox) ? 1/s_in_out : 1;
-
-		this.mini_avatars.get(name).scale(s);
-		this.mini_avatars.get(name).updateLoc(loc_mini);
-		prevInboxes.set(name, inBox);
+		this.mini_avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, loc_mini);
 
 		// only update non-local-users' room avatar location and scale
 		if (name !== this.local_user) {
-			this.avatars.get(name).scale(s);
-			this.avatars.get(name).updateLoc(loc);
+			this.avatars.get(name).update(inBox ? SCALE_IN : SCALE_OUT, loc);
 		}
 	}
 
-	this.updateLocal = (inBox, rm, vm, sandbox) =>{
+	this.getVMPosition = (in_room, sandbox) => {
+		let vm = window.views[0]._viewMatrix;
+        let p = vm.slice(12, 15);
+        let rp = sandbox.getRPosition(in_room ? 1 : 0, p);
+        return rp;
+	}
+
+	this.updateLocal = (inBox, floor, rm, vm, sandbox, state) =>{
+		
 		// move sandbox according to local user location
 		let box_center = sandbox.room.robot.getGlobalMatrix().slice(12, 15); // further left corner
 		let mini_box_center = sandbox.mini_sandbox.robot.getGlobalMatrix().slice(12, 15);
-		let prevInBox = prevInboxes.get(this.local_user);
 
-		let rLoc = cg.add(rm.slice(12, 15), floor_offset); // [x,y,z] relative position in box w.r.t. mini box center
-		let s = 1;
+		let rLoc = rm.slice(12, 15);
 
-		// move sandbox around
-		if (prevInBox && inBox) { // from inbox to inbox
-			// translate sandbox to updated global location
-			let move = cg.subtract([-box_center[0], -box_center[1], -box_center[2]], cg.scale(rLoc, sc));
-			sandbox.move(move);
-		} else if (!prevInBox && !inBox) { // from outside to outside
-			let move = cg.subtract([-mini_box_center[0], -mini_box_center[1], -mini_box_center[2]], [-rLoc[0], -rLoc[1], -rLoc[2]]);
-			sandbox.move(move);
-		} else if (!prevInBox && inBox) { // from outside to inbox
-			let loc = cg.add(mini_box_center, rLoc);
-			loc = cg.add(loc, floor_offset);
-			loc = cg.add(loc, [0, avatar_height*MINI_SCALE_IN, 0]);
-			sandbox.div(loc);
-			prevInboxes.set(this.local_user, true);
-			s = 1/s_in_out;
-		} else { // from inbox to outside
-			sandbox.leaveRoom();
-			prevInboxes.set(this.local_user, false);
-			s = s_in_out;
+		// move sandbox around, might need to block for diving??
+		if (state.MODE["MODE"] !== ut.DIVING_MSG && state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_EXCHANGE_MSG) {
+			if (prevInBox && inBox) {
+				// from inbox to inbox
+				// let rv = this.getVMPosition(inBox, sandbox);
+				// let rp = cg.subtract(rv, rLoc);
+				let rp = cg.subtract(prev_rp, rLoc);
+				console.log("move in room", prev_rp, rLoc, rp);
+				sandbox.changePerspective(1, rp);
+			} else if (!prevInBox && !inBox) { 
+				// from outside to outside
+				// do nothing
+			} else if (!prevInBox && inBox) { 
+				// from outside to inbox
+				console.log("dive", prevInBox, inBox)
+				let loc = sandbox.getGPosition(0, rLoc);
+				// sandbox.div(loc);
+				state.MODE["MODE"] = ut.DIVING_MSG;
+				state.BOX.ACTION.MSG = ut.DIVING_MSG;
+				state.BOX.ACTION.ARG = loc;
+			} else { 
+				// from inbox to outside
+				console.log("leave room")
+				//sandbox.leaveRoom();
+				state.MODE["MODE"] = ut.BOX_VIEW_MSG;
+				state.BOX.ACTION.MSG = ut.NON_ACTION_MSG;
+				state.BOX.ACTION.ARG = null;
+			}
+			state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
 		}
 
 		// update location and scale in mini sandbox
+		prevInBox = inBox;
+		prev_rp = rLoc;
 		mini_box_center = cg.add(sandbox.mini_sandbox.robot.getGlobalMatrix().slice(12, 15), floor_offset);
 		let loc_mini = cg.add(mini_box_center, rLoc);
-		this.mini_avatars.get(this.local_user).scale(s);
-		this.mini_avatars.get(this.local_user).updateLoc(loc_mini);
+		this.mini_avatars.get(this.local_user).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, loc_mini);
+
+		return state;
 	}
 
 	this.destroy = (names) => {
@@ -123,11 +131,10 @@ export function CreateAvatarController(model){
 			this.avatars.delete(name);
 			this.mini_avatars.delete(name);
 			prevInboxes.delete(name);
-			this.num_users--;
 		}
 	}
 
-	this.refresh = (msg, sandbox) => {
+	this.refresh = (msg, sandbox, state) => {
 		// msg: {NAME: {ID, IN_BOX, RM, VM}}
 
 		let room = sandbox.room, mini_box = sandbox.mini_sandbox;
@@ -143,7 +150,7 @@ export function CreateAvatarController(model){
 
 		// move sandbox to update local avatar
 		let info = msg.get(this.local_user);
-		this.updateLocal(info.get("IN_BOX"), info.get("RM"), info.get("VM"), sandbox);
+		state = this.updateLocal(info.get("IN_BOX"), info.get["FLOOR"], info.get("RM"), info.get("VM"), sandbox, state);
 
 		// update other avatars
 		for (const [name, info] of msg) {
@@ -152,29 +159,29 @@ export function CreateAvatarController(model){
 				if (!this.avatars.has(name)) {
 					let avatar = new CreateAvatar(this.model, name, SCALE_OUT);
 					let mini_avatar = new CreateAvatar(this.model, name, MINI_SCALE_OUT);
-					this.avatars.set(name, avatar); // [avatar, prevInsideBox]
+					this.avatars.set(name, avatar);
 					this.mini_avatars.set(name, mini_avatar);
-					prevInboxes.set(name, false);
-					this.num_users++;
 				}
 				this.update(name, info.get("IN_BOX"), info.get("RM"), room, mini_box);
 			}
 		}
+
+		return state;
 	}
 
-	this.animate = (msg, sandbox) => {
-		if (msg !== undefined || msg !== null) {
-			this.refresh(msg, sandbox);
-		}
+	this.animate = (msg, sandbox, state) => {
 
-		if (this.num_users <= 0) {
-			return;
+		if (msg !== undefined && msg !== null) {
+			state = this.refresh(msg, sandbox, state);
 		}
 
 		for (const [name, avatar] of this.avatars) {
-			this.avatars.get(name).animate();
+			if (name !== this.local_user)
+				this.avatars.get(name).animate();
 			this.mini_avatars.get(name).animate();
 		}
-	} 
+
+		return state;
+	}
 
 }

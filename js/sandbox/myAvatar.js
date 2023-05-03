@@ -7,9 +7,9 @@ export function CreateAvatar(model, name, scale){
 	let _scale = scale;
     let _loc = [0,0,0];
 
-	let avatar = model.add().color(1,.86,.69);
-    let base  = avatar.add();
-    let spine = base.add().move(0, .4, 0);
+    let avatar = model.add();
+    
+    let spine = avatar.add().move(0, .4, 0);
     spine.add('tubeY').scale(.06, .4, .06);
 
     let tag = avatar.add().move(0, 1, 0).scale(.2, .1,.0001);
@@ -22,32 +22,19 @@ export function CreateAvatar(model, name, scale){
             g2.drawWidgets(nameTag);
     });
 
-    avatar.scale(_scale);
-
-	this.setMatrix = (matrix) => {
-		avatar.setMatrix(matrix);
-	}
-
-	this.getGlobalMatrix = () => avatar.getGlobalMatrix();
-
-	this.getMatrix = () => avatar.getMatrix();
-
-	this.scale = (s) => {
-        _scale = _scale*s;
-        avatar.scale(s);
-    }
-
     this.getScale = () => _scale;
+    this.getLoc = () => _loc;
 
-	this.getName = () => nameTag.text;
+    this.setColor = (c) => spine.color(c);
 
-	this.updateLoc = (loc) => { //move to global location loc
+	this.update = (s, loc) => {
         _loc = loc;
-    	let mTr = cg.mTranslate(cg.subtract(loc, avatar.getGlobalMatrix().slice(12,15)));
-    	avatar.setMatrix(ut.transform(mTr, avatar));
+        _scale = s;
+        avatar.identity().move(_loc).scale(_scale);
     }
 
     this.remove = () => {
+        avatar = null;
     	model.remove(avatar);
     }
 
