@@ -35,7 +35,7 @@ export function CreateAvatar(model, name, scale){
 
     this.remove = () => {
         avatar = null;
-    	model.remove(avatar);
+    	  model.remove(avatar);
     }
 
 	this.animate = () => {

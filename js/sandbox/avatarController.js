@@ -117,6 +117,7 @@ export function CreateAvatarController(model){
 		this.mini_avatars.get(this.local_user).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, loc_mini);
 
 		return state;
+
 	}
 
 	this.destroy = (names) => {

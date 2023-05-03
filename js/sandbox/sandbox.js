@@ -9,6 +9,7 @@ export function CreateSandbox(model){
     let root = model.add();
     let node = root.add();
     let walk = node.add();
+    this.robot = walk.add();
     let box_model = walk.add();
     let robot = walk.add();
     this.robot = walk;//robot;

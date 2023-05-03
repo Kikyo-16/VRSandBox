@@ -24,7 +24,7 @@ export const init = async model => {
     model.setRoom(false);
 
     console.log(model.getGlobalMatrix());
-
+    
     let menu_model = model.add();
     let box_model = model.add();
     let obj_model = model.add();
@@ -148,7 +148,6 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-
 
    });
 
