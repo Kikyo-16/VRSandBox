@@ -26,6 +26,9 @@ export let WHO_KEY = "Q"
 export let WHAT_KEY = "R"
 
 
+export let PERSPECTIVE_SHARE_MSG = "perspective-share"
+export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
+
 /*
 * STATUS CODE
 * */

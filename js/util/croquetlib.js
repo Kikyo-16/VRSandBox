@@ -178,11 +178,10 @@ export class View extends Croquet.View {
                this.latest = scene;
            }
 
-
-
-           /*let player_msg = new Map();
+           let player_msg = new Map();
            player_msg.set(ut.WHO_KEY, name);
-           player_msg.set(ut.PLAYER_KEY, window.clay.model.multi_controller.player);*/
+           player_msg.set(ut.PLAYER_KEY, window.clay.model.multi_controller.player);
+           this.updateScene(player_msg);
 
        }
        this.future(50).event();

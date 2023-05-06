@@ -220,6 +220,16 @@ export function CreateVRSandbox(model){
 
     }
 
+     this.changePerspective = (mode, rp) => {
+        // move to relative loc rp
+        if (cg.norm(rp) <= 0.01) {
+            return
+        }
+        //rp = [-.5,0,-.5];
+        mini_sandbox.walkAway(rp);
+        room.walkAway(rp);
+    }
+
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
         if(floor === -1 || mode < 0)

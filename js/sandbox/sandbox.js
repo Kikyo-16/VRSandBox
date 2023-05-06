@@ -10,10 +10,9 @@ export function CreateSandbox(model){
     let edge = .02;
     let root = model.add();
     let node = root.add();
-    let robot = root.add();
     let walk = node.add();
     let box_model = walk.add();
-    this.robot = robot;
+    this.robot = walk;//robot;
     this.boxes = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];

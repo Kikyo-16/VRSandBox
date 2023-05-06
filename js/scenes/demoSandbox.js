@@ -89,7 +89,15 @@ export const init = async model => {
             DISABLED: true,
             NAME: null,
 
+        },
+
+         PERSPECTIVE: {
+            ACTION: {
+                MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
+                ARG: null,
+            }
         }
+
 
     }
 
@@ -105,7 +113,7 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_11.56');
+    croquet.register('croquetDemo_11.88');
 
     model.animate(() => {
         state_msg.RESUME =true;
@@ -145,7 +153,8 @@ export const init = async model => {
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
 
-        multi_controller.animate(model.time, state_msg.MODE.IN_ROOM);
+        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
+        state_msg = checkStateCode(state_code);
 
 
    });
