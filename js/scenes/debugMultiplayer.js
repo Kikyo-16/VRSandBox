@@ -15,6 +15,7 @@ import * as croquet from "../util/croquetlib.js";
 
 export let updateModel = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
+        console.log("update");
         window.clay.model.multi_controller.updateScene(msg);
     }
 }
@@ -105,10 +106,55 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_11.56');
+    croquet.register('croquetDemo_10.77');
+    //let debug = model.add("cube").color(1, 0, 0).scale(.2);
 
+    //sandbox.addNewObj(0, debug);
+    //console.log(sandbox.latest)
+    let debug = 0;
+    let debug_name = null;
+    let debug_obj = null;
     model.animate(() => {
         state_msg.RESUME =true;
+        if(debug === 0){
+            //let obj = model.add("cube").move(Math.random(), 1.4, 0).scale(.1);
+            //obj.color(Math.random(), Math.random(), Math.random());
+            //sandbox.addNewObj(0, obj);
+            //model.remove(obj);
+
+            ///let w = sandbox.mini_sandbox.boxes[0].wall_collection.walls.get("2");
+            ///w.setColor([Math.random(), Math.random(), Math.random()]);
+            ///w._revised = true;
+            ///w._latest = sandbox.timer.newTime();
+            //let r = Math.random();
+            //sandbox.mini_sandbox.boxes[0].wall_collection.createWall(
+            //    [0, 0, r], [1, 1, 1], 0, r.toString())
+            //let w = sandbox.mini_sandbox.boxes[0].wall_collection.walls.get(r.toString());
+            //w._revised = true;
+            //w._latest = sandbox.timer.newTime();
+            //console.log(w);
+
+
+        }
+        let sa = ["test", "0.7993388552145906", "0.5000515662609963", "0.47496701534904284",
+        "0.4092263627108117", "0.7993388552145906", "0.47496701534904284", "0.8863008114607696"];
+        for(let i = 0; i < sa.length; ++ i){
+            let w = sandbox.mini_sandbox.boxes[0].wall_collection.walls.get(sa[i]);
+            if(!wu.isNull(w)){
+                console.log("delete", sa[i], w);
+                sandbox.mini_sandbox.boxes[0].wall_collection.remove(w, sandbox.timer.newTime());
+            }
+        }
+
+        debug += 1;
+
+        if(debug === 100 && debug_name !== null){
+            //console.log("ready to remove")
+            //debug_obj.setColor([1, 0, 0]);
+            //sandbox.refreshObj([debug_obj]);
+            //sandbox.removeObjOfName(debug_name,0);
+        }
+
 
         let state_code = login_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
@@ -135,6 +181,7 @@ export const init = async model => {
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
 
+
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
         let obj_collection = sandbox.getObjCollection(box_mode);
         state_code = obj_controller.animate(model.time, obj_collection, state_msg);
@@ -144,6 +191,17 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
+
+
+        if(obj_collection.length > 0){
+            //obj_collection[0].move(Math.sin(model.time)*.01, Math.sin(model.time)*.01, Math.sin(model.time) *.01)
+            //obj_collection[0]._revised = true;
+            //obj_collection[0]._latest = sandbox.timer.newTime();
+            //debug_name = obj_collection[0]._name;
+            //debug_obj = obj_collection[0];
+        }
+
+
 
         multi_controller.animate(model.time, state_msg.MODE.IN_ROOM);
 

@@ -2,6 +2,30 @@ import * as cg from "../render/core/cg.js";
 
 
 
+export let FLOOR_TIMER = "A"
+export let OBJ_TIMER = "B"
+export let N_OBJ_TIMER = "C"
+export let WALL_TIMER = "D"
+export let N_WALL_TIMER = "E"
+
+export let LATEST_KEY = "F"
+export let TAG_KEY = "G"
+export let NUM_FLOORS_KEY = "H"
+export let COLLECTION_KEY = "I"
+
+export let SCENE_KEY = "J"
+export let PLAYER_KEY = "K"
+
+export let COLOR_KEY = "L"
+export let TEXTURE_KEY = "M"
+export let RM_KEY = "N"
+export let FORM_KEY = "O"
+export let P_KEY = "P"
+
+export let WHO_KEY = "Q"
+export let WHAT_KEY = "R"
+
+
 /*
 * STATUS CODE
 * */
@@ -23,9 +47,6 @@ export let COLLAPSE_FLOOR_MSG = "collapse-floor"
 export let PICK_LOCATION_MSG = "pick-a-location"
 
 
-export let ADD_OBJ_MSG = "add-obj"
-export let REMOVE_OBJ_MSG = "remove-obj"
-export let REVISE_OBJ_MSG = "revise-obj"
 export let SPLIT_WALL_MSG = "split-wall"
 export let REVISE_WALL_MSG = "revise-wall"
 export let DELETE_WALL_MSG = "delete-wall"
@@ -37,22 +58,12 @@ export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 /*
 * Menu CODE
 * */
-export let MENU_ADD_OBJ = 1;
-export let MENU_REVISE_WALL = 2;
-export let MENU_REVISE_OBJ = 3;
-export let MENU_REVISE_BOX = 4;
 export let MENU_DISABLED = 4;
 
-
-export let MENU_OPEN = 1;
-export let MENU_CANCEL = 2;
-export let MENU_CLOSE = 3;
 
 
 export let WALKING_FORWARD = 1;
 export let WALKING_BACKWARD = 2;
-export let WALKING_LEFT = 3;
-export let WALKING_RIGHT = 4;
 
 
 

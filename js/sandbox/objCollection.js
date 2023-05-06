@@ -16,8 +16,7 @@ export class Object{
 
     init(model, form, loc, scale, time){
     	this._form = form;
-        this._time = (new Date()).getTime();
-        this._name = this._time.toString() + "_" + Math.round(Math.random() * 10000).toString();
+        this._name = Math.round(Math.random() * 10000).toString();
     	this.parent = model;
         this.obj_node = this.parent.add(form);
         this.time = time;

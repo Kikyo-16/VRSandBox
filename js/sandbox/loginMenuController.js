@@ -30,13 +30,14 @@ export class CreateLoginMenuController {
             login_menu.move(-0.4,0,0.1).turnY(0.4).scale(0.6, 0.35, .001);
             
         }
-        this.animate = () =>{
-
+        this.animate = (t, state) =>{
+            if(state.LOGIN.DISABLED)
+                return [false, state]
             menu.identity().hud().move(0.2, .6, 0).scale(1.3);
             
             login_menu.opacity(login_menu.name_selected == null ? 1 : 0.0001);
 
-            if(name_banner == undefined && login_menu.name_selected)
+            if(name_banner === undefined && login_menu.name_selected)
             {
                 name_banner = menu.add('cube').texture(() => {
                     g2.setColor('white');
@@ -49,8 +50,17 @@ export class CreateLoginMenuController {
                 });
                 name_banner.move(-0.3,0.5,0.1).scale(0.6, 0.35, .001).color(1,0,0);
                 name_banner.opacity(1);
+                state.LOGIN.NAME = login_menu.name_selected;
+                state.LOGIN.DISABLED = false;
+                return [false, state];
             }
 
+            return [true, state];
+        }
+        this.clearState = (state, sandbox) =>{
+            if(state.LOGIN.NAME !== null){
+                sandbox.setName(state.LOGIN.NAME)
+            }
         }
     }
 }

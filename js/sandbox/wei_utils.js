@@ -39,7 +39,9 @@ export let objMatrix = (mTr, obj) => {
     let tr = cg.mMultiply(mA, cg.mInverse(mGA));
     return cg.mMultiply(tr, mTr);
 }
-
+export let newUniqueId = () =>{
+    return (new Date()).getTime() + "_" + Math.round(Math.random() * 10000).toString();
+}
 
 export let objGlobalMatrix = (mTr, obj) => {
     let mGA = obj.getGlobalMatrix();

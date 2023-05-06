@@ -1,8 +1,9 @@
-import {MakeBottom, MakeWall, WallCollection} from "../sandbox/wall.js";
+import {MakeBottom, MakeWall, WallCollection} from "../sandbox/wallCollection.js";
+import {FurnitureCollection} from "../sandbox/furnitureCollection.js";
 import * as cg from "../render/core/cg.js";
 import * as wu from "../sandbox/wei_utils.js"
 import * as ut from "../sandbox/utils.js"
-import {Object} from "../sandbox/objCollection.js"
+
 let COLORS = [
     [255/255, 153/255, 204/255],
     [255/255, 217/255, 102/255],
@@ -19,46 +20,49 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     let upper = box.add();
     let bottom = box.add();
     let obj_model = box.add();
-    this.tmp_wall = new MakeWall(box, p1, p2, h, d, 0);
+
+    this.tmp_wall = new MakeWall(box, p1, p2, h, d, 0, "");
     this.tmp_wall.disappear();
     this.tmp_focus = undefined;
     this.wall_to_split = undefined;
     this.focus_walls = Array(0);
     this.obj_model = obj_model;
 
+
     this.robot = robot;
 
 
-    this.objCollection = Array(0);
+
     if(level < COLORS.length){
         this.color = COLORS[level];
     }else{
         this.color = [255, 153, 153];
     }
 
+    this.furniture_collection = new FurnitureCollection(obj_model);
 
     let wall_collection = new WallCollection(upper, level, h, d);
-    wall_collection.createWall(p1, p2, d)
-    wall_collection.createWall(p2, p3, d)
-    wall_collection.createWall(p3, p4, d)
-    wall_collection.createWall(p4, p1, d)
+    wall_collection.createWall(p1, p2, d, "1")
+    wall_collection.createWall(p2, p3, d, "2")
+    wall_collection.createWall(p3, p4, d, "3")
+    wall_collection.createWall(p4, p1, d, "4")
+    wall_collection.formatName(level)
     MakeBottom(bottom, p1, p2, p3, d, edge);
+    this.wall_collection = wall_collection;
 
     this.select = (p1, p2) =>{
         return wall_collection.select(p1, p2);
     }
 
 
-    this.merge = (w1, w2) =>{
-        wall_collection.merge(w1, w2);
+    this.deleteWall = (w, time) =>{
+        this.wall_collection.remove(w._name, time);
     }
-    this.delete = (w) =>{
-        wall_collection.remove(w);
-    }
+
     this.remove = () =>{
         model.remove(node_1);
-        this.objCollection = Array(0);
     }
+
     this.resetPos = (active_floor) =>{
         node_2.identity().move(active_floor, y, z);
     }
@@ -71,49 +75,64 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
             pos[1] < 0 || pos[1] > h * 2 ||
             pos[2] < p1[2] || pos[2] > p3[2]);
     }
-    this.active = () =>{
-        bottom.color(this.color);
-        wall_collection.isOnActiveFloor(true);
+
+
+    this.isRemovedObj = (obj) =>{
+        return this.furniture_collection.isRemoved(obj);
+
     }
-    this.deactive = () =>{
-        bottom.color(1, 1, 1);
-        wall_collection.isOnActiveFloor(false);
+    this.newObj = (obj, m) =>{
+        return this.furniture_collection.newObj(obj, m);
+    }
+    this.reviseObj = (obj) =>{
+        return this.furniture_collection.reviseObj(obj);
     }
 
-    this.newObj = (obj, m) => {
-
-        let n_obj = new Object();
-
-        n_obj.init(obj_model, obj._form, [0, 0, 0], 1, 0);
-
-        n_obj.setColor(obj._color);
-        n_obj.setTexture(obj._texture);
-        n_obj.setMatrix(m);
-        n_obj.setName(obj._name);
-        n_obj._revised = obj._revised;
-        this.objCollection.push(n_obj);
-        return n_obj;
-    }
     this.getObjByName = (name) => {
-        for(let i = 0; i < this.objCollection.length; ++ i){
-            if(this.objCollection[i]._name === name){
-                return this.objCollection[i];
-            }
-        }
-        return null;
+        return this.furniture_collection.getObjByName(name);
     }
-    this.removeObjOfIdx = (idx) =>{
-        let n_objCollection = Array(0);
-        for(let i = 0; i < this.objCollection.length; ++ i){
-            if(i !== idx){
-                n_objCollection.push(this.objCollection[i]);
-            }else{
 
-                this.objCollection[idx].delete();
-            }
-        }
-        this.objCollection = n_objCollection;
+
+    this.removeObjOfName = (idx, time) =>{
+        return this.furniture_collection.removeObjOfName(idx, time);
     }
+
+    this.getObjCollectionState = (time) =>{
+        return this.furniture_collection.getCollectionState(time);
+    }
+    this.getWallCollectionState = (time) =>{
+        return this.wall_collection.getCollectionState(time);
+    }
+    this.getRemovedObjTags = (time) =>{
+        return this.furniture_collection.getRemovedTags();
+    }
+    this.getRemovedWallTags = (time) =>{
+        return this.wall_collection.getRemovedTags();
+    }
+
+    this.setObjCollection = (collection) =>{
+        this.furniture_collection.setObjScene(collection);
+    }
+
+    this.setWallCollection = (collection) =>{
+        this.wall_collection.setWallScene(collection);
+    }
+    this.setNobjScene = (obj_tags) =>{
+        this.furniture_collection.setNobjScene(obj_tags);
+
+    }
+    this.setNwallScene = (wall_tags) =>{
+        this.wall_collection.setNwallScene(wall_tags);
+    }
+    this.removeWallCollection = (wall_tags) =>{
+
+    }
+
+
+
+
+
+
 
     this.getRM = (p) =>{
         return wu.objMatrix(cg.mTranslate(p), box);
@@ -125,8 +144,22 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         return wu.objGlobalMatrix(cg.mTranslate(p), box).slice(12, 15);
     }
 
-    this.focus = (w, p, clean, tmp) => {
 
+
+
+
+
+
+    this.active = () =>{
+        bottom.color(this.color);
+        this.wall_collection.isOnActiveFloor(true);
+    }
+    this.deactive = () =>{
+        bottom.color(1, 1, 1);
+        this.wall_collection.isOnActiveFloor(false);
+    }
+
+    this.focus = (w, p, clean, tmp) => {
         if(clean){
             this.clear(3);
         }else{
@@ -203,19 +236,20 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
 
     }
 
-
-
-    this.reviseFocus = (args) =>{
+    this.reviseFocus = (args, time) =>{
         let mode = args[0];
         args = args[1];
         for(let i = 0; i < this.focus_walls.length; ++ i){
             let w = this.focus_walls[i];
             if(mode === "delete"){
-                this.delete(w);
+                this.deleteWall(w, time);
             }else if(mode === "revise"){
                 //w.setTexture(args)
                 w.setTexture(args._texture);
                 w.setColor(args._color);
+                w._revised = true;
+                w._latest = time;
+
             }
 
         }
@@ -223,7 +257,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         this.clear(3);
     }
 
-    this.split = () => {
+    this.split = (uid, time) => {
         if(this.focus_walls.length !== 1 || this.wall_to_split === undefined){
             return false
         }
@@ -232,9 +266,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         let edge_1 = w1.focus_edge, edge_2 = w2.focus_edge;
         let p1 = [edge_1[0], edge_1[1], edge_1[2]];
         let p2 = [edge_2[0], edge_1[1], edge_2[2]];
-        wall_collection.split(w1, p1);
-        wall_collection.split(w2, p2);
-        wall_collection.createWall(p1, p2, 0);
+        wall_collection.split(w1, p1, uid + "_1", time);
+        wall_collection.split(w2, p2, uid + "_2", time);
+        let w = wall_collection.createWall(p1, p2, 0, uid);
+        w._revised = true;
+        w._latest = time;
         this.clear(3);
 
     }
@@ -245,22 +281,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
             this.tmp_focus = undefined;
         }
     }
-    this.getCollectionState = () =>{
-        let collections = Array(0);
-        for(let i = 0; i < this.objCollection.length; ++ i){
-            if(this.objCollection[i]._revised){
-                collections.push({
-                    _color: this.objCollection[i].getColor(),
-                    _texture: this.objCollection[i].getTexture(),
-                    _rm: this.objCollection[i].getMatrix(),
-                    _name: this.objCollection[i]._name,
-                    _form: this.objCollection[i].getForm(),
-                    _latest: this.objCollection[i]._latest,
-                })
-            }
 
-        }
-        return collections
-    }
+
 
 }

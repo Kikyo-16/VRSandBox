@@ -1,5 +1,6 @@
 import {CreateAvatarController} from "../sandbox/avatarController.js";
 import * as cg from "../render/core/cg.js";
+import * as ut from "../sandbox/utils.js";
 
 export function CreateMultiplayerController(model, sandbox){
     let avatar_controller = new CreateAvatarController(model);
@@ -7,17 +8,16 @@ export function CreateMultiplayerController(model, sandbox){
 
     this.scene = 0;
     this.player = 0;
-    this.viewID = null;
-    this.latest_version = -1;
     this.player_list = new Map();
+    this.name = null;
 
     this.init =(in_room) =>{
-        let name = sandbox._name;
+        this.name = sandbox._name;
         this.player = this.getPlayer(in_room);
         this.scene = sandbox.getScene();
-        this.player_list.set(name, this.player)
-        avatar_controller.initialize(this.player_list,
-            sandbox._name, sandbox.room, sandbox.mini_sandbox);
+        this.player_list.set(this.name, this.player)
+        //avatar_controller.initialize(this.player_list,
+        //    sandbox._name, sandbox.room, sandbox.mini_sandbox);
     }
 
     this.getPlayer = (in_room) =>{
@@ -38,31 +38,24 @@ export function CreateMultiplayerController(model, sandbox){
         return sandbox.getScene();
 
     }
-    this.getScene = () =>{
-        return sandbox.getScene();
-
-    }
     this.updateScene = (e) =>{
-        if(e.name === null || e.name === undefined)
+        let who = e.get(ut.WHO_KEY);
+        //console.log("update", e);
+        if(who === null || who === undefined || who === this.name)
             return
-        if(e.scene !== null && e.name !== sandbox._name){
-            //console.log("aw", sandbox._name, e.scene._name, e.scene.latest, this.latest_version, e.scene);
-            if(e.scene.latest > this.latest_version){
-                sandbox.setScene(e.scene)
-                //console.log("asas");
-                this.latest_version = e.scene.latest;
-            }
+        if(e.has(ut.SCENE_KEY)){
+            console.log("aw", who, e.get(ut.SCENE_KEY));
+            sandbox.setScene(e.get(ut.SCENE_KEY))
+        }else if(e.has(ut.PLAYER_KEY)) {
+            this.player_list.set(who, e.get(ut.PLAYER_KEY));
         }
-
-        this.player_list.set(e.name, e.player);
-        //console.log("sent", e.name, e.player.get("VM"))
 
     };
 
     this.animate = (t, in_room) =>{
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
-        if(avatar_controller.local_user !== null)
-            avatar_controller.animate(this.player_list, sandbox);
+        //if(avatar_controller.local_user !== null)
+        //    avatar_controller.animate(this.player_list, sandbox);
     }
 }
