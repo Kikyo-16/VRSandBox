@@ -31,6 +31,8 @@ export function CreateVRSandbox(model){
     this.is_collapse = true;
     this.in_room = false;
 
+    let sc = 80;
+
     this.numFloors = () =>{
         return mini_sandbox.boxes.length;
     }
@@ -49,9 +51,6 @@ export function CreateVRSandbox(model){
         this.is_diving = false;
         this.leaveRoom();
         this.timer.reset();
-
-
-
     }
 
     let deleteTmpFocus = () =>{
@@ -241,6 +240,14 @@ export function CreateVRSandbox(model){
     this.getRPosition = (mode, p) =>{
         return boxes[mode].getMPosition(p, this.active_floor);
     }
+
+    this.getRobotPosition = (mode, p) =>{
+        return boxes[mode].getRobotMPosition(p);
+    }
+
+    this.getGPosition = (mode, p) =>{
+        return boxes[mode].getGPosition(p, this.active_floor);
+    }
     this.getRM = (mode, p) =>{
         return boxes[mode].getRM(p, this.active_floor);
     }
@@ -294,12 +301,31 @@ export function CreateVRSandbox(model){
 
     }
 
+    this.changePerspective = (rp) => {
+        // move to relative loc rp
+        if (cg.norm(rp) <= 0.05) {
+            return
+        }
+
+        room.walk(rp);
+    }
+
+    this.changeView = (vm) => {
+        mini_sandbox.relocate_view(vm);
+        room.relocate_view(vm);
+    }
+
+    this.resetView = () => {
+        mini_sandbox.reset_view();
+        room.reset_view();
+    }
+
     this.divAnimation = (state) =>{
         if(!this.is_diving){
             return [false, state];
         }
         let diving_limit = 50;
-        let sc = 80;
+        
         if(this.diving_time === -1){
             this.diving_time = 0;
         }else if(this.diving_time > diving_limit){

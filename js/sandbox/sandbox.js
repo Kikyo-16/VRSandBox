@@ -9,10 +9,12 @@ export function CreateSandbox(model){
     let d = .01;
     let edge = .02;
     let root = model.add();
-    let node = root.add();
+    let view_node = root.add();
+    let node = view_node.add();
     let walk = node.add();
     let box_model = walk.add();
-    this.robot = walk;//robot;
+    let robot = box_model;
+    this.robot = robot;
     this.boxes = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];
@@ -22,6 +24,8 @@ export function CreateSandbox(model){
     this.timer.register([ut.WALL_TIMER, ut.OBJ_TIMER,
             ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.N_WALL_TIMER]);
 
+    let robot_model = box_model.add();
+    this.robot_model = robot_model;
 
     this.getNodeMatrix = () =>{
         return node.getMatrix();
@@ -97,8 +101,8 @@ export function CreateSandbox(model){
 
     this.getRM = (p, floor) =>{
         return this.boxes[floor].getRM(p);
-
     }
+
     this.getMPosition = (p, floor) =>{
         return this.boxes[floor].getMPosition(p);
 
@@ -121,9 +125,28 @@ export function CreateSandbox(model){
     this.getWalkPosition = (p) =>{
         return walk.getGlobalMatrix().slice(12, 15);
     }
+
     this.walkAway = (rp) =>{
         walk.identity().move(rp);
     }
+
+    this.walk = (rp) =>{
+        walk.move(rp);
+    }
+
+    this.clear_view = () => {
+        view_node.identity();
+        walk.identity();
+    }
+
+    this.relocate_view = (vm) => {
+        view_node.identity();
+        view_node.setMatrix(cg.mMultiply(view_node.getMatrix(), cg.mInverse(vm)));
+    }
+
+    this.reset_view = () => {
+        view_node.identity();
+    }  
 
     this.relocate = (p, floor, s) =>{
         let height = (h*2 + .01) * floor + 1.5 / 4 * 2 * h;
@@ -131,6 +154,7 @@ export function CreateSandbox(model){
         let pos_p = [p[0], height, p[2]];
         node.identity().move(pos_p).scale(s).move(neg_p);
     }
+
     this.reset = (m) =>{
         node.setMatrix(m.getNodeMatrix());
     }
@@ -167,10 +191,12 @@ export function CreateSandbox(model){
     }
 
     this.flyAway = () =>{
-
+        this.clear_view();
         root.identity().move(0, -1000, 0);
     }
+
     this.comeBack = () =>{
+        this.clear_view();
         root.identity();
     }
 

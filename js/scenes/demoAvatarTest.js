@@ -7,12 +7,12 @@ import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController } from '../sandbox/loginMenuController.js'
 import * as ut from '../sandbox/utils.js'
-import * as wu from '../sandbox/wei_utils.js'
-import * as croquet from "../util/croquetlib.js";
 
+import * as croquet from "../util/croquetlib.js";
 
 export let updateModel = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
+        console.log("update");
         window.clay.model.multi_controller.updateScene(msg);
     }
 }
@@ -28,7 +28,6 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add()
     //let room_model = model.add();
     let login_menu_model = model.add();
 
@@ -42,10 +41,8 @@ export const init = async model => {
     let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
 
-    let login_controller = new CreateLoginMenuController();
-    login_controller.init(login_menu_model);
-
-
+    //let login_controller = new CreateLoginMenuController();
+    //login_controller.init(login_menu_model);
 
     let state_msg = {
         RESUME: true,
@@ -79,7 +76,7 @@ export const init = async model => {
         OBJ: {
             INACTIVE: true,
             ACTION: {
-                DELETE: -1,
+                DELETE: Array(0),
                 REVISE: Array(0),
             }
         },
@@ -87,12 +84,7 @@ export const init = async model => {
         PERSPECTIVE: {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
-            },
-        },
-
-        LOGIN: {
-            DISABLED: true,
-            NAME: null,
+            }
         },
 
     }
@@ -100,6 +92,7 @@ export const init = async model => {
     let multi_controller = new CreateMultiplayerController(sandbox);
     multi_controller.init(state_msg.MODE.IN_ROOM);
     model.multi_controller = multi_controller;
+    multi_controller.debug = true;
 
     let checkStateCode = (state) =>{
         let s = state[1];
@@ -108,20 +101,12 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_11.88');
-
-    console.log("initialization successed")
-
+    croquet.register('croquetDemo_5.01');
+    
     model.animate(() => {
 
         state_msg.RESUME =true;
-
-        let state_code = login_controller.animate(model.time, state_msg);
-        state_msg = checkStateCode(state_code);
-        login_controller.clearState(state_msg, sandbox);
-
-
-        state_code = mode_controller.animate(model.time, state_msg);
+        let state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
 
@@ -144,10 +129,10 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
+        //login_controller.animate(model);
 
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
-        let obj_collection = sandbox.getObjCollection(box_mode);
-        state_code = obj_controller.animate(model.time, obj_collection, state_msg);
+        state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = obj_controller.clearState(model.time, state_msg, sandbox, box_mode);
 
