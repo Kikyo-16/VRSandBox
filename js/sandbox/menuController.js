@@ -61,7 +61,7 @@ export class CreateMenuController {
          return currentSelection;
       };
       /*
-         JS = buttonState.left[3].pressed
+         JS = buttonState.left[3].x,y
          X  = buttonState.left[4].pressed
          Y  = buttonState.left[5].pressed
       */

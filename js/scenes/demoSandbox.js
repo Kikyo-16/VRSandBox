@@ -5,7 +5,9 @@ import {CreateMenuController} from '../sandbox/menuController.js'
 import {CreateModeController} from '../sandbox/modeController.js'
 import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
-import { CreateLoginMenuController } from '../sandbox/loginMenuController.js'
+import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
+import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
+
 import * as ut from '../sandbox/utils.js'
 import * as wu from '../sandbox/wei_utils.js'
 import * as croquet from "../util/croquetlib.js";
@@ -41,8 +43,12 @@ export const init = async model => {
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
 
+    // Object Customize/Select Menu
     let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
+
+    // User Collaboration/Share Menu
+    let share_menu_controller = new CreateShareMenuController();
 
     let login_controller = new CreateLoginMenuController();
     login_controller.init(login_menu_model);
@@ -142,6 +148,14 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
+        let shareMenuSelection = share_menu_controller.animate(model, playerNames);
+        /*
+            Returns Object with keys 'user' and 'op'
+            'user' : <username selected>
+            'op'   : <operation selected>
+        */
+
+        //login_controller.animate(model);
 
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
         let obj_collection = sandbox.getObjCollection(box_mode);
