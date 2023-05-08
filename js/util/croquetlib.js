@@ -2,8 +2,10 @@
 // YOUR APPLICATION SHOULD REDEFINE THESE FUNCTIONS:
 
 import { updateModel } from "../scenes/demoSandbox.js";
+import { diffData } from "../sandbox/vr_sandbox.js";
 import { controllerMatrix,  buttonState, joyStickState} from "../render/core/controllerInput.js";
 import { initAvatar } from "../primitive/avatar.js";
+import * as ut from "../sandbox/utils.js";
 import * as global from "../global.js";
 
 // YOU SHOULD OBTAIN YOUR OWN apiKey FROM: croquet.io/keys
@@ -109,7 +111,7 @@ export class View extends Croquet.View {
       this.state = croquetModel.actorStates.get(this.viewId);
       this.color = window.color; // assign a unique color to each user for them to create their cubes in demoCroquet
       this.pawns = new Map();
-      this.latest = -1;
+      this.latest = null;
       croquetModel.actors.forEach(actor => this.addPawn(actor));
 
       this.subscribe("actor", "join", this.addPawn);
@@ -120,44 +122,16 @@ export class View extends Croquet.View {
 
    }
 
-   tick() {    
-      var headMat = [];
-      for(let j = 0; j < 16; j ++) {
-         headMat.push(window.avatars[window.playerid].headset.matrix[j])
-      }
-      var avatarJson = {
-         "headset": headMat,
-         "controllerMatrix": controllerMatrix,
-         "buttonState": buttonState,
-         "joyStickState": joyStickState,
-         "VR": window.vr,
-      }
-      if(preRightTrigger && !buttonState.right[0].pressed) {
-      this.event('rightTriggerRelease', controllerMatrix.right, this.color)
-      }
-      this.publish(this.viewId, "updatePos", avatarJson);
-      preRightTrigger = buttonState.right[0].pressed;
-
-      window.view = this;
-      drawView();
-      let viewState = this.croquetModel.actorStates.get(this.viewId);
-      for (const pawn of this.pawns.values()) {
-         pawn.update(viewState);
-      }
-
-    this.future(50).tick();
- }
 
    addPawn(actor) {
-       console.log("here")
       this.pawns.set(actor, new Pawn(actor));
       if(!(actor.viewId in window.avatars)) {
-        initAvatar(actor.viewId);
+        //initAvatar(actor.viewId);
      } 
      else { // for false stream drop, when the stream is back, change its avatar to visible
-      window.avatars[actor.viewId].headset.model.visible = true;
-      window.avatars[actor.viewId].leftController.model.visible = true;
-      window.avatars[actor.viewId].rightController.model.visible = true;
+      //window.avatars[actor.viewId].headset.model.visible = true;
+      //window.avatars[actor.viewId].leftController.model.visible = true;
+      //window.avatars[actor.viewId].rightController.model.visible = true;
      }
    }
    removePawn(actor) {
@@ -166,12 +140,9 @@ export class View extends Croquet.View {
          pawn.detach();
          this.pawns.delete(actor);
          // currently only change the visibility instead of removing the model directly in case of false stream drop
-         window.avatars[actor.viewId].headset.model.visible = false;
-         window.avatars[actor.viewId].leftController.model.visible = false;
-         window.avatars[actor.viewId].rightController.model.visible = false;
-         // global.scene().removeNode(window.avatars[actor.viewId].headset.model);
-         // global.scene().removeNode(window.avatars[actor.viewId].leftController.model);
-         // global.scene().removeNode(window.avatars[actor.viewId].rightController.model);
+         //window.avatars[actor.viewId].headset.model.visible = false;
+         //window.avatars[actor.viewId].leftController.model.visible = false;
+         //window.avatars[actor.viewId].rightController.model.visible = false;
       }
    }
    update() { // turns out this function will not be called when entering the VR session, moved the following code to tick function
@@ -186,30 +157,37 @@ export class View extends Croquet.View {
    updateScene(info) { this.publish("scene", "updateScene", info); }
 
    event() {
-       //let msg = parseMsg();
-       //console.log(msg);
        let scene = window.clay.model.multi_controller.scene;
-       let name_sandbox = scene._name;
-       let scene_to_update = null;
-       if(this.latest < scene.latest){
-           console.log("kkk", this.latest, scene.latest)
-           scene_to_update = window.clay.model.multi_controller.scene;
-           this.latest = scene.latest;
+       let name = window.clay.model.multi_controller.name;
+
+       if(name !== null){
+           let diff_scene = null;
+           if(scene !== null && this.latest === null) {
+               diff_scene = scene;
+           }else if(scene !== null){
+               diff_scene = diffData(scene, this.latest);
+           }
+           this.latest = scene;
+
+
+           if(diff_scene !== null){
+               let sent = new Map();
+               sent.set(ut.WHO_KEY, name);
+               sent.set(ut.SCENE_KEY, diff_scene);
+               this.updateScene(sent);
+               this.latest = scene;
+           }
+
+           let player_msg = new Map();
+           player_msg.set(ut.WHO_KEY, name);
+           player_msg.set(ut.PLAYER_KEY, window.clay.model.multi_controller.player);
+           this.updateScene(player_msg);
 
        }
-       this.updateScene({who : this.viewId,
-                                scene : scene_to_update,
-                                player : window.clay.model.multi_controller.player,
-                                name: name_sandbox});
-
        this.future(50).event();
-
 
    }
 
-   //mouseDown(p) { this.isDown = true ; this.event('press', p); }
-   //mouseMove(p) { this.event(this.isDown ? 'drag' : 'move', p); }
-   //mouseUp(p)   { this.isDown = false; this.event('release', p, this.color); }
 }
 
 export class Pawn extends Croquet.View {

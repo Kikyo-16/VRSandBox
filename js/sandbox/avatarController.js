@@ -3,7 +3,7 @@ import * as ut from '../sandbox/utils.js';
 import * as cg from "../render/core/cg.js";
 
 const sc = 80;
-const s_in_out = 3;
+export const s_in_out = 3;
 
 const floor_offset = [0, .01, 0];
 const wall_h = .05;

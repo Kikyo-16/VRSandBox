@@ -12,6 +12,7 @@ function G2() {
    let height  = textureCanvas.height;
    let mouseZPrev = false;
    let mouseState = 'move';
+   this.context = context;
 
    let x2c = x => width * x;
    let y2c = y => height * (1 - y);

@@ -1,6 +1,7 @@
 import {CreateAvatarController} from "../sandbox/avatarController.js";
 import * as cg from "../render/core/cg.js";
-import * as ut from '../sandbox/utils.js'
+import * as ut from '../sandbox/utils.js';
+import * as ac from '../sandbox/avatarController.js'
 
 let debug = true;
 export function CreateMultiplayerController(sandbox){
@@ -8,11 +9,10 @@ export function CreateMultiplayerController(sandbox){
 
     this.scene = 0;
     this.player = 0;
-    this.viewID = null;
-    this.latest_version = -1;
     this.player_list = new Map();
+    this.name = null;
 
-    let out_pos = [-.25+1.25*Math.random(), 0, 1.1+.25*Math.random()];
+    let out_pos = [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
 
     let t_ = 0;
     this.debug = false;
@@ -46,9 +46,10 @@ export function CreateMultiplayerController(sandbox){
         return sandbox.getScene();
 
     }
-    
+
     this.updateScene = (e) =>{
-        if(e.name === null || e.name === undefined)
+        let who = e.get(ut.WHO_KEY);
+        if(who === null || who === undefined || who === this.name)
             return
         if(e.scene !== null && e.name !== sandbox._name){
             if(e.scene.latest > this.latest_version){
@@ -66,7 +67,7 @@ export function CreateMultiplayerController(sandbox){
         for (let i = 0; i < 10; ++i) {
             let vm = cg.mIdentity();
             let in_room = i % 2 == 0 ? true : false;
-            let rm = in_room ? [Math.random(), .8*.05, Math.random()] : [-.25+1.25*Math.random(), .8*.05, 1.1+.25*Math.random()];
+            let rm = in_room ? [Math.random(), .8*.05, Math.random()] : [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
             rm = cg.mTranslate(rm);
             let msg = new Map();
             msg.set("VM", vm);
