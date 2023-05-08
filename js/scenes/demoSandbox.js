@@ -54,6 +54,7 @@ export const init = async model => {
             SWITCH: false,
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
+            ARG: null,
         },
         MENU: {
             INACTIVE: true,
@@ -81,12 +82,17 @@ export const init = async model => {
                 DELETE: Array(0),
                 REVISE: Array(0),
             }
+        },
+
+        PERSPECTIVE: {
+            ACTION: {
+                MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
+            }
         }
 
     }
 
-
-    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
+    let multi_controller = new CreateMultiplayerController(sandbox);
     multi_controller.init(state_msg.MODE.IN_ROOM);
     model.multi_controller = multi_controller;
 
@@ -98,15 +104,17 @@ export const init = async model => {
     }
 
     croquet.register('croquetDemo_5.01');
-    //let debug = model.add("cube").color(1, 0, 0).scale(.2);
-
-    //sandbox.addNewObj(0, debug);
-    //console.log(sandbox.latest)
+    
     model.animate(() => {
+
         state_msg.RESUME =true;
         let state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
+
+
+        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
+        state_msg = checkStateCode(state_code);
 
 
         state_code = room_controller.animate(model.time, state_msg);
@@ -133,8 +141,6 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-
-        multi_controller.animate(model.time, state_msg.MODE.IN_ROOM);
 
 
    });

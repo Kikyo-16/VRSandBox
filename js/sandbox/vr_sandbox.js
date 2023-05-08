@@ -44,8 +44,6 @@ export function CreateVRSandbox(model){
         this.in_room = true;
         this.is_diving = false;
         this.leaveRoom();
-
-
     }
 
     let deleteTmpFocus = () =>{
@@ -225,6 +223,10 @@ export function CreateVRSandbox(model){
         return boxes[mode].getMPosition(p, this.active_floor);
     }
 
+    this.getRobotPosition = (mode, p) =>{
+        return boxes[mode].getRobotMPosition(p);
+    }
+
     this.getGPosition = (mode, p) =>{
         return boxes[mode].getGPosition(p, this.active_floor);
     }
@@ -295,14 +297,23 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.changePerspective = (mode, rp) => {
+    this.changePerspective = (rp) => {
         // move to relative loc rp
-        if (cg.norm(rp) <= 0.01) {
+        if (cg.norm(rp) <= 0.05) {
             return
         }
-        //rp = [-.5,0,-.5];
-        mini_sandbox.walkAway(rp);
-        room.walkAway(rp);
+
+        room.walk(rp);
+    }
+
+    this.changeView = (vm) => {
+        mini_sandbox.relocate_view(vm);
+        room.relocate_view(vm);
+    }
+
+    this.resetView = () => {
+        mini_sandbox.reset_view();
+        room.reset_view();
     }
 
     this.divAnimation = (state) =>{

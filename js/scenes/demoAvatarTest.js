@@ -10,6 +10,8 @@ import * as ut from '../sandbox/utils.js'
 
 import * as croquet from "../util/croquetlib.js";
 
+import * as cg from "../render/core/cg.js";
+
 export let updateModel = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
         console.log("update");
@@ -23,18 +25,13 @@ export const init = async model => {
     model.setTable(false);
     model.setRoom(false);
 
-    console.log(model.getGlobalMatrix());
-
     let menu_model = model.add();
     let box_model = model.add();
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add()
     //let room_model = model.add();
     let login_menu_model = model.add();
-
-    console.log(sandbox_model.getGlobalMatrix());
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
@@ -49,8 +46,6 @@ export const init = async model => {
     //let login_controller = new CreateLoginMenuController();
     //login_controller.init(login_menu_model);
 
-
-
     let state_msg = {
         RESUME: true,
         MODE: {
@@ -58,6 +53,7 @@ export const init = async model => {
             SWITCH: false,
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
+            ARG: null,
         },
         MENU: {
             INACTIVE: true,
@@ -90,16 +86,15 @@ export const init = async model => {
         PERSPECTIVE: {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
-                ARG: null,
             }
         }
 
     }
 
-
-    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
+    let multi_controller = new CreateMultiplayerController(sandbox);
     multi_controller.init(state_msg.MODE.IN_ROOM);
     model.multi_controller = multi_controller;
+    multi_controller.debug = true;
 
     let checkStateCode = (state) =>{
         let s = state[1];
@@ -109,15 +104,17 @@ export const init = async model => {
     }
 
     croquet.register('croquetDemo_5.01');
-    //let debug = model.add("cube").color(1, 0, 0).scale(.2);
-
-    //sandbox.addNewObj(0, debug);
-    //console.log(sandbox.latest)
+    
     model.animate(() => {
+
         state_msg.RESUME =true;
         let state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
+
+
+        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
+        state_msg = checkStateCode(state_code);
 
 
         state_code = room_controller.animate(model.time, state_msg);
@@ -140,10 +137,6 @@ export const init = async model => {
         state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = obj_controller.clearState(model.time, state_msg, sandbox, box_mode);
-
-        // console.log("in room", state_msg.MODE.IN_ROOM)
-        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
-        state_msg = checkStateCode(state_code);
 
 
         state_code = sandbox.animate(model.time, state_msg);
