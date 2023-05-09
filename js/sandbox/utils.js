@@ -63,23 +63,16 @@ export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 * */
 export let MENU_DISABLED = 4;
 
-
-
 export let WALKING_FORWARD = 1;
 export let WALKING_BACKWARD = 2;
 
-
-
-
-
 export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";
 export let TEXT_ROOM_WITHOUT_BOX = "Click to show Sandbox";
-export let TEXT_BOX_VIEW = "Sandbox->View";
-export let TEXT_BOX_EDIT = "Sandbox->Edit";
-export let TEXT_BOX_OBJ = "Sandbox->Object";
+export let TEXT_BOX_VIEW = "Sandbox View Mode";
+export let TEXT_BOX_EDIT = "Sandbox Edit Mode";
+export let TEXT_BOX_OBJ = "Sandbox Object Mode";
 export let TEXT_IS_DIVING = "Diving to Room...";
 export let TEXT_ROOM_WALKING = "Walking in the Room...";
-
 
 export let COLOR_ROOM_WITH_BOX = [153/255, 204/255, 255/255];
 export let COLOR_ROOM_WITHOUT_BOX = [153/255, 1, 153/255];
@@ -89,11 +82,9 @@ export let COLOR_BOX_EDIT = [153/255, 204/255, 255/255];
 export let COLOR_BOX_OBJ = [153/255, 1, 153/255];
 export let COLOR_IS_DIVING = [201/255, 176/255, 255/255];
 
-
 export let isObj = (obj) => {
     return obj._form !== undefined && obj.status === 0;
 }
-
 
 export let disableSelect = (obj) => {
     for(let i = 0; i < obj.nChildren(); ++i){
@@ -101,7 +92,6 @@ export let disableSelect = (obj) => {
     }
     obj.status = 1;
 }
-
 
 export let transform = (mTr, obj) => {
     let mGA = obj.getGlobalMatrix();
@@ -121,8 +111,6 @@ export let copy = (parent, obj) => {
        copy(obj_copy, obj[i]);
     }
 }
-
-
 
 export let distance = (a, b) =>{
     let d = 0;

@@ -7,14 +7,16 @@ import * as ut from "../sandbox/utils.js"
 
 export function CreateModeController(model){
     let node = model.add();
-    let menu_button = node.add("cube").texture(() => {
-            g2.setColor(menu_button.color);
-            g2.fillRect(0,0,1,1);
-            g2.setColor('black');
-            g2.textHeight(.12);
-            g2.fillText(menu_button.text, .5, .5, 'center');
-            g2.drawWidgets(menu_button);
-    });
+    
+    let menu_button = node.add('cube').texture('../media/textures/menu/png-small/menu-item-type-3.png');
+    menu_button.add('cube').texture( () => {
+         g2.textHeightAndFont('',0.042,'Arial');
+         g2.setColor('#1a1aff');
+         g2.fillText( menu_button.text, 0.5, 0.5 , 'center');
+         g2.drawWidgets(menu_button);
+    }).scale(1.4,8.4,1);
+
+
     let CD = 20;
     this.cold_down = -1;
     this.mode_id = ut.BOX_VIEW_MSG;
@@ -193,7 +195,7 @@ export function CreateModeController(model){
             return [false, state]
         }
         this.mode_id = state.MODE.MODE;
-        menu_button.identity().hud().move(-.2, .5, -.1).scale(.2, .2, .001);
+        menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001);
         if(state.MODE.SWITCH){
             if(state.MODE.IN_ROOM)
                 this.mode_id = ut.ROOM_WITHOUT_BOX_MSG;
