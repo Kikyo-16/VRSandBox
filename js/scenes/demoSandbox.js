@@ -120,6 +120,7 @@ export const init = async model => {
          PERSPECTIVE: {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
+                USER: null,
                 ARG: null,
             },
             PLAYER_INFO: new Map(),
@@ -131,7 +132,7 @@ export const init = async model => {
             INACTIVE: true,
             OPEN: false,
             SELECT: null,
-        }
+        },
 
     }
 

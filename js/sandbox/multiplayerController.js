@@ -140,7 +140,7 @@ export function CreateMultiplayerController(model, sandbox){
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
         this.player_list.set(this.name, this.player);
-        let send_player_list = updateSendList(this.player_list, state["PERSPECTIVE"]["ACTION"]);
+        let send_player_list = updateSendList(this.player_list, state);
         if(avatar_controller.local_user !== null)
             state = avatar_controller.animate(send_player_list, sandbox, state);
         state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;
