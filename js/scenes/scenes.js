@@ -7,7 +7,7 @@ export default () => {
    })).name = "backGround";
 
    return {
-      enableSceneReloading: false,
+      enableSceneReloading: true,
       scenes: [ 
          // { name: "DemoSimplest"       , path: "./demoSimplest.js"       },
          // { name: "DemoShapes"         , path: "./demoShapes.js"         },

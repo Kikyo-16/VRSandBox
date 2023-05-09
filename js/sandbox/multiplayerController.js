@@ -34,7 +34,7 @@ export function CreateMultiplayerController(sandbox){
     this.debug = false;
 
     this.init =(in_room) =>{
-        if (debug)
+        if (this.debug)
             this.debug_init();
             console.log("local user", this.name)
         this.name = sandbox._name;
@@ -87,7 +87,7 @@ export function CreateMultiplayerController(sandbox){
         if(who === null || who === undefined || who === this.name)
             return
         if(e.has(ut.SCENE_KEY)){
-            //console.log("aw", who, e.get(ut.SCENE_KEY));
+            console.log("aw", who, e.get(ut.SCENE_KEY));
             sandbox.setScene(e.get(ut.SCENE_KEY));
             if(this.player_list.has(who)){
                 let player = this.player_list.get(who);
@@ -153,7 +153,7 @@ export function CreateMultiplayerController(sandbox){
                 let player = this.player_list.get(who);
                 player.set(ut.LATEST_KEY, sandbox.timer.newTime());
                 this.player_list.set(who, player);
-                //console.log("new", who, player);
+                console.log("new", who, player);
             }
 
         }
@@ -251,7 +251,7 @@ export function CreateMultiplayerController(sandbox){
 
             t_++;
         }
-
+        //console.log("sss", send_player_list);
         if(avatar_controller.local_user !== null)
             state = avatar_controller.animate(send_player_list, state);
         state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;

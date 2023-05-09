@@ -150,6 +150,7 @@ export function CreateAvatarController(sandbox){
 		}
 
 		if (state.MODE["MODE"] !== ut.DIVING_MSG) {
+			console.log("avatar ", state.PERSPECTIVE.ACTION.MSG)
 			if (state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_SHARE_MSG) {
 				// compensate for view offset??
 				let vm = info.get("VM");

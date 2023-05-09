@@ -39,6 +39,9 @@ export class CreateShareMenuController {
       this.operationMenu = null;
       this.playerNames = null;
 
+      this.CD = 50;
+      this.cold_down = -1;
+
 
       this.init = (model) =>{
          this.model = model;
@@ -314,16 +317,13 @@ export class CreateShareMenuController {
          selected = this.returnObject(null);
       state_msg["GLOBAL_MENU"]["ACTION"] = selected;
       state_msg.GLOBAL_MENU.OPEN = this.openMenu;
-      if(selected !== null){
+      if(selected !== null && selected.user !== null){
          state_msg["PERSPECTIVE"]["ACTION"] = {
             USER: selected.user,
             MSG: selected.op,
          }
       }else{
-         state_msg["PERSPECTIVE"]["ACTION"] = {
-            USER: null,
-            MSG: null,
-         }
+
       }
 
       return [false, state_msg];

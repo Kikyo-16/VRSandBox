@@ -64,12 +64,12 @@ export const init = async model => {
 
 
 
-    let test_players = new Map();
-    let names = ["Mike_1111", "Mike_1112", "Mike_1113", "Mike_1114"]
-    for(let i =0; i < names.length; ++ i){
-        test_players.set(names[i], "");
-    }
-    test_players.set(sandbox.name, "");
+    //let test_players = new Map();
+    //let names = ["Mike_1111", "Mike_1112", "Mike_1113", "Mike_1114"]
+    //for(let i =0; i < names.length; ++ i){
+    //    test_players.set(names[i], "");
+    //}
+    //test_players.set(sandbox.name, "");
 
     let state_msg = {
         RESUME: true,
@@ -144,7 +144,7 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_12.100');
+    croquet.register('croquetDemo_15.99');
 
     model.animate(() => {
         state_msg.RESUME =true;
