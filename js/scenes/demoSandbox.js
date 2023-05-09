@@ -7,6 +7,7 @@ import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
 import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
+import {CreateSavingController} from "../sandbox/savingController.js"
 
 import * as ut from '../sandbox/utils.js'
 import * as wu from '../sandbox/wei_utils.js'
@@ -41,13 +42,16 @@ export const init = async model => {
     let multi_model = model.add()
     let shared_menu_model = model.add();
     let login_menu_model = model.add();
+    let save_model = model.add();
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
+    let saving_controller = new CreateSavingController(save_model);
     let mode_controller = new CreateModeController(mode_model);
     let box_controller = new CreateBoxController(box_model, sandbox);
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
+
 
     // Object Customize/Select Menu
     let menu_controller = new CreateMenuController();
@@ -108,7 +112,8 @@ export const init = async model => {
 
         LOGIN: {
             DISABLED: true,
-            NAME: null,
+            NAME: "Liwei",
+            SAVE: false,
 
         },
 
@@ -140,7 +145,7 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_11.99');
+    croquet.register('croquetDemo_12.99');
 
     model.animate(() => {
         state_msg.RESUME =true;
@@ -149,6 +154,9 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         login_controller.clearState(state_msg, sandbox);
 
+        state_code = saving_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = saving_controller.clearState(model.time, state_msg, sandbox);
 
         state_code = share_menu_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
@@ -185,6 +193,7 @@ export const init = async model => {
 
         state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
         state_msg = checkStateCode(state_code);
+
 
 
         /*

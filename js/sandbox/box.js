@@ -97,11 +97,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         return this.furniture_collection.removeObjOfName(idx, time);
     }
 
-    this.getObjCollectionState = (time) =>{
-        return this.furniture_collection.getCollectionState(time);
+    this.getObjCollectionState = (time, revised) =>{
+        return this.furniture_collection.getCollectionState(time, revised);
     }
-    this.getWallCollectionState = (time) =>{
-        return this.wall_collection.getCollectionState(time);
+    this.getWallCollectionState = (time, revised) =>{
+        return this.wall_collection.getCollectionState(time, revised);
     }
     this.getRemovedObjTags = (time) =>{
         return this.furniture_collection.getRemovedTags();

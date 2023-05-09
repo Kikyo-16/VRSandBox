@@ -80,10 +80,10 @@ export function FurnitureCollection(model){
         }
         return collection;
     }
-    this.getCollectionState = (time) =>{
+    this.getCollectionState = (time, revised) =>{
         let collections = new Map();
         for(const [name, obj] of this.objCollection){
-            if(obj._revised) {
+            if(obj._revised || !revised) {
                 let v = new Map();
                 v.set(ut.COLOR_KEY, obj.getColor());
                 v.set(ut.TEXTURE_KEY, obj.getTexture());

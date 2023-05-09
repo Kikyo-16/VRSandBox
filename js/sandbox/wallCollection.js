@@ -283,10 +283,10 @@ export function WallCollection(model, level, h, d){
         return collections;
     }
 
-    this.getCollectionState = (time) =>{
+    this.getCollectionState = (time, revised) =>{
         let collections = new Map();
         for(let [name, w] of this.walls){
-            if(w._revised){
+            if(w._revised || !revised){
                 let v = new Map();
                 v.set(ut.COLOR_KEY, w._color);
                 v.set(ut.TEXTURE_KEY, w._texture);

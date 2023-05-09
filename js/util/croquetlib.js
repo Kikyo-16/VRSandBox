@@ -24,24 +24,27 @@ let initPlayer = () => {
 
 export class Model extends Croquet.Model {
    init() {
-      this.subscribe("scene", "initScene"   , this.initSettings );
+      this.subscribe("scene", "updateWholeScene"   , this.updateWholeScene );
       this.subscribe("scene", "updateScene" , this.updateScene );
       this.subscribe("scene", "updatePlayer" , this.updatePlayer );
+
       this.initSettings();
    }
-
-   initSettings() {
-      window.croquetModel = this;
-      initScene();
-      initPlayer();
-
+   initSettings(){
+       window.croquetModel = this;
+   }
+   updateWholeScene(e) {
+      if (window.croquetModel)
+         updateScene(e);
+      else {
+         window.croquetModel = this;
+      }
    }
    updateScene(e) {
       if (window.croquetModel)
          updateScene(e);
       else {
          window.croquetModel = this;
-         initScene();
       }
    }
    updatePlayer(e) {
@@ -49,7 +52,6 @@ export class Model extends Croquet.Model {
          updatePlayer(e);
       else {
          window.croquetModel = this;
-         initPlayer();
       }
    }
 }
@@ -62,9 +64,23 @@ export class View extends Croquet.View {
       this.pre_player = null;
       this.future(50).sceneEvent();
       this.future(50).playerEvent();
+      //this.future(10000).wholeSceneEvent();
    }
    updateScene(info) { this.publish("scene", "updateScene", info); }
    updatePlayer(info) { this.publish("scene", "updatePlayer", info); }
+   updateWholeScene(info) { this.publish("scene", "updateWholeScene", info); }
+
+   wholeSceneEvent(){
+       let scene = window.clay.model.multi_controller.scene;
+       if(scene !== null){
+           let sent = new Map();
+           sent.set(ut.WHOLE_KEY, scene);
+           this.updateWholeScene(scene);
+
+       }
+
+       this.future(10000).wholeSceneEvent();
+   }
 
    sceneEvent() {
        let scene = window.clay.model.multi_controller.scene;

@@ -24,10 +24,12 @@ export let P_KEY = "P"
 
 export let WHO_KEY = "Q"
 export let WHAT_KEY = "R"
+export let WHOLE_KEY = "S"
 
 
 export let PERSPECTIVE_SHARE_MSG = "perspective-share"
 export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
+
 
 /*
 * STATUS CODE

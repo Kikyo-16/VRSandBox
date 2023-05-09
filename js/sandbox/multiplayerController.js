@@ -1,6 +1,7 @@
 import {CreateAvatarController} from "../sandbox/avatarController.js";
 import * as cg from "../render/core/cg.js";
 import * as ut from "../sandbox/utils.js";
+import * as wu from "../sandbox/wei_utils.js";
 
 export let diffPlayer = (x1, x2) =>{
     let msg = new Map();
@@ -69,7 +70,7 @@ export function CreateMultiplayerController(model, sandbox){
 
     }
     this.getScene = () =>{
-        return sandbox.getScene();
+        return sandbox.getScene(true);
 
     }
     this.updateScene = (e) =>{
@@ -83,9 +84,9 @@ export function CreateMultiplayerController(model, sandbox){
                 let player = this.player_list.get(who);
                 player.set(ut.LATEST_KEY, sandbox.timer.newTime());
             }
-
         }
     };
+
 
     this.updatePlayer = (e) =>{
         let who = e.get(ut.WHO_KEY);
@@ -114,16 +115,37 @@ export function CreateMultiplayerController(model, sandbox){
         }
     };
 
+    let updateSendList = (player_list, state) =>{
+        if(wu.isNull(this.name) || wu.isNull(this.player_list)){
+            return this.player_list;
+        }
+        let user = state.PERSPECTIVE.ACTION.USER;
+        let players = new Map();
+        if(user !== null){
+            for(let [name, info] of player_list){
+                if(name === this.name){
+                    players.set(name, player_list.get(user));
+                }else{
+                    players.set(name, info);
+                }
+            }
+        }else{
+            players = this.player_list;
+        }
+        return players;
+
+
+    }
     this.animate = (t, in_room, state) =>{
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
         this.player_list.set(this.name, this.player);
-        //console.log(this.player_list)
-        //if(avatar_controller.local_user !== null)
-        //    state = avatar_controller.animate(this.player_list, sandbox, state);
+        let send_player_list = updateSendList(this.player_list, state["PERSPECTIVE"]["ACTION"]);
+        if(avatar_controller.local_user !== null)
+            state = avatar_controller.animate(send_player_list, sandbox, state);
         state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;
         state["PERSPECTIVE"]["SELF"] = this.name;
-        //console.log("##", this.player_list);
         return [true, state];
     }
+
 }

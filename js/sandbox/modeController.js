@@ -145,7 +145,6 @@ export function CreateModeController(model){
                 state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.BOX_VIEW_MSG:
-                state.GLOBAL_MENU.INACTIVE = false;
 
                 break;
             case ut.BOX_EDIT_MSG:

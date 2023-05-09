@@ -3,7 +3,6 @@ import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
-import {COLLAPSE_FLOOR_MSG, FOCUS_WALL_MSG, SPLITTING_FOCUS_WALL_MSG} from "../sandbox/utils.js";
 
 
 

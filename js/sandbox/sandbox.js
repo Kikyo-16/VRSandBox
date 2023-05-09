@@ -174,7 +174,7 @@ export function CreateSandbox(model){
         root.identity();
     }
 
-    this.getScene = (tag, time) => {
+    this.getScene = (tag, time, revised) => {
         let flag = false;
         switch (tag) {
             case ut.FLOOR_TIMER:
@@ -185,7 +185,7 @@ export function CreateSandbox(model){
             case ut.OBJ_TIMER:
                 let obj_collection = Array(0);
                 for(let i = 0; i < this.boxes.length; ++ i) {
-                    let obj = this.boxes[i].getObjCollectionState(time);
+                    let obj = this.boxes[i].getObjCollectionState(time, revised);
 
                     obj_collection.push(obj);
                     if(obj.size > 0)
@@ -205,7 +205,7 @@ export function CreateSandbox(model){
             case ut.WALL_TIMER:
                 let wall_collection = Array(0);
                 for(let i = 0; i < this.boxes.length; ++ i) {
-                    let wall = this.boxes[i].getWallCollectionState(time);
+                    let wall = this.boxes[i].getWallCollectionState(time, revised);
                     wall_collection.push(wall);
                     if(wall.size > 0)
                         flag = true

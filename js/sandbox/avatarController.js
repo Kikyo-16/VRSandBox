@@ -28,7 +28,7 @@ export function CreateAvatarController(model){
 	// debug
 	let t = model.time;
 	
-	this.initialize = (msg, local_user) => {
+	this.initialize = (msg, local_user, sandbox) => {
 		// msg: {NAME: {ID, IN_BOX, FLOOR, RM, VM}}, include local user, RM: relative to mini sandbox
 		// local user initialize to outside of box
 		this.local_user = local_user;
@@ -181,6 +181,7 @@ export function CreateAvatarController(model){
 				this.avatars.get(name).animate();
 			this.mini_avatars.get(name).animate();
 		}
+
 		return state;
 	}
 

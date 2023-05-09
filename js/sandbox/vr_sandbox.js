@@ -347,17 +347,18 @@ export function CreateVRSandbox(model){
         return mini_sandbox.boxes[floor].focus_walls.length > 0;
     }
 
-    this.getScene = () => {
+    this.getScene = (revised) => {
         let tags = [ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.OBJ_TIMER, ut.N_WALL_TIMER, ut.WALL_TIMER];
         let scene = new Map();
         for(let i = 0; i < tags.length; ++ i){
             let time = this.timer.get(tags[i]);
-            let v = this.mini_sandbox.getScene(tags[i], time);
+            let v = this.mini_sandbox.getScene(tags[i], time, revised);
             scene.set(tags[i], v);
         }
         return scene;
 
     }
+
 
     this.setScene = (args) =>{
         console.log("set Scene")
