@@ -86,7 +86,7 @@ export class CreateShareMenuController {
          let hit = (Math.abs(diff[0]) < intersectionWidth) &&  (Math.abs(diff[1]) < intersectionHeight);//cg.norm(diff) < intersectionRadius;
 
          if(hit){
-            if(i===objectList.length-1){
+            if(i===0){
                objectList[i].color([0.9,0,0]);
             } else {
                objectList[i].color(hoverColorSet);
@@ -95,7 +95,7 @@ export class CreateShareMenuController {
                return i;
             }
          } else {
-            if(i===objectList.length-1){
+            if(i===0){
                objectList[i].color([0.9,0.3,0.3]);
             } else {
                objectList[i].color([1,1,1]);
@@ -136,13 +136,15 @@ export class CreateShareMenuController {
             g2.drawWidgets(operationTileText);
          }).scale(0.4,0.4,1).move(0,-0.1,0.15);
          
+      this.operationTilesObjectList.push(operationMenuCancelButton);
+      
       let yLocO = 5.2, yDeltaO = -2.5;
       for (let i = 0; i < this.operationTypes.length; i++) {
          let operationTileBG = operationTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-6.png').move(0,yLocO,0.1);
          this.operationTilesObjectList.push(operationTileBG);
          yLocO = yLocO + yDeltaO;
       }
-      this.operationTilesObjectList.push(operationMenuCancelButton);
+      
       return operationMenu;
    };
 
@@ -206,6 +208,7 @@ export class CreateShareMenuController {
       }else if(newPlayerNames.length < playerNames.length){
          for(let i = newPlayerNames.length; i < playerNames.length; i++){
             this.playerTiles.remove(this.playerTilesObjectList[i + 1]);
+            this.playerTilesObjectList.pop();
          }
       }
       this.playerNames = newPlayerNames;
