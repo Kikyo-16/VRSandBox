@@ -7,6 +7,7 @@ import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
 import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
+import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js";
 
 import * as ut from '../sandbox/utils.js'
 import * as wu from '../sandbox/wei_utils.js'
@@ -56,6 +57,9 @@ export const init = async model => {
     // User Collaboration/Share Menu
     let share_menu_controller = new CreateShareMenuController();
     share_menu_controller.init(shared_menu_model);
+
+    // User invitation prompt
+    let invitation_menu_controller = new CreateInvitationMenuController();
 
 
     let login_controller = new CreateLoginMenuController();
@@ -187,10 +191,19 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
 
 
+        // let invitationResult = invitation_menu_controller.animate(model,<fromUser>, <operation> ,<isInviteForMe> ,true);
         /*
-            Returns Object with keys 'user' and 'op'
-            'user' : <username selected>
-            'op'   : <operation selected>
+            Inputs :
+            <fromUser> = The user name who sent the invitaion
+            <operation> = The operation/invitation type
+            <isInviteForMe> = Set this to true if the invitation is for the current user, currentUser == <the user for which the invitation is meant for>
+
+            Output :
+            Returns null until the user accepts or rejects the invitation.
+            Returns True   if user accepts invitaion
+            Returns False  if user rejects invitaion
+
+            Example : let invitationResult = invitation_menu_controller.animate(model, 'Rahul', 'collaborate' ,true);
         */
 
         //login_controller.animate(model);

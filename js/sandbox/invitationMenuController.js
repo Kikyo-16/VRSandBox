@@ -5,8 +5,6 @@ import { lcb, rcb } from '../handle_scenes.js';
 import { rotate } from "../third-party/gl-matrix/src/gl-matrix/mat2.js";
 
 
-
-
 export class CreateInvitationMenuController {
 
    constructor(){
@@ -77,15 +75,15 @@ export class CreateInvitationMenuController {
       if(isInviteForMe){
          if(this.invitationMenu==null){
             this.invitationMenu = this.createInvitationMenu(model, fromUser, operation);
-            this.invitationMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
+            this.invitationMenu.identity().hud().move(0,0,0.6).scale(1,1,.0001);
          } else {
-            this.invitationMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
+            this.invitationMenu.identity().hud().move(0,0,0.6).scale(1,1,.0001);
 
             // Check if selected YES
-            let isYes = this.checkOptionAndSelection(this.yesButton, 0.1, 0.1, rt, this.rt_prev, [0.1,1,0.1],[0.1,0.6,0.1]);
+            let isYes = this.checkOptionAndSelection(this.yesButton, 0.07, 0.03, rt, this.rt_prev, [0,1,0],[0,0.5,0]);
             
             // Check if selected NO
-            let isNo = this.checkOptionAndSelection(this.noButton, 0.1, 0.1, rt, this.rt_prev, [1,0.1,0.1],[0.6,0.1,0.1]);
+            let isNo = this.checkOptionAndSelection(this.noButton, 0.07, 0.03, rt, this.rt_prev, [1,0,0],[0.5,0,0]);
 
             if(isYes || isNo){
                this.closeInvitationMenu(model);
