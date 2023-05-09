@@ -102,6 +102,7 @@ export function CreateModeController(model){
         }
         return false;
     }
+    
     let switchModeInBox = () =>{
         if(isInBox()){
             let mid = this.mode_id;

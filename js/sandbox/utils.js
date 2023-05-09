@@ -30,7 +30,6 @@ export let WHOLE_KEY = "S"
 export let PERSPECTIVE_SHARE_MSG = "perspective-share"
 export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
 
-
 /*
 * STATUS CODE
 * */
@@ -60,6 +59,7 @@ export let SPLITTING_FOCUS_WALL_MSG = "splitting-focus-wall"
 export let SPLITTING_WALL_MSG = "splitting-wall"
 export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 
+
 /*
 * Menu CODE
 * */
@@ -69,9 +69,6 @@ export let MENU_DISABLED = 4;
 
 export let WALKING_FORWARD = 1;
 export let WALKING_BACKWARD = 2;
-
-
-
 
 
 export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";

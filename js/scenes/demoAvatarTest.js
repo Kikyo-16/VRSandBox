@@ -5,23 +5,15 @@ import {CreateMenuController} from '../sandbox/menuController.js'
 import {CreateModeController} from '../sandbox/modeController.js'
 import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
-import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
-import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
-import {CreateSavingController} from "../sandbox/savingController.js";
+import {CreateLoginMenuController } from '../sandbox/loginMenuController.js'
+import * as ut from '../sandbox/utils.js'
 
-import * as ut from '../sandbox/utils.js';
-import * as wu from '../sandbox/wei_utils.js';
 import * as croquet from "../util/croquetlib.js";
 
-export let updateScene = msg => {
+export let updateModel = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
+        console.log("update");
         window.clay.model.multi_controller.updateScene(msg);
-    }
-}
-
-export let updatePlayer = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updatePlayer(msg);
     }
 }
 
@@ -36,40 +28,21 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add()
-    let shared_menu_model = model.add();
+    //let room_model = model.add();
     let login_menu_model = model.add();
-    let save_model = model.add();
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
-    let saving_controller = new CreateSavingController(save_model);
     let mode_controller = new CreateModeController(mode_model);
     let box_controller = new CreateBoxController(box_model, sandbox);
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
 
-
-    // Object Customize/Select Menu
     let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
 
-    // User Collaboration/Share Menu
-    let share_menu_controller = new CreateShareMenuController();
-    share_menu_controller.init(shared_menu_model);
-
-
-    let login_controller = new CreateLoginMenuController();
-    login_controller.init(login_menu_model);
-
-
-
-    let test_players = new Map();
-    let names = ["Mike_1111", "Mike_1112", "Mike_1113", "Mike_1114"]
-    for(let i =0; i < names.length; ++ i){
-        test_players.set(names[i], "");
-    }
-    test_players.set(sandbox.name, "");
+    //let login_controller = new CreateLoginMenuController();
+    //login_controller.init(login_menu_model);
 
     let state_msg = {
         RESUME: true,
@@ -78,6 +51,7 @@ export const init = async model => {
             SWITCH: false,
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
+            ARG: null,
         },
         MENU: {
             INACTIVE: true,
@@ -102,68 +76,40 @@ export const init = async model => {
         OBJ: {
             INACTIVE: true,
             ACTION: {
-                DELETE: -1,
+                DELETE: Array(0),
                 REVISE: Array(0),
             }
-        },
-
-        LOGIN: {
-            DISABLED: true,
-            NAME: "Liwei",
-            SAVE: false,
-
         },
 
         PERSPECTIVE: {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
-                USER: null,
-                ARG: null,
-            },
-            PLAYER_INFO: new Map(),
-            SELF: sandbox.name,
-        },
-
-        GLOBAL_MENU: {
-            ACTION: null,
-            INACTIVE: true,
-            OPEN: false,
-            SELECT: null,
+            }
         },
 
     }
 
     let multi_controller = new CreateMultiplayerController(sandbox);
     multi_controller.init(state_msg.MODE.IN_ROOM);
-    multi_controller.debug = false;
     model.multi_controller = multi_controller;
+    multi_controller.debug = true;
 
     let checkStateCode = (state) =>{
         let s = state[1];
         s.RESUME = !state[0];
+
         return s;
     }
 
-    croquet.register('croquetDemo_12.100');
-
+    croquet.register('croquetDemo_5.01');
+    
     model.animate(() => {
+
         state_msg.RESUME =true;
-
-        let state_code = login_controller.animate(model.time, state_msg);
-        state_msg = checkStateCode(state_code);
-        login_controller.clearState(state_msg, sandbox);
-
-        state_code = saving_controller.animate(model.time, state_msg);
-        state_msg = checkStateCode(state_code);
-        state_msg = saving_controller.clearState(model.time, state_msg, sandbox);
-
-        state_code = share_menu_controller.animate(model.time, state_msg);
-        state_msg = checkStateCode(state_code);
-        state_msg = share_menu_controller.clearState(state_msg);
-
-        state_code = mode_controller.animate(model.time, state_msg);
+        let state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
+
 
         state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
         state_msg = checkStateCode(state_code);
@@ -183,9 +129,10 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = menu_controller.clearState(model.time, state_msg, sandbox);
 
+        //login_controller.animate(model);
+
         let box_mode = state_msg.MODE.IN_ROOM ? 1 : 0;
-        let obj_collection = sandbox.getObjCollection(box_mode);
-        state_code = obj_controller.animate(model.time, obj_collection, state_msg);
+        state_code = obj_controller.animate(model.time, sandbox.getObjCollection(box_mode), state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = obj_controller.clearState(model.time, state_msg, sandbox, box_mode);
 
@@ -193,15 +140,6 @@ export const init = async model => {
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
 
-
-
-        /*
-            Returns Object with keys 'user' and 'op'
-            'user' : <username selected>
-            'op'   : <operation selected>
-        */
-
-        //login_controller.animate(model);
 
    });
 

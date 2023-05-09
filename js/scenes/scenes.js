@@ -34,6 +34,7 @@ export default () => {
           { name: "DemoShareMenuTest"        , path: "./demoShareMenuTest.js"      },
           { name: "DemoInvitationMenuTest"   , path: "./demoInvitationMenuTest.js" },
           { name: "DemoSandbox"              , path: "./demoSandbox.js"            },
+         { name: "DemoAvatarTest"           , path: "./DemoAvatarTest.js"      },
       ]
    };
 }

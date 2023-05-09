@@ -42,7 +42,7 @@ export function CreateObjController(obj_model){
 
     let copy_t = 0;
     //
-    this.debug = true;
+    this.debug = false;
 
     // press either trigger to grab an obj, ctr has to intersect with the obj
     this.isLeftTriggerPressed = () => this.bs.left[0].pressed; 
