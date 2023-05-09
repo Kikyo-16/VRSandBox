@@ -14,7 +14,8 @@ export class CreateShareMenuController {
       this.operationTypes = ['Collaborate', 'Position Exchange', 'Perspective Share'];
       this.rt = false;
       this.rt_prev = false;
-   
+
+      this.openMenu = false;
       this.rotateYThreshold = 0.6;
       this.rotateYDelta = 0.06;
       
@@ -36,9 +37,16 @@ export class CreateShareMenuController {
       this.userListMenu = null;
       this.operationMenu = null;
       this.playerNames = null;
+
+
+      this.init = (model) =>{
+         this.model = model;
+         this.sharingMenu = this.createSharingMenu(model, Array(0));
+
+      }
    }
    
-   
+
 
    createSharingMenu = (model, playerNames) => {
 
@@ -60,7 +68,7 @@ export class CreateShareMenuController {
 
       this.playerNames = playerNames;
       
-      this.userListMenu = this.createUserListMenu(this.sharingMenu, this.playerNames);
+      this.userListMenu = this.createUserListMenu(this.sharingMenu);
       this.operationMenu = this.createOperationMenu(this.sharingMenu);
 
       return this.sharingMenu;
@@ -78,7 +86,7 @@ export class CreateShareMenuController {
          let hit = (Math.abs(diff[0]) < intersectionWidth) &&  (Math.abs(diff[1]) < intersectionHeight);//cg.norm(diff) < intersectionRadius;
 
          if(hit){
-            if(i==objectList.length-1){
+            if(i===objectList.length-1){
                objectList[i].color([0.9,0,0]);
             } else {
                objectList[i].color(hoverColorSet);
@@ -87,7 +95,7 @@ export class CreateShareMenuController {
                return i;
             }
          } else {
-            if(i==objectList.length-1){
+            if(i===objectList.length-1){
                objectList[i].color([0.9,0.3,0.3]);
             } else {
                objectList[i].color([1,1,1]);
@@ -140,7 +148,7 @@ export class CreateShareMenuController {
 
 
    // Username selection menu
-   createUserListMenu = (sharingMenu, playerNames) => {
+   createUserListMenu = (sharingMenu) => {
       let userListMenu = sharingMenu.add();
       // User Select Text Box Heading
       let userListMenuBG = userListMenu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
@@ -166,104 +174,151 @@ export class CreateShareMenuController {
       let playerTileText = playerTiles.add('cube').texture(() => {
             g2.textHeightAndFont('',0.05,'Arial');
             g2.setColor('white');
-            for (let i = 0; i < playerNames.length; i++) {
-               g2.fillText(playerNames[i], 0.5, 0.88 - i*0.157 , 'center');
+            for (let i = 0; i < this.playerNames.length; i++) {
+               g2.fillText(this.playerNames[i], 0.5, 0.88 - i*0.157 , 'center');
             }
             g2.drawWidgets(playerTileText);
          }).scale(0.4,0.4,1).move(0,-0.1,0.15);
-         
+
+      this.playerTilesObjectList.push(menuCancelButton);
       // User Name Tiles
       let yLoc = 5.2, yDelta = -2.5;
-      for (let i = 0; i < playerNames.length; i++) {
+      for (let i = 0; i < this.playerNames.length; i++) {
          let playerTileBG = playerTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-4.png').move(0,yLoc,0.1);
          this.playerTilesObjectList.push(playerTileBG);
          yLoc = yLoc + yDelta;
       }
-      this.playerTilesObjectList.push(menuCancelButton);
+      this.playerTiles = playerTiles;
+
+
 
       return userListMenu;
    }
+   onChangeNameList(newPlayerNames){
+      let playerNames = this.playerNames;
+      if(newPlayerNames.length > playerNames.length){
+         let yLoc = 5.2, yDelta = -2.5;
+         for (let i = playerNames.length; i < newPlayerNames.length; i++) {
+            yLoc = 5.2 + yDelta * i;
+            let playerTileBG = this.playerTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-4.png').move(0,yLoc,0.1);
+            this.playerTilesObjectList.push(playerTileBG);
+         }
+      }else if(newPlayerNames.length < playerNames.length){
+         for(let i = newPlayerNames.length; i < playerNames.length; i++){
+            this.playerTiles.remove(this.playerTilesObjectList[i + 1]);
+         }
+      }
+      this.playerNames = newPlayerNames;
 
-   closeMenu = (model) => {
-      model.remove(this.sharingMenu);
-      this.playerNames = null;
-      this.sharingMenu = null;
-      this.userListMenu = null;
-      this.operationMenu = null; 
+   }
+
+   closeMenu = () => {
+      this.operationMenu.identity().hud().move(0.6 - this.moveX,0,0).scale(1,1,.0001).opacity(0.0001);
+      this.userListMenu.identity().hud().move(-this.moveX,0,(this.menuOpacity-1)/6).scale(1,1,.0001).opacity(0.0001);
       this.moveX = 0.0;
       this.menuOpacity = 1;  
       this.operationMenuOpacity = 0.001;
       this.selectedPlayerIndex = -1;
       this.selectedOperationIndex = -1;
-      this.playerTilesObjectList = [];
-      this.operationTilesObjectList = [];
+      this.openMenu = false;
    }
 
    returnObject = (user,op) => {
       return {user : user, op : op};
    }
    
-   
-   animate = (model, playerNames) => {
+   openUserMenu = () =>{
+      this.openMenu = true;
+      this.operationMenu.identity().hud().move(0.6 - this.moveX,0,0).scale(1,1,.0001).opacity(this.operationMenuOpacity);
+      this.userListMenu.identity().hud().move(-this.moveX,0,(this.menuOpacity-1)/6).scale(1,1,.0001).opacity(1).color([this.menuOpacity,this.menuOpacity,this.menuOpacity]);
+   }
+   animate = (t, state_msg) => {
+      if(state_msg.GLOBAL_MENU.INACTIVE){
+         this.closeMenu();
+         state_msg["GLOBAL_MENU"]["OPEN"] = this.openMenu;
+         return [false, state_msg];
+      }
+      let model = this.model;
+      let playerNames = Array(0);
+      let selected = null;
+      let flag = false;
+      for(let [name, info] of state_msg["PERSPECTIVE"]["PLAYER_INFO"]){
+         if(name !== state_msg["PERSPECTIVE"]["SELF"])
+            playerNames.push(name);
+      }
+      this.onChangeNameList(playerNames);
 
-      if( buttonState.left[4].pressed && this.sharingMenu == null){
-         this.sharingMenu = this.createSharingMenu(model, playerNames);
-         this.operationMenu.identity().hud().move(0.6 - this.moveX,0,0).scale(1,1,.0001).opacity(this.operationMenuOpacity);
-         this.userListMenu.identity().hud().move(-this.moveX,0,(this.menuOpacity-1)/6).scale(1,1,.0001).color([this.menuOpacity,this.menuOpacity,this.menuOpacity]);
 
-      } else {
 
+      if( buttonState.right[5].pressed){
+         this.openUserMenu();
+
+      } else if(this.openMenu){
          let rt = buttonState.right[0].pressed;
          this.operationMenu.identity().hud().move(0.6 - this.moveX,0,0).scale(1,1,.0001).opacity(this.operationMenuOpacity);
          this.userListMenu.identity().hud().move(-this.moveX,0,(this.menuOpacity-1)/6).scale(1,1,.0001).color([this.menuOpacity,this.menuOpacity,this.menuOpacity]);
-         
-         if(this.selectedPlayerIndex == -1){
+
+         if(this.selectedPlayerIndex === -1){
             this.selectedPlayerIndex = this.getBeamIntersectionWithBoxObjects(this.playerTilesObjectList, 0.1, 0.02, rt, this.rt_prev,[0.2,0.2,1]) ;
             // selectedPlayerIndex = playerTilesObjectList.length - 1;
          } else {
             // Cancel button pressed
-            if(this.selectedPlayerIndex == this.playerTilesObjectList.length - 1){
-               this.closeMenu(model);
-               return this.returnObject(null,null);
-            }
-   
-            if(this.selectedOperationIndex == -1){
-               if(this.moveX < this.moveXThreshold){
-                  this.moveX = this.moveX + this.moveXDelta;
-                  this.rotateY = this.rotateY + this.rotateYDelta
-                  this.menuOpacity = this.menuOpacity - 0.04;
-                  this.operationMenuOpacity += 0.1;
-               } else {
-                  this.selectedOperationIndex = this.getBeamIntersectionWithBoxObjects(this.operationTilesObjectList, 0.1, 0.02, rt, this.rt_prev,[0.2,0.2,1]) ;
+            if(this.selectedPlayerIndex === 0){
+               this.closeMenu();
+               selected = this.returnObject(null,null);
+               flag = true;
+            }else {
+               if (this.selectedOperationIndex === -1) {
+                  if (this.moveX < this.moveXThreshold) {
+                     this.moveX = this.moveX + this.moveXDelta;
+                     this.rotateY = this.rotateY + this.rotateYDelta
+                     this.menuOpacity = this.menuOpacity - 0.04;
+                     this.operationMenuOpacity += 0.1;
+                  } else {
+                     this.selectedOperationIndex = this.getBeamIntersectionWithBoxObjects(this.operationTilesObjectList, 0.1, 0.02, rt, this.rt_prev, [0.2, 0.2, 1]);
+                  }
+
                }
-               
-            }
-            
-   
-            if(this.selectedOperationIndex == this.operationTilesObjectList.length - 1){
-               // Closing the operation menu
-               if(this.moveX > 0){
-                  this.moveX = this.moveX - this.moveXDelta;
-                  this.rotateY = this.rotateY - this.rotateYDelta;
-                  this.menuOpacity = this.menuOpacity + 0.04;
-                  this.operationMenuOpacity -= 0.1;
-               } else {
-                  this.selectedOperationIndex = -1;
-                  this.selectedPlayerIndex = -1;
+
+               if (this.selectedOperationIndex === this.operationTilesObjectList.length - 1) {
+                  // Closing the operation menu
+                  if (this.moveX > 0) {
+                     this.moveX = this.moveX - this.moveXDelta;
+                     this.rotateY = this.rotateY - this.rotateYDelta;
+                     this.menuOpacity = this.menuOpacity + 0.04;
+                     this.operationMenuOpacity -= 0.1;
+                  } else {
+                     this.selectedOperationIndex = -1;
+                     this.selectedPlayerIndex = -1;
+                  }
+               }
+
+               if (this.selectedPlayerIndex > 0 &&
+                   this.selectedOperationIndex > -1 &&
+                   this.selectedOperationIndex !== this.operationTilesObjectList.length - 1) {
+                  // close all open menus and return selected values - assign default values to variables
+                  let user = this.playerNames[this.selectedPlayerIndex - 1];
+                  let op = this.operationTypes[this.selectedOperationIndex];
+                  this.closeMenu(model);
+                  selected = this.returnObject(user, op);
+                  flag = true;
                }
             }
-   
-            if(this.selectedPlayerIndex > -1 && this.selectedPlayerIndex != this.playerTilesObjectList.length - 1 &&
-               this.selectedOperationIndex > -1 && this.selectedOperationIndex != this.operationTilesObjectList.length - 1){
-               // close all open menus and return selected values - assign default values to variables
-               let user = this.playerNames[this.selectedPlayerIndex];
-               let op = this.operationTypes[this.selectedOperationIndex];
-               this.closeMenu(model);
-               return this.returnObject(user,op);;
-            }  
+
          }
          this.rt_prev = rt;
+
       }
-      return this.returnObject(nullnull);
+      if(!flag)
+         selected = this.returnObject(null);
+      state_msg["GLOBAL_MENU"]["ACTION"] = selected;
+      state_msg.GLOBAL_MENU.OPEN = this.openMenu;
+      return [false, state_msg];
    }
+
+   clearState = (state) =>{
+
+      return state;
+   }
+
 }

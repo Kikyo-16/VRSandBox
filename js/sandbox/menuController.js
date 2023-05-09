@@ -185,7 +185,7 @@ export class CreateMenuController {
          }
 
          if (buttonState.left[5].pressed) {
-            state.MENU.REQUIRE = false;
+            state["MENU"]["REQUIRE"] = false;
             console.log("close menu");
             console.log("selected obj: ", selectedObject);
             this.closeMenu(model);
@@ -206,8 +206,8 @@ export class CreateMenuController {
                }
             }
          }
-         state.MENU.OPEN = menuOpen;
-         state.MENU.SELECT = res;
+         state["MENU"]["OPEN"] = menuOpen;
+         state["MENU"]["SELECT"] = res;
          rt_prev = rt;
          return [menuOpen, state];
       };

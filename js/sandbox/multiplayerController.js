@@ -2,6 +2,21 @@ import {CreateAvatarController} from "../sandbox/avatarController.js";
 import * as cg from "../render/core/cg.js";
 import * as ut from "../sandbox/utils.js";
 
+export let diffPlayer = (x1, x2) =>{
+    let msg = new Map();
+    let keys = ["VM", "RM", "IN_BOX", "FLOOR"];
+    for(let i = 0; i < keys.length; ++ i){
+        let v1 = x1.get(keys[i]);
+        let v2 = x2.get(keys[i]);
+        if(v1 !== v2){
+            msg.set(keys[i], v1);
+        }
+    }
+    return msg.size === 0? null : msg;
+
+}
+
+
 export function CreateMultiplayerController(model, sandbox){
     let avatar_controller = new CreateAvatarController(model);
 
@@ -19,6 +34,24 @@ export function CreateMultiplayerController(model, sandbox){
         this.scene = sandbox.getScene();
         this.player_list.set(this.name, this.player)
         avatar_controller.initialize(this.player_list, this.name);
+    }
+
+    let checkPlayers = (who) =>{
+        let players = this.player_list;
+        if(players.size <= 4)
+            return;
+        let latest = -1;
+        let selected_name = null;
+        for(let [name, info] of players){
+            if(name === this.name || name === who)
+                continue
+            if(latest === -1 || info[ut.LATEST_KEY] < latest){
+                latest = info[ut.LATEST_KEY];
+                selected_name = name;
+            }
+        }
+        if(selected_name !== null)
+            players.delete(selected_name);
     }
 
     this.getPlayer = (in_room) =>{
@@ -43,27 +76,54 @@ export function CreateMultiplayerController(model, sandbox){
         let who = e.get(ut.WHO_KEY);
         if(who === null || who === undefined || who === this.name)
             return
-
         if(e.has(ut.SCENE_KEY)){
             //console.log("aw", who, e.get(ut.SCENE_KEY));
-            sandbox.setScene(e.get(ut.SCENE_KEY))
-        }else if(e.has(ut.PLAYER_KEY)) {
-            this.player_list.set(who, e.get(ut.PLAYER_KEY));
-
+            sandbox.setScene(e.get(ut.SCENE_KEY));
+            if(this.player_list.has(who)){
+                let player = this.player_list.get(who);
+                player.set(ut.LATEST_KEY, sandbox.timer.newTime());
+            }
 
         }
-
     };
 
+    this.updatePlayer = (e) =>{
+        let who = e.get(ut.WHO_KEY);
+        if(who === null || who === undefined || who === this.name)
+            return
+
+        if(e.has(ut.PLAYER_KEY)) {
+            let diff_player = e.get(ut.PLAYER_KEY);
+            if(this.player_list.has(who)){
+                let player = this.player_list.get(who);
+                for(let [k, v] of diff_player){
+                    player.set(k, v);
+                }
+                this.player_list.set(who, player);
+            }else{
+                checkPlayers(who);
+                this.player_list.set(who, diff_player);
+            }
+            if(this.player_list.has(who)) {
+                let player = this.player_list.get(who);
+                player.set(ut.LATEST_KEY, sandbox.timer.newTime());
+                this.player_list.set(who, player);
+                //console.log("new", who, player);
+            }
+
+        }
+    };
 
     this.animate = (t, in_room, state) =>{
         this.scene = this.getScene();
         this.player = this.getPlayer(in_room);
         this.player_list.set(this.name, this.player);
         //console.log(this.player_list)
-        if(avatar_controller.local_user !== null)
-            state = avatar_controller.animate(this.player_list, sandbox, state);
-
+        //if(avatar_controller.local_user !== null)
+        //    state = avatar_controller.animate(this.player_list, sandbox, state);
+        state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;
+        state["PERSPECTIVE"]["SELF"] = this.name;
+        //console.log("##", this.player_list);
         return [true, state];
     }
 }

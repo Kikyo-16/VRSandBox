@@ -129,19 +129,23 @@ export function CreateModeController(model){
         state.OBJ.INACTIVE = true;
         state.BOX.DISABLED = false;
         state.ROOM.WALKING.DISABLED = true;
+        state.GLOBAL_MENU.INACTIVE = true;
+        state.MODE.DISABLED = false;
         switch(state.MODE.MODE) {
             case ut.ROOM_WITH_BOX_MSG:
                 sandbox.mini_sandbox.comeBack();
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.ROOM_WITHOUT_BOX_MSG:
                 sandbox.mini_sandbox.flyAway();
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.BOX_VIEW_MSG:
-
+                state.GLOBAL_MENU.INACTIVE = false;
 
                 break;
             case ut.BOX_EDIT_MSG:
@@ -150,6 +154,7 @@ export function CreateModeController(model){
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
                 sandbox.clear(4);
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.DIVING_MSG:
                 break;
@@ -168,10 +173,21 @@ export function CreateModeController(model){
         }else{
             state.BOX.DISABLED = true;
         }
+        if(state.MENU.OPEN || state.GLOBAL_MENU.OPEN){
+            state.BOX.DISABLED = true;
+            state.MODE.DISABLED = true;
+            state.OBJ.INACTIVE =true;
+        }
+        if(state.MENU.OPEN)
+            state.GLOBAL_MENU.INACTIVE = true;
+        if(state.GLOBAL_MENU.OPEN)
+            state.MENU.INACTIVE = true;
         return state;
     }
 
     this.animate = (t, state) =>{
+        if(state.MODE.DISABLED)
+            return [false, state]
         if(state.MODE.MODE === ut.DIVING_MSG){
             refresh(ut.DIVING_MSG);
             return [false, state]
