@@ -111,7 +111,7 @@ export const init = async model => {
         },
 
         LOGIN: {
-            DISABLED: true,
+            DISABLED: false,
             NAME: null,
 
         },
@@ -149,7 +149,7 @@ export const init = async model => {
     model.animate(() => {
         state_msg.RESUME =true;
 
-        let state_code = login_controller.animate(model.time, state_msg);
+        let state_code = login_controller.animate(model, state_msg);
         state_msg = checkStateCode(state_code);
         login_controller.clearState(state_msg, sandbox);
 

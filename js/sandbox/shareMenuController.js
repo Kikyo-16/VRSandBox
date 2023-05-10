@@ -78,7 +78,7 @@ export class CreateShareMenuController {
 
 
    // Menu item selection/hover logic
-   getBeamIntersectionWithBoxObjects = (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
+   getBeamIntersectionWithBoxObjects =  (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
       for(let i=0;i<objectList.length;i++){
          let center = objectList[i].getGlobalMatrix().slice(12,15);
          let point = rcb.projectOntoBeam(center);
@@ -152,8 +152,8 @@ export class CreateShareMenuController {
    // Username selection menu
    createUserListMenu = (sharingMenu) => {
       let userListMenu = sharingMenu.add();
-      // User Select Text Box Heading
       let userListMenuBG = userListMenu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
+      // User Select Text Box Heading
       let selectUserBox = userListMenu.add('cube').scale(0.20,0.04,1).texture('../media/textures/menu/png-small/menu-item-type-3.png').move(0,9.5,0.1);
       let selectUserText = selectUserBox.add('cube').texture(() => {
          g2.textHeightAndFont('',0.05,'Arial');
@@ -283,7 +283,7 @@ export class CreateShareMenuController {
 
                }
 
-               if (this.selectedOperationIndex === this.operationTilesObjectList.length - 1) {
+               if (this.selectedOperationIndex === 0) {
                   // Closing the operation menu
                   if (this.moveX > 0) {
                      this.moveX = this.moveX - this.moveXDelta;
@@ -296,11 +296,9 @@ export class CreateShareMenuController {
                   }
                }
 
-               if (this.selectedPlayerIndex > 0 &&
-                   this.selectedOperationIndex > -1 &&
-                   this.selectedOperationIndex !== this.operationTilesObjectList.length - 1) {
+               if (this.selectedPlayerIndex > 0 && this.selectedOperationIndex > 0 ) {
                   // close all open menus and return selected values - assign default values to variables
-                  let user = this.playerNames[this.selectedPlayerIndex - 1];
+                  let user = this.playerNames[this.selectedPlayerIndex];
                   let op = this.operationTypes[this.selectedOperationIndex];
                   this.closeMenu(model);
                   selected = this.returnObject(user, op);

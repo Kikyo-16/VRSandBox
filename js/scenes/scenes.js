@@ -31,8 +31,9 @@ export default () => {
          // { name: "DemoSprite"         , path: "./demoSprite.js"         },
          // { name: "DemoIntersect"      , path: "./demoIntersect.js"      },
          // { name: "DemoCroquet"        , path: "./demoCroquet.js"        },
-          { name: "DemoShareMenuTest"        , path: "./demoShareMenuTest.js"      },
-          { name: "DemoInvitationMenuTest"   , path: "./demoInvitationMenuTest.js" },
+         // { name: "DemoShareMenuTest"        , path: "./demoShareMenuTest.js"      },
+         // { name: "DemoInvitationMenuTest"   , path: "./demoInvitationMenuTest.js" },
+         // { name: "DemoLoginMenuTest"        , path: "./demoLoginMenuTest.js" },
           { name: "DemoSandbox"              , path: "./demoSandbox.js"            },
       ]
    };

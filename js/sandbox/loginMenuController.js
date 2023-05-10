@@ -1,66 +1,132 @@
 import { g2 } from "../util/g2.js";
 import * as bc from "../sandbox/baseController.js"
-
+import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
+import { lcb, rcb } from '../handle_scenes.js';
+import * as cg from "../render/core/cg.js";
 
 export class CreateLoginMenuController {
     constructor() {
-        let menu = undefined;
-        let login_menu = undefined;
-        let name_banner = undefined;
 
-        this.init = (model) => {
-            console.log("LOGIN MENU")
-            menu = model.add('cube').opacity(0.0001).color(0,1,1);
-            login_menu = menu.add('cube').texture(() => {
+        this.logInMenu = null;
+        // List of all user names supported
+        this.userNamesAll = ["Lewei", "Rahul", "Zhiqi", "Namrata"];
+        this.availableUserNames = [];
+        this.userNameTilesObjectList = [];
+        this.rt_prev = false;
+        this.model = null;
+    }
+
+    init = (model) => {
+        this.model = model;
+        this.currentUserBanner = null;
+        // already logged in users 
+        // UPDATE this variable to get a list of all logged in users using state["PERSPECTIVE"]["PLAYER_INFO"]
+        let loggedInUsers = ["Rahul", "Zhiqi"];
+        
+        for(let i=0;i<this.userNamesAll.length;i++){
+            if(!loggedInUsers.includes(this.userNamesAll[i])){
+                this.availableUserNames.push(this.userNamesAll[i]);
+            }
+        }
+
+
+        this.logInMenu = this.model.add();
+        // User Select Text Box Heading
+        let userLogInMenuBG = this.logInMenu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
+
+        let selectUserBox = this.logInMenu.add('cube').scale(0.20,0.04,1).texture('../media/textures/menu/png-small/menu-item-type-3.png').move(0,9.5,0.1);
+        let selectUserText = selectUserBox.add('cube').texture(() => {
+            g2.textHeightAndFont('',0.05,'Arial');
+            g2.setColor('#1a1aff');
+            g2.fillText("SELECT YOUR NAME", 0.5, 0.5 , 'center');
+            g2.drawWidgets(selectUserText);
+        }).scale(1.5,7.5,1).move(0,0,0.1);
+
+        // User Name Text 
+        let userNameTiles = this.logInMenu.add();
+        let userNameTileText = userNameTiles.add('cube').texture(() => {
+                g2.textHeightAndFont('',0.05,'Arial');
                 g2.setColor('white');
-                g2.fillRect(0.2,0,0.6,1);
-                g2.setColor(0,0,1);
-                g2.fillRect(.25,0.40,.5,0.45);
-                g2.setColor('black');
-                g2.textHeight(0.07);
-                g2.fillText('Login', .5, .92, 'center');
-                g2.drawWidgets(login_menu);
-            });
-
-            g2.addWidget(login_menu, 'button', 0.3, 0.5, '#ff0000', 'A', () => {login_menu.name_selected="A";});
-            g2.addWidget(login_menu, 'button', 0.6, 0.5, '#ff0000', 'B', () => {login_menu.name_selected="B";});
-            
-            login_menu.name_selected = null;
-            menu.move(0.3, .6, 0);
-            login_menu.move(-0.4,0,0.1).turnY(0.4).scale(0.6, 0.35, .001);
-            
+                for (let i = 0; i < this.availableUserNames.length; i++) {
+                g2.fillText(this.availableUserNames[i], 0.5, 0.88 - i*0.157 , 'center');
+                }
+                g2.drawWidgets(userNameTileText);
+            }).scale(0.4,0.4,1).move(0,-0.1,0.15);
+        
+        // User Name Tiles
+        let yLoc = 5.2, yDelta = -2.5;
+        for (let i = 0; i < this.availableUserNames.length; i++) {
+            let userNameTileBG = userNameTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-4.png').move(0,yLoc,0.1);
+            this.userNameTilesObjectList.push(userNameTileBG);
+            yLoc = yLoc + yDelta;
         }
-        this.animate = (t, state) =>{
-            if(state.LOGIN.DISABLED)
-                return [false, state]
-            menu.identity().hud().move(0.2, .6, 0).scale(1.3);
-            
-            login_menu.opacity(login_menu.name_selected == null ? 1 : 0.0001);
+        
+    }
 
-            if(name_banner === undefined && login_menu.name_selected)
-            {
-                name_banner = menu.add('cube').texture(() => {
-                    g2.setColor('white');
-                    g2.fillRect(0.3,0,0.4,0.3);
-                    g2.setColor(0,0,1);
-                    g2.setColor('black');
-                    g2.textHeight(0.07);
-                    g2.fillText(login_menu.name_selected, .5, .15, 'center');
-                    g2.drawWidgets(name_banner);
-                });
-                name_banner.move(-0.3,0.5,0.1).scale(0.6, 0.35, .001).color(1,0,0);
-                name_banner.opacity(1);
-                state.LOGIN.NAME = login_menu.name_selected;
-                state.LOGIN.DISABLED = false;
-                return [false, state];
+    // Menu item selection/hover logic
+    getBeamIntersectionWithBoxObjects = (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
+        for(let i=0;i<objectList.length;i++){
+            let center = objectList[i].getGlobalMatrix().slice(12,15);
+            let point = rcb.projectOntoBeam(center);
+            let diff = cg.subtract(point, center);
+            let hit = (Math.abs(diff[0]) < intersectionWidth) &&  (Math.abs(diff[1]) < intersectionHeight);
+
+            if(hit){
+                objectList[i].color(hoverColorSet);
+                if(rt && !rt_prev){
+                    return i;
+                }
+            } else {
+                    objectList[i].color([1,1,1]);
             }
-
-            return [true, state];
         }
-        this.clearState = (state, sandbox) =>{
-            if(state.LOGIN.NAME !== null){
-                sandbox.setName(state.LOGIN.NAME)
-            }
+        return -1;
+    }
+
+    animate = (model, state) =>{
+        
+        if(this.currentUserBanner != null){
+            this.currentUserBanner.identity().hud().turnY(-0.2).move(0.77,0.43,0.1).scale(0.25,0.05,0.001);
+        }
+
+        // TODO :set state as required
+        if(state.LOGIN.DISABLED){
+            // TODO : Update return as required
+            return [false, state];
+        }
+
+        this.logInMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
+        let rt = buttonState.right[0].pressed;
+        let res = this.getBeamIntersectionWithBoxObjects(this.userNameTilesObjectList, 0.1, 0.02, rt, this.rt_prev, [0.2,0.2,1]);
+        
+        if(res > -1){
+            let userName = this.availableUserNames[res];
+            this.currentUserBanner = model.add('cube').texture('../media/textures/menu/png-small/menu-item-type-4.png').scale(0.1,0.1,0.001);
+            let selectUserText = this.currentUserBanner.add('cube').texture(() => {
+                g2.textHeightAndFont('',0.05,'Arial');
+                g2.setColor('white');
+                g2.fillText(" Hi ! " + userName, 0.5, 0.5 , 'center');
+                g2.drawWidgets(selectUserText);
+            }).scale(1.5,7.5,1).move(0,0,0.1);
+
+            // TODO :set state as required
+            state.LOGIN.NAME = userName;
+            this.logInMenu.opacity(0.0001);
+            state.LOGIN.DISABLED = true;
+
+            // TODO : Update return as required
+            return [false, state];
+        }
+        
+        this.rt_prev = rt;
+        // TODO : Update return as required
+        return [false, state];
+    }
+
+    clearState = (state, sandbox) =>{
+        if(state.LOGIN.NAME !== null){
+            sandbox.setName(state.LOGIN.NAME)
         }
     }
+    
 }
