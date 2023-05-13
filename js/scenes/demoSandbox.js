@@ -13,15 +13,21 @@ import * as ut from '../sandbox/utils.js';
 import * as wu from '../sandbox/wei_utils.js';
 import * as croquet from "../util/croquetlib.js";
 
-export let updateScene = msg => {
+export let updateModelScene = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
         window.clay.model.multi_controller.updateScene(msg);
     }
 }
 
-export let updatePlayer = msg => {
+export let updateModelPlayer = msg => {
     if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
         window.clay.model.multi_controller.updatePlayer(msg);
+    }
+}
+
+export let updateModelWholeScene = msg => {
+    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
+        window.clay.model.multi_controller.updateWholeScene(msg);
     }
 }
 
@@ -43,7 +49,7 @@ export const init = async model => {
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
-    let saving_controller = new CreateSavingController(save_model);
+    let saving_controller = new CreateSavingController(save_model, sandbox);
     let mode_controller = new CreateModeController(mode_model);
     let box_controller = new CreateBoxController(box_model, sandbox);
     let obj_controller = new CreateObjController(obj_model);
@@ -55,8 +61,8 @@ export const init = async model => {
     menu_controller.init(menu_model);
 
     // User Collaboration/Share Menu
-    let share_menu_controller = new CreateShareMenuController();
-    share_menu_controller.init(shared_menu_model);
+    //let share_menu_controller = new CreateShareMenuController();
+    //share_menu_controller.init(shared_menu_model);
 
 
     let login_controller = new CreateLoginMenuController();
@@ -144,9 +150,12 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_15.99');
+    croquet.register('croquetDemo_18.99');
+
+    let debug = true;
 
     model.animate(() => {
+        window.demoDemoSandboxState = true;
         state_msg.RESUME =true;
 
         let state_code = login_controller.animate(model.time, state_msg);
@@ -155,11 +164,15 @@ export const init = async model => {
 
         state_code = saving_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
+        if(debug && model.time > 5){
+            state_msg.LOGIN.SAVE = true
+            debug = false;
+        }
         state_msg = saving_controller.clearState(model.time, state_msg, sandbox);
 
-        state_code = share_menu_controller.animate(model.time, state_msg);
-        state_msg = checkStateCode(state_code);
-        state_msg = share_menu_controller.clearState(state_msg);
+        //state_code = share_menu_controller.animate(model.time, state_msg);
+        //state_msg = checkStateCode(state_code);
+        //state_msg = share_menu_controller.clearState(state_msg);
 
         state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
@@ -167,6 +180,7 @@ export const init = async model => {
 
         state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
         state_msg = checkStateCode(state_code);
+        state_msg = multi_controller.clearState(model.time, state_msg)
 
 
         state_code = room_controller.animate(model.time, state_msg);
@@ -192,6 +206,8 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
+
+
 
 
 

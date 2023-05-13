@@ -84,8 +84,8 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     this.newObj = (obj, m) =>{
         return this.furniture_collection.newObj(obj, m);
     }
-    this.reviseObj = (obj) =>{
-        return this.furniture_collection.reviseObj(obj);
+    this.reviseObj = (obj, revised) =>{
+        return this.furniture_collection.reviseObj(obj, revised);
     }
 
     this.getObjByName = (name) => {
@@ -110,19 +110,19 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         return this.wall_collection.getRemovedTags();
     }
 
-    this.setObjCollection = (collection) =>{
-        this.furniture_collection.setObjScene(collection);
+    this.setObjCollection = (collection, revised) =>{
+        this.furniture_collection.setObjScene(collection, revised);
     }
 
-    this.setWallCollection = (collection) =>{
-        this.wall_collection.setWallScene(collection);
+    this.setWallCollection = (collection, revised) =>{
+        this.wall_collection.setWallScene(collection, revised);
     }
-    this.setNobjScene = (obj_tags) =>{
-        this.furniture_collection.setNobjScene(obj_tags);
+    this.setNobjScene = (obj_tags, revised) =>{
+        this.furniture_collection.setNobjScene(obj_tags, revised);
 
     }
-    this.setNwallScene = (wall_tags) =>{
-        this.wall_collection.setNwallScene(wall_tags);
+    this.setNwallScene = (wall_tags, revised) =>{
+        this.wall_collection.setNwallScene(wall_tags, revised);
     }
     this.removeWallCollection = (wall_tags) =>{
 
@@ -276,10 +276,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
     this.deleteTmpFocus = () =>{
-        if(this.tmp_focus !== undefined && this.tmp_focus.isFocus() === 3){
+        if(!wu.isNull(this.tmp_focus) && this.tmp_focus.isFocus() === 3){
             this.tmp_focus.defocus();
             this.tmp_focus = undefined;
         }
+
     }
 
 

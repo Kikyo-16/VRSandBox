@@ -386,11 +386,11 @@ export function CreateVRSandbox(model){
     }
 
 
-    this.setScene = (args) =>{
+    this.setScene = (args, revised) =>{
         console.log("set Scene")
-        this.mini_sandbox.setScene(args);
-        this.room.setScene(args);
-        this.effect.setScene(args);
+        this.mini_sandbox.setScene(args, revised);
+        this.room.setScene(args, revised);
+        this.effect.setScene(args, revised);
         if(this.active_floor >= this.mini_sandbox.boxes.length){
             this.active_floor = 0;
         }

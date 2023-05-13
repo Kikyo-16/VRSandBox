@@ -175,7 +175,7 @@ export function CreateSandbox(model){
 
     this.reviseObj = (floor, obj_state) =>{
 
-        let flag = this.boxes[floor].reviseObj(obj_state);
+        let flag = this.boxes[floor].reviseObj(obj_state, true);
         if(flag)
             this.timer.set(ut.OBJ_TIMER, obj_state._latest);
         return flag;
@@ -251,7 +251,7 @@ export function CreateSandbox(model){
         return null
 
     }
-    this.setScene = (args) =>{
+    this.setScene = (args, revised) =>{
         //console.log("updaaaaaaaaaate", args)
         for(let [tag, scene] of args) {
             if(scene === null || scene === undefined)
@@ -274,22 +274,22 @@ export function CreateSandbox(model){
                     break
                 case ut.OBJ_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setObjCollection(scene[i]);
+                        this.boxes[i].setObjCollection(scene[i], revised);
                     }
                     break
                 case ut.N_OBJ_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setNobjScene(scene[i]);
+                        this.boxes[i].setNobjScene(scene[i], revised);
                     }
                     break
                 case ut.WALL_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setWallCollection(scene[i]);
+                        this.boxes[i].setWallCollection(scene[i], revised);
                     }
                     return scene
                 case ut.N_WALL_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setNwallScene(scene[i]);
+                        this.boxes[i].setNwallScene(scene[i], revised);
                     }
                     break
                 default:

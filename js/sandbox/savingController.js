@@ -1,14 +1,14 @@
 import * as bc from "../sandbox/baseController.js"
+import * as wu from "../sandbox/wei_utils.js"
 import {g2} from "../util/g2.js";
 
-export function CreateSavingController(model){
+export function CreateSavingController(model, sandbox){
 
-    let PRESS = 4;
+    let PRESS = 2;
     let CD = .5;
     this.pre = -1;
     this.msg = ["NULL"];
     this.is_saving = false;
-
 
 
     this.invitationMenu = model.add();
@@ -23,15 +23,28 @@ export function CreateSavingController(model){
     this.invitationMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
     this.invitationMenu.opacity(0.00001);
 
+    let file_input = document.getElementById('fileInput');
+    file_input.addEventListener('change', function selectedFileChanged() {
+        console.log("click", file_input.files);
+        if(file_input.files.length === 0)
+            return;
+        const reader = new FileReader();
+        reader.onload = function fileReadCompleted() {
+            console.log("result......");
+            sandbox.setScene(reader.result);
+
+        };
+        reader.readAsText(this.files[0]);
+    });
+
+
+
     let showMsg = (text, ratio) =>{
         this.msg[0] = text;
         console.log(ratio)
         this.invitationMenu.opacity(ratio);
 
     }
-
-
-
 
 
 
@@ -79,6 +92,44 @@ export function CreateSavingController(model){
 
     }
 
+    let parseState = (e) =>{
+        if(wu.isNull(e)){
+            return e;
+        }
+        console.log("jiji", e.constructor);
+        if(e.constructor===Array){
+            let export_json = Array(0);
+            for(let i = 0; i < e.length; ++ i){
+                export_json.push(parseState(e[i]));
+            }
+            return export_json;
+        }else if(e.constructor===Map){
+            let export_json = {};
+            for(let [key, info] of e){
+                export_json[key] = parseState(info)
+            }
+            return export_json;
+        }else{
+            return e;
+        }
+
+    }
+
+
+    let exportState = (e) =>{
+        let json_data = parseState(e);
+        return JSON.stringify(json_data);
+    }
+
+
+
+    let importState = (state) =>{
+        state.LOGIN.SAVE = false;
+        file_input.click();
+        return state;
+
+    }
+
     this.animate = (t, state) =>{
         let flag = saving(t);
         if(flag)
@@ -88,13 +139,13 @@ export function CreateSavingController(model){
 
     this.clearState = (t, state, sandbox) =>{
         if(state.LOGIN.SAVE){
-            let jsonData = JSON.stringify(sandbox.getScene(false));
-            //const fs = require("fs");
-            //"../media/scenes/" +
+            return importState(state);
+            let v = sandbox.getScene(false);
+            const jsonFromMap = exportState(v);
             let file_name = state.LOGIN.NAME.toString() + "_" + sandbox.timer.newTime();
-            //fs.writeFile(file_name, jsonData);
+            console.log("ashere", v, jsonFromMap);
             const a = document.createElement("a");
-            const file = new Blob([jsonData], {type: 'text/plain'});
+            const file = new Blob([jsonFromMap], {type: 'text/plain'});
             a.href = URL.createObjectURL(file);
             a.download = file_name;
             a.click();

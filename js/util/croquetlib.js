@@ -1,7 +1,7 @@
 
 // YOUR APPLICATION SHOULD REDEFINE THESE FUNCTIONS:
 
-import { updateScene,  updatePlayer} from "../scenes/demoSandbox.js";
+import { updateModelScene,  updateModelPlayer, updateModelWholeScene} from "../scenes/demoSandbox.js";
 import { diffData } from "../sandbox/vr_sandbox.js";
 import {diffPlayer} from "../sandbox/multiplayerController.js"
 import { controllerMatrix,  buttonState, joyStickState} from "../render/core/controllerInput.js";
@@ -11,7 +11,10 @@ import * as global from "../global.js";
 
 // YOU SHOULD OBTAIN YOUR OWN apiKey FROM: croquet.io/keys
 
-let apiKey = '16JKtOOpBuJsmaqgLzMCFyLPg9mqtNhxtObIsoj4b';
+ /* Copy this into a file named apiKey.js */
+const apiKey = '1zMbeaMBGMs10zxhv3u4JqDOsGC3G4N770Gpq72yf';
+const appId = 'edu.nyu.ll4270.microverse';
+
 let preRightTrigger = {pressed: false, touched: false, value: 0};
 window.color = [Math.random(), Math.random(), Math.random()]
 /////////////////////////////////////////////////////////////////
@@ -35,21 +38,21 @@ export class Model extends Croquet.Model {
    }
    updateWholeScene(e) {
       if (window.croquetModel)
-         updateScene(e);
+         updateModelWholeScene(e);
       else {
          window.croquetModel = this;
       }
    }
    updateScene(e) {
       if (window.croquetModel)
-         updateScene(e);
+         updateModelScene(e);
       else {
          window.croquetModel = this;
       }
    }
    updatePlayer(e) {
       if (window.croquetModel)
-         updatePlayer(e);
+         updateModelPlayer(e);
       else {
          window.croquetModel = this;
       }
@@ -64,18 +67,21 @@ export class View extends Croquet.View {
       this.pre_player = null;
       this.future(50).sceneEvent();
       this.future(50).playerEvent();
-      //this.future(10000).wholeSceneEvent();
+      this.future(5000).wholeSceneEvent();
    }
    updateScene(info) { this.publish("scene", "updateScene", info); }
    updatePlayer(info) { this.publish("scene", "updatePlayer", info); }
    updateWholeScene(info) { this.publish("scene", "updateWholeScene", info); }
 
    wholeSceneEvent(){
-       let scene = window.clay.model.multi_controller.scene;
-       if(scene !== null){
+       let scene = window.clay.model.multi_controller.wholeScene;
+       let name = window.clay.model.multi_controller.name;
+       if(scene !== null && name !== null){
+
            let sent = new Map();
+           sent.set(ut.WHO_KEY, name);
            sent.set(ut.WHOLE_KEY, scene);
-           this.updateWholeScene(scene);
+           this.updateWholeScene(sent);
 
        }
 
