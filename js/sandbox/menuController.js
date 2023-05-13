@@ -45,7 +45,7 @@ export class CreateMenuController {
 
       // Menu interaction
       let rotationSpeedDivider = 2000;
-      let selectedObjectScale = 0.2;
+      let selectedObjectScale = 0.17;
       let hitRadius = 0.04;
 
       this.getBeamIntersectionWithObjects = (objectList, intersectionRadius, rt, rt_prev, currentSelection, bgList, defColor, hoverColor) => {
@@ -129,8 +129,8 @@ export class CreateMenuController {
          }
 
          menu.move(0, 0, 0);
-         colorPicker.move(-.7, 0, 0).turnY(0.4).scale(0.3, 0.3, .0001);
-         texturePicker.move(.7,0, 0).turnY(-0.4).scale(0.3, 0.3, 0.0001);
+         colorPicker.move(-.6, 0, 0).turnY(0.4).scale(0.27, 0.27, .0001);
+         texturePicker.move(.6,0, 0).turnY(-0.4).scale(0.27, 0.27, 0.0001);
          objectPicker.move(objectPickerLeftOffset, -0.6, 0).scale(0.2);
          //console.log("menu created")
       }
@@ -162,7 +162,8 @@ export class CreateMenuController {
          }
 
          // visualize menu
-         menu.identity().hud();
+         let menu_pos = [0,-0.18,0.4];
+         menu.identity().hud().move(menu_pos);
          colorPicker.opacity(menuOpen ? 1 : .001);
          texturePicker.opacity(menuOpen ? 1 : .001);
          objectPicker.opacity(menuOpen ? 1 : .001);
@@ -178,12 +179,12 @@ export class CreateMenuController {
             // Display selected object
             if (selectedObject == null) {
                if (selectedTextureIndex > 0) {
-                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).texture(textureList[selectedTextureIndex]).scale(selectedObjectScale);
+                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).move(menu_pos).texture(textureList[selectedTextureIndex]).scale(selectedObjectScale);
                } else {
-                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).scale(selectedObjectScale);
+                  selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).move(menu_pos).scale(selectedObjectScale);
                }
             } else {
-               selectedObject.identity().hud().color(selectedColor).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
+               selectedObject.identity().hud().color(selectedColor).move(menu_pos).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
             }
 
             // BEAM INTERSECTION FOR TEXTURE PICKER

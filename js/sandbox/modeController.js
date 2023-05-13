@@ -188,6 +188,13 @@ export function CreateModeController(model){
     }
 
     this.animate = (t, state) =>{
+
+        if(state.LOGIN.DISABLED){
+            menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001).opacity(1);
+        } else {
+            menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001).opacity(0.001);
+        }
+
         if(state.MODE.DISABLED)
             return [false, state]
         if(state.MODE.MODE === ut.DIVING_MSG){
@@ -195,7 +202,6 @@ export function CreateModeController(model){
             return [false, state]
         }
         this.mode_id = state.MODE.MODE;
-        menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001);
         if(state.MODE.SWITCH){
             if(state.MODE.IN_ROOM)
                 this.mode_id = ut.ROOM_WITHOUT_BOX_MSG;

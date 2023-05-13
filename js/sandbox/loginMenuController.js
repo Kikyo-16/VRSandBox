@@ -86,7 +86,7 @@ export class CreateLoginMenuController {
     animate = (model, state) =>{
         
         if(this.currentUserBanner != null){
-            this.currentUserBanner.identity().hud().turnY(-0.2).move(0.77,0.43,0.1).scale(0.25,0.05,0.001);
+            this.currentUserBanner.identity().hud().turnY(-0.4).move(0.77,0.43,0.0).scale(0.30,0.06,0.001);
         }
 
         // TODO :set state as required
