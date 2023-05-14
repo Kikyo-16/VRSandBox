@@ -166,6 +166,7 @@ export const init = async model => {
             USER: null,
             OP: null,
             ACT: null,
+            ANS: null,
         }
 
     }
@@ -207,7 +208,7 @@ export const init = async model => {
 
         state_code = invitation_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-        state_msg = invitation_controller.clearState(model.time, state_msg);
+        state_msg = invitation_controller.clearState(model.time, state_msg, message_collection);
 
         state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);

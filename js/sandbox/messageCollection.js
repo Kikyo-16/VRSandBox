@@ -14,16 +14,18 @@ export function CreateMessageCollection(sandbox){
             let k = send_msg.USER + "_" + send_msg.OP;
             if(this.send_queue.has(k)){
                 let send = this.send_queue.get(k);
-                if(send.getColor(ut.ACT_KEY)){
+                if(send.get(ut.ACT_KEY)){
                     send.set(ut.LATEST_KEY, new_t);
                     send.set(ut.ACT_KEY, false);
+                    send.set(ut.INVITATION_KEY, true);
                 }
             }else{
-                let msg = new Map;
+                let msg = new Map();
                 msg.set(ut.USER_KEY, send_msg.USER);
                 msg.set(ut.OP_KEY, send_msg.OP);
                 msg.set(ut.LATEST_KEY, new_t);
                 msg.set(ut.ACT_KEY, false);
+                msg.set(ut.INVITATION_KEY, true);
                 this.send_queue.set(k, msg);
             }
         }
@@ -32,20 +34,16 @@ export function CreateMessageCollection(sandbox){
 
     }
 
-    this.sendReply = (state) =>{
-        let rev_msg = state.REV;
-        if(!wu.isNull(rev_msg.USER)&&!wu.isNull(rev_msg.OP)&&!wu.isNull(rev_msg.ACT)) {
-            let k = rev_msg.USER + "_" + rev_msg.OP + "_r";
-            let rev = receive_queue.get(k);
-            let msg = new Map();
-            msg.set(ut.USER_KEY, rev_msg.USER);
-            msg.set(ut.ACT_KEY, rev_msg.ACT);
-            msg.set(ut.LATEST_KEY, rev.get(ut.LATEST_KEY));
-            this.send_queue.set(k, msg);
-            rev_msg.USER = null;
-            rev_msg.OP = null;
-            rev_msg.ACT = null;
-        }
+    this.sendReply = (user, op, act) =>{
+        let k = user + "_" + op;
+        let rev = receive_queue.get(k);
+        let msg = new Map();
+        msg.set(ut.USER_KEY, user);
+        msg.set(ut.ACT_KEY, act);
+        msg.set(ut.OP_KEY, op);
+        msg.set(ut.LATEST_KEY, rev.get(ut.LATEST_KEY));
+        this.send_queue.set(k + "_r", msg);
+
     }
 
     let clearRevQ = (k) =>{
@@ -81,16 +79,14 @@ export function CreateMessageCollection(sandbox){
                 let msg = new Map();
                 msg.set(ut.USER_KEY, who);
                 msg.set(ut.LATEST_KEY, info.get(ut.LATEST_KEY));
+                msg.set(ut.OP_KEY, info.get(ut.OP_KEY));
 
-                if(info.has(ut.OP_KEY)){
-                    msg.set(ut.OP_KEY, info.get(ut.OP_KEY));
+                if(info.has(ut.INVITATION_KEY)){
                     updateRevQ(k, msg);
                 }else{
                     msg.set(ut.ACT_KEY, info.get(ut.ACT_KEY));
                     updateRevQ(k + "_r", msg);
                 }
-
-                console.log("rev", msg, info);
             }
 
 
@@ -103,21 +99,28 @@ export function CreateMessageCollection(sandbox){
         let rev_msg = state.REV;
         if(!wu.isNull(send_msg.USER)&&!wu.isNull(send_msg.OP)&&wu.isNull(send_msg.ACT)){
             let k = send_msg.USER + "_" + send_msg.OP;
+
             if(this.send_queue.has(k)) {
-                if (receive_queue.has(k)) {
-                    let send = this.send_queue.get(k);
+                if (receive_queue.has(k + "_r")) {
+                    //console.log("revvvvvvvvvvv");
+                    //let send = this.send_queue.get(k);
                     let rev = receive_queue.get(k + "_r");
-                    if (rev.get(ut.LATEST_KEY) === send.get(ut.LATEST_KEY)) {
+                    let check_key = k + "_r";
+                    if(this.solve_msg.has(check_key) && rev.get(ut.LATEST_KEY) <= this.solve_msg.get(check_key)){
+                        //console.log("reqqqqq", k, rev.get(ut.LATEST_KEY), this.solve_msg.get(check_key), this.send_queue.has(k), receive_queue.has(k + "_r"));
+                    }else{
                         send_msg.ACT = rev.get(ut.ACT_KEY);
                         this.send_queue.set(ut.ACT_KEY, true);
+                        this.solve_msg.set(check_key, rev.get(ut.LATEST_KEY));
+                        console.log("response----------------------------");
                     }
                 }
             }
         }
         if(wu.isNull(rev_msg.USER)&&wu.isNull(rev_msg.OP)&&wu.isNull(rev_msg.ACT)){
             for(let [key, info] of receive_queue){
-                let check_key = key + info.get(ut.LATEST_KEY);
-                if(this.solve_msg.has(check_key)){
+                let check_key = key;
+                if(this.solve_msg.has(check_key) &&  + info.get(ut.LATEST_KEY) <= this.solve_msg.get(check_key)){
                     continue;
                 }
                 if(info.has(ut.OP_KEY)){
@@ -125,11 +128,6 @@ export function CreateMessageCollection(sandbox){
                     rev_msg.OP = info.get(ut.OP_KEY);
                     this.solve_msg.set(check_key, info.get(ut.LATEST_KEY));
                     console.log("check", state.REV);
-                    break
-                }else if(info.has(ut.ACT_KEY)) {
-                    let res = info.get(ut.ACT_KEY);
-                    this.solve_msg.set(check_key, info.get(ut.LATEST_KEY));
-                    console.log("check", res);
                     break
                 }
             }
@@ -146,8 +144,8 @@ export function CreateMessageCollection(sandbox){
         let send_msg = state.SEND;
         if(!wu.isNull(send_msg.USER)&&!wu.isNull(send_msg.OP)&&!wu.isNull(send_msg.ACT)){
             console.log("Invitation rev", send_msg.ACT);
-            state.USER = null;
-            state.OP = null;
+            send_msg.USER = null;
+            send_msg.OP = null;
             send_msg.ACT = null;
         }
         return state;
