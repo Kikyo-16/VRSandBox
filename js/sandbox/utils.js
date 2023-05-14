@@ -1,7 +1,5 @@
 import * as cg from "../render/core/cg.js";
 
-
-
 export let FLOOR_TIMER = "A"
 export let OBJ_TIMER = "B"
 export let N_OBJ_TIMER = "C"

@@ -190,9 +190,9 @@ export function CreateModeController(model){
     this.animate = (t, state) =>{
 
         if(state.LOGIN.DISABLED){
-            menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001).opacity(1);
+            menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(1);
         } else {
-            menu_button.identity().hud().move(0, .45, 0.1).scale(.42, .07, .001).opacity(0.001);
+            menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(0.001);
         }
 
         if(state.MODE.DISABLED)
