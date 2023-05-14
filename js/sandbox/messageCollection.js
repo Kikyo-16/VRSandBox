@@ -6,6 +6,7 @@ export function CreateMessageCollection(sandbox){
     this.name = null;
     this.send_queue = new Map();
     this.solve_msg = new Map();
+    this.latest = -1;
 
     this.sendInvitation = (state) => {
         let send_msg = state.SEND;
@@ -66,6 +67,9 @@ export function CreateMessageCollection(sandbox){
     }
     this.updateRev = (e) =>{
         let who = e.get(ut.WHO_KEY);
+        let when = e.get(ut.LATEST_KEY);
+        if(wu.isNull(when) || when < this.latest)
+            return;
         if(!wu.isNull(sandbox._name) && sandbox._name!==who){
 
             for(let [key, info] of e){
@@ -97,6 +101,7 @@ export function CreateMessageCollection(sandbox){
     this.animate = (t, state) =>{
         let send_msg = state.SEND;
         let rev_msg = state.REV;
+        this.latest = sandbox.timer.newTime();
         if(!wu.isNull(send_msg.USER)&&!wu.isNull(send_msg.OP)&&wu.isNull(send_msg.ACT)){
             let k = send_msg.USER + "_" + send_msg.OP;
 

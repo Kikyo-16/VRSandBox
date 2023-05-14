@@ -67,6 +67,7 @@ export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 
 export let LOAD_MSG = "Load"
 export let SAVE_MSG = "Save"
+export let REFRESH_MSG = "Refresh"
 export let LOGOUT_MSG = "Log out"
 export let CANCEL_MSG = "Cancel"
 export let RECEIVE_MSG = "New message from "

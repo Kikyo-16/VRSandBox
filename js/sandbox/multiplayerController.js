@@ -92,21 +92,27 @@ export function CreateMultiplayerController(sandbox){
         msg.set("RM", rm);
         msg.set("IN_BOX", in_room);
         msg.set("FLOOR", sandbox.active_floor);
+        msg.set(ut.LATEST_KEY, sandbox.timer.newTime());
         return msg;
 
     }
 
     this.getScene = () =>{
-        return sandbox.getScene(true);
+        let v = sandbox.getScene(true);
+        v.set(ut.LATEST_KEY, sandbox.timer.newTime());
+        return v;
 
     }
     this.getWholeScene = () =>{
-        return sandbox.getScene(false);
+        let v = sandbox.getScene(false);
+        v.set(ut.LATEST_KEY, sandbox.timer.newTime());
+        return v;
     }
 
     this.updateScene = (e) =>{
         let who = e.get(ut.WHO_KEY);
-        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name)
+        let when = e.get(ut.LATEST_KEY);
+        if(wu.isNull(this.name)|| wu.isNull(when) || wu.isNull(who) || who === this.name || when < this.latest)
             return
         if(e.has(ut.SCENE_KEY)){
             console.log("aw", who, e.get(ut.SCENE_KEY), this.name);
@@ -155,16 +161,18 @@ export function CreateMultiplayerController(sandbox){
 
     this.updateWholeScene = (e) =>{
         let who = e.get(ut.WHO_KEY);
-        if(wu.isNull(who) || (!wu.isNull(this.name) && who === this.name))
+        let when = e.get(ut.LATEST_KEY);
+        if(wu.isNull(who) || wu.isNull(when)|| (!wu.isNull(this.name) && who === this.name) || when < this.latest)
             return
-        console.log("asasa", e, ut.WHO_KEY, who, this.name)
+        console.log("asasa", e, ut.WHO_KEY, when, this.name)
         this.reloadedScene = e.get(ut.WHOLE_KEY);
     }
 
     this.updatePlayer = (e) =>{
         let who = e.get(ut.WHO_KEY);
+        let when = e.get(ut.LATEST_KEY);
         //console.log("player", who);
-        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name)
+        if(wu.isNull(this.name)|| wu.isNull(when) || wu.isNull(who) || who === this.name || when < this.latest)
             return
 
         if(e.has(ut.PLAYER_KEY)) {
@@ -281,6 +289,7 @@ export function CreateMultiplayerController(sandbox){
     this.animate = (t, in_room, state) =>{
         if(!this.has_init)
             return [false, state];
+        this.latest = state.RESET;
         this.scene = this.getScene();
         this.wholeScene = this.getWholeScene();
         this.player = this.getPlayer(in_room);

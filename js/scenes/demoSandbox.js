@@ -158,7 +158,8 @@ export const init = async model => {
             OP: null,
             ACT: null,
             ANS: null,
-        }
+        },
+        RESET: -1,
 
     }
 
@@ -177,9 +178,14 @@ export const init = async model => {
     croquet.register('croquetDemo_23.11');
 
     let debug = true;
+    state_msg.RESET = sandbox.timer.newTime();
+    if(!wu.isNull(window.temporal)){
+        sandbox.loadScene(window.temporal);
+        //console.log("reset", state_msg.RESET);
 
+    }
     model.animate(() => {
-
+        //console.log(window.temporal);
         state_msg.RESUME =true;
 
         let state_code = login_controller.animate(model.time, state_msg, sandbox);

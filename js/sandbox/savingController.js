@@ -4,11 +4,12 @@ import {g2} from "../util/g2.js";
 import * as cg from "../render/core/cg.js";
 import { lcb, rcb } from '../handle_scenes.js';
 import * as ut from "../sandbox/utils.js"
+import {REFRESH_MSG} from "../sandbox/utils.js";
 
 export function CreateSavingController(model, sandbox){
 
     let menu = model.add();
-    let userNamesAll = [ut.LOAD_MSG, ut.SAVE_MSG, ut.LOGOUT_MSG, ut.CANCEL_MSG];
+    let userNamesAll = [ut.SAVE_MSG, ut.REFRESH_MSG, ut.LOGOUT_MSG, ut.CANCEL_MSG];
 
     this.availableUserNames = [];
     this.userNameTilesObjectList = [];
@@ -20,19 +21,7 @@ export function CreateSavingController(model, sandbox){
     this.msg = ["NULL"];
     this.is_saving = false;
 
-    let file_input = document.getElementById('fileInput');
-    file_input.addEventListener('change', function selectedFileChanged() {
-        console.log("click", file_input.files);
-        if(file_input.files.length === 0)
-            return;
-        const reader = new FileReader();
-        reader.onload = function fileReadCompleted() {
-            console.log("result......");
-            sandbox.setScene(reader.result);
 
-        };
-        reader.readAsText(this.files[0]);
-    });
 
     this.currentUserBanner = null;
     for(let i=0;i< userNamesAll.length;i++){
@@ -169,11 +158,14 @@ export function CreateSavingController(model, sandbox){
         if(res > -1){
             let op = this.availableUserNames[res];
             switch (op) {
-                case ut.LOAD_MSG:
-                    file_input.click();
-                    break;
+                //case ut.LOAD_MSG:
+                //    file_input.click();
+                //    break;
                 case ut.SAVE_MSG:
                     exportState(state);
+                    break;
+                case ut.REFRESH_MSG:
+                    state.RESET = sandbox.timer.newTime();
                     break;
                 case ut.CANCEL_MSG:
                     break;
