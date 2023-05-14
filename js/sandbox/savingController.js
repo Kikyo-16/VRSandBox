@@ -1,27 +1,24 @@
 import * as bc from "../sandbox/baseController.js"
 import * as wu from "../sandbox/wei_utils.js"
 import {g2} from "../util/g2.js";
+import * as cg from "../render/core/cg.js";
+import { lcb, rcb } from '../handle_scenes.js';
+import * as ut from "../sandbox/utils.js"
 
 export function CreateSavingController(model, sandbox){
 
-    let PRESS = 2;
-    let CD = .5;
+    let menu = model.add();
+    let userNamesAll = [ut.LOAD_MSG, ut.SAVE_MSG, ut.LOGOUT_MSG, ut.CANCEL_MSG];
+
+    this.availableUserNames = [];
+    this.userNameTilesObjectList = [];
+    this.rt_prev = false;
+    this.is_open = false;
+
+
     this.pre = -1;
     this.msg = ["NULL"];
     this.is_saving = false;
-
-
-    this.invitationMenu = model.add();
-    let invitationMenuBG = this.invitationMenu.add('cube').scale(0.35,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-6.png');
-    let invitationMenuText = invitationMenuBG.add('cube').texture( () => {
-        g2.textHeightAndFont('',0.042,'Arial');
-            //g2.setColor('#1a1aff');
-        g2.setColor('white');
-        g2.fillText( this.msg[0], 0.5, 0.505 , 'center');
-        g2.drawWidgets(invitationMenuText);
-    }).scale(1,7,1).move(0,0,0.1);
-    this.invitationMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
-    this.invitationMenu.opacity(0.00001);
 
     let file_input = document.getElementById('fileInput');
     file_input.addEventListener('change', function selectedFileChanged() {
@@ -37,66 +34,83 @@ export function CreateSavingController(model, sandbox){
         reader.readAsText(this.files[0]);
     });
 
-
-
-    let showMsg = (text, ratio) =>{
-        this.msg[0] = text;
-        console.log(ratio)
-        this.invitationMenu.opacity(ratio);
-
+    this.currentUserBanner = null;
+    for(let i=0;i< userNamesAll.length;i++){
+        this.availableUserNames.push(userNamesAll[i]);
     }
 
 
+    // User Select Text Box Heading
+    let userLogInMenuBG = menu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
 
-    let saving = (t) =>{
-        if((!bc.isLBt2()||!bc.isLBt1()) && !this.is_saving){
-            this.pre = -1;
-            return false;
-        }
-        let flag = false;
-        if(this.pre === -1){
-            this.pre = t
-        }else if(t - this.pre > PRESS){
-            if(!this.is_saving){
-                flag = true;
-            }
-            this.is_saving = true;
-            if(t - this.pre > PRESS + 4 * CD){
-                this.pre = t;
-                this.is_saving = false;
-            }else{
-                let dt = (t - this.pre - PRESS) / CD;
-                if(dt > 1 && dt < 3)
-                    dt = 1
-                else if(dt > 3)
-                    dt = (4 - dt) - .1;
-                if(dt < 0)
-                    dt = 0.00001
-                showMsg("Saved successfully!",  dt);
-            }
+    let selectUserBox = menu.add('cube').scale(0.20,0.04,1).texture('../media/textures/menu/png-small/menu-item-type-3.png').move(0,9.5,0.1);
+    let selectUserText = selectUserBox.add('cube').texture(() => {
+            g2.textHeightAndFont('',0.05,'Arial');
+            g2.setColor('#1a1aff');
+            g2.fillText("SELECT", 0.5, 0.5 , 'center');
+            g2.drawWidgets(selectUserText);
+    }).scale(1.5,7.5,1).move(0,0,0.1);
 
-            return flag;
-        }
+    // User Name Text
+    let userNameTiles = menu.add();
+    let userNameTileText = userNameTiles.add('cube').scale(0.4,0.4,1).move(0,-0.1,0.15);
 
-
+    // User Name Tiles
+    let yLoc = 5.2, yDelta = -2.5;
+    for (let i = 0; i < this.availableUserNames.length; i++) {
+        let userNameTileBG = userNameTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-4.png').move(0,yLoc,0.1);
+        this.userNameTilesObjectList.push(userNameTileBG);
+        yLoc = yLoc + yDelta;
     }
 
-    let load = () =>{
-        let input = document.createElement('input');
-        input.type = 'file';
-        input.onchange = _ => {
-            let files =   Array.from(input.files);
-            console.log(files);
-        };
-        input.click();
+    let textureNull = () =>{
 
+    }
+    let textureFn = () => {
+        g2.textHeightAndFont('',0.05,'Arial');
+        g2.setColor('white');
+        for (let i = 0; i < this.availableUserNames.length; i++) {
+            g2.fillText(this.availableUserNames[i], 0.5, 0.88 - i*0.157 , 'center');
+        }
+        g2.drawWidgets(userNameTileText);
+    }
+
+    let closeMenu = () =>{
+        menu.opacity(.0001);
+        this.is_open = false;
+        userNameTileText.texture(textureNull);
+    }
+    let openMenu = () =>{
+        menu.opacity(1.);
+        this.is_open = true;
+        userNameTileText.texture(textureFn);
+    }
+
+    closeMenu();
+    // Menu item selection/hover logic
+    let getBeamIntersectionWithBoxObjects = (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
+        for(let i=0;i<objectList.length;i++){
+            let center = objectList[i].getGlobalMatrix().slice(12,15);
+            let point = rcb.projectOntoBeam(center);
+            let diff = cg.subtract(point, center);
+            let hit = (Math.abs(diff[0]) < intersectionWidth) &&  (Math.abs(diff[1]) < intersectionHeight);
+
+            if(hit){
+                objectList[i].color(hoverColorSet);
+                if(rt && !rt_prev){
+                    return i;
+                }
+            } else {
+                    objectList[i].color([1,1,1]);
+            }
+        }
+        return -1;
     }
 
     let parseState = (e) =>{
         if(wu.isNull(e)){
             return e;
         }
-        console.log("jiji", e.constructor);
         if(e.constructor===Array){
             let export_json = Array(0);
             for(let i = 0; i < e.length; ++ i){
@@ -116,43 +130,79 @@ export function CreateSavingController(model, sandbox){
     }
 
 
-    let exportState = (e) =>{
-        let json_data = parseState(e);
-        return JSON.stringify(json_data);
+    let exportState = (state) =>{
+        let v = sandbox.getScene(false);
+        let json_data = parseState(v);
+        const jsonFromMap = JSON.stringify(json_data);
+        let file_name = state.LOGIN.NAME.toString() + "_" + sandbox.timer.newTime();
+        const a = document.createElement("a");
+        const file = new Blob([jsonFromMap], {type: 'text/plain'});
+        a.href = URL.createObjectURL(file);
+        a.download = file_name;
+        a.click();
     }
 
+    this.animate = (model, state) =>{
 
+        if(this.currentUserBanner != null){
+            this.currentUserBanner.identity().hud().turnY(-0.4).move(0.77,0.43,0.0).scale(0.30,0.06,0.001);
+        }
 
-    let importState = (state) =>{
-        state.LOGIN.SAVE = false;
-        file_input.click();
-        return state;
+        if(state.SAVING.INACTIVE){
+            closeMenu();
+            state.SAVING.OPEN = this.is_open;
+            return [false, state];
+        }
+        if(!this.is_open && bc.isLBt1()&&bc.isLBt2()){
+            openMenu();
+        }
+        if(!this.is_open){
+            state.SAVING.OPEN = this.is_open;
+            return [false, state];
+        }
 
-    }
+        menu.identity().hud().move(0,0,0).scale(1,1,.0001);
 
-    this.animate = (t, state) =>{
-        let flag = saving(t);
-        if(flag)
-            state.LOGIN.SAVE = true;
+        let rt = bc.isRBt1();
+        let res = getBeamIntersectionWithBoxObjects(this.userNameTilesObjectList, 0.1, 0.02, rt, this.rt_prev, [0.2,0.2,1]);
+
+        if(res > -1){
+            let op = this.availableUserNames[res];
+            switch (op) {
+                case ut.LOAD_MSG:
+                    file_input.click();
+                    break;
+                case ut.SAVE_MSG:
+                    exportState(state);
+                    break;
+                case ut.CANCEL_MSG:
+                    break;
+                case ut.LOGOUT_MSG:
+                    state.LOGIN.OUT = true;
+                    break;
+                default:
+
+            }
+            closeMenu();
+            state.SAVING.OPEN = this.is_open;
+            return [false, state];
+        }
+
+        this.rt_prev = rt;
+        state.SAVING.OPEN = this.is_open;
         return [false, state];
     }
 
-    this.clearState = (t, state, sandbox) =>{
-        if(state.LOGIN.SAVE){
-            return importState(state);
-            let v = sandbox.getScene(false);
-            const jsonFromMap = exportState(v);
-            let file_name = state.LOGIN.NAME.toString() + "_" + sandbox.timer.newTime();
-            console.log("ashere", v, jsonFromMap);
-            const a = document.createElement("a");
-            const file = new Blob([jsonFromMap], {type: 'text/plain'});
-            a.href = URL.createObjectURL(file);
-            a.download = file_name;
-            a.click();
-            state.LOGIN.SAVE = false;
-        }
-        return state;
-    }
+    this.clearState = (t, state, multi_player) =>{
+        if(state.LOGIN.OUT){
+            state.LOGIN.OUT = false;
+            state.LOGIN.INACTIVE = false;
+            state.LOGIN.CD = 10;
 
+            sandbox.setName(null);
+            multi_player.reset();
+        }
+        return state
+    }
 
 }

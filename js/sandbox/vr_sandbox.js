@@ -16,8 +16,7 @@ export function CreateVRSandbox(model){
     //wrapped_model.vallinaInit(model)
     this.timer = new CreateTimer();
 
-
-    this._name = NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString();
+    this._name = null;
 
     this.mini_sandbox = mini_sandbox;
     this.room = room;
@@ -283,7 +282,6 @@ export function CreateVRSandbox(model){
         let flag = false;
         let floor = this.active_floor;
         let time = this.timer.newTime();
-
         for(let i =0; i< objs.length; ++ i){
             let obj_state = {
                 _name: objs[i]._name,
@@ -397,7 +395,8 @@ export function CreateVRSandbox(model){
     }
 
     this.setName = (n) =>{
-        this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+        //this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+        this._name = n;
     }
 
 }

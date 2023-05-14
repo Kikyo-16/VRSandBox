@@ -10,7 +10,8 @@ object controller to select/move/resize/rotate/delete object
 
 import * as cg from "../render/core/cg.js";
 import * as ut from '../sandbox/utils.js';
-import * as wut from '../sandbox/wei_utils.js';
+import * as wu from '../sandbox/wei_utils.js';
+
 import {controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import {lcb, rcb} from '../handle_scenes.js';
 
@@ -159,7 +160,7 @@ export function CreateObjController(obj_model){
         let obj = objs[objIdx];
         let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
         
-        if (obj !== null && triggerPressed) {
+        if (!wu.isNull(obj) && triggerPressed) {
 
             if (this.debug)
                 obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
@@ -189,6 +190,7 @@ export function CreateObjController(obj_model){
         if(state.OBJ.INACTIVE || objs.length === 0)
             return [false, state]
 
+
         let delete_obj_idx = -1;
         let selected_obj_idx = Array(0);
         //let copied_obj = null;
@@ -201,14 +203,14 @@ export function CreateObjController(obj_model){
                        resl[0] === -1 ? [resr[0]] : resl[0] === resr[0] ? [resl[0]] : [resl[0], resr[0]];
 
         // begin/during resize, left and right controller select the same obj, press both trigger to resize obj
-        if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0])){
+        if (resize_lock || (resl[0] > -1 && resr[0] > -1 && resl[0] === resr[0])){
             if (this.isResize(t, resl[0] > -1 ? objs[resl[0]] : null, resl[0]))
                 this.resizeObj(t);
         // press both buttons to delect the Obj, both controller have to select the same object
         } else if (!resize_lock && this.isDelete()) {
             resl = this.hitByBeam(objs, 0);
             resr = this.hitByBeam(objs, 1);
-            if (resl[0] > -1 && resr[0] > -1 && resl[0] == resr[0]) {
+            if (resl[0] > -1 && resr[0] > -1 && resl[0] === resr[0]) {
                 if (this.debug)
                     objs[resl[0]].setColor([0,0,0]); // for test
                 delete_obj_idx = resl[0];
@@ -232,10 +234,12 @@ export function CreateObjController(obj_model){
         if(delete_obj_idx > -1)
             deleted_name = objs[delete_obj_idx]._name;
         let selected_names = Array(0)
+
         for(let i =0; i < selected_obj_idx.length; ++ i){
+            if(wu.isNull(objs[selected_obj_idx[i]]))
+                continue
             selected_names.push(objs[selected_obj_idx[i]]);
         }
-
 
         state.OBJ.ACTION["DELETE"] = deleted_name;
         state.OBJ.ACTION["REVISE"] = selected_names;

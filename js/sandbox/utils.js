@@ -26,6 +26,10 @@ export let WHO_KEY = "Q"
 export let WHAT_KEY = "R"
 export let WHOLE_KEY = "S"
 
+export let USER_KEY = "T"
+export let OP_KEY = "U"
+export let ACT_KEY = "V"
+
 
 export let PERSPECTIVE_SHARE_MSG = "perspective-share"
 export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
@@ -59,6 +63,14 @@ export let SPLITTING_FOCUS_WALL_MSG = "splitting-focus-wall"
 export let SPLITTING_WALL_MSG = "splitting-wall"
 export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 
+export let LOAD_MSG = "Load"
+export let SAVE_MSG = "Save"
+export let LOGOUT_MSG = "Log out"
+export let CANCEL_MSG = "Cancel"
+export let RECEIVE_MSG = "New message from "
+
+export let POS_EXCHANGE_MSG = "Position Exchange"
+export let PERSP_SHARING_MSG = "Perspective Share"
 
 /*
 * Menu CODE

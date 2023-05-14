@@ -8,27 +8,31 @@ import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
 import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
 import {CreateSavingController} from "../sandbox/savingController.js";
+import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js"
+import {CreateMessageCollection} from "../sandbox/messageCollection.js"
 
 import * as ut from '../sandbox/utils.js';
 import * as wu from '../sandbox/wei_utils.js';
 import * as croquet from "../util/croquetlib.js";
 
 export let updateModelScene = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updateScene(msg);
-    }
+    window.clay.model.multi_controller.updateScene(msg);
+
 }
 
 export let updateModelPlayer = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updatePlayer(msg);
-    }
+    window.clay.model.multi_controller.updatePlayer(msg);
+
 }
 
 export let updateModelWholeScene = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updateWholeScene(msg);
-    }
+    window.clay.model.multi_controller.updateWholeScene(msg);
+
+}
+
+export let updateModelMsg = msg => {
+    window.clay.model.message_collection.updateRev(msg);
+
 }
 
 
@@ -42,7 +46,8 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add()
+    let multi_model = model.add();
+    let invi_model = model.add()
     let shared_menu_model = model.add();
     let login_menu_model = model.add();
     let save_model = model.add();
@@ -55,18 +60,24 @@ export const init = async model => {
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
 
+    let invitation_controller = new CreateInvitationMenuController();
+    invitation_controller.init(invi_model);
+
+    let login_controller = new CreateLoginMenuController();
+    login_controller.init(login_menu_model, []);
+
 
     // Object Customize/Select Menu
     let menu_controller = new CreateMenuController();
     menu_controller.init(menu_model);
 
     // User Collaboration/Share Menu
-    //let share_menu_controller = new CreateShareMenuController();
-    //share_menu_controller.init(shared_menu_model);
+    let share_menu_controller = new CreateShareMenuController();
+    share_menu_controller.init(shared_menu_model);
 
 
-    let login_controller = new CreateLoginMenuController();
-    login_controller.init(login_menu_model);
+    let message_collection = new CreateMessageCollection(sandbox);
+
 
 
 
@@ -84,6 +95,7 @@ export const init = async model => {
             SWITCH: false,
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
+            TMP_MODE: null,
         },
         MENU: {
             INACTIVE: true,
@@ -114,10 +126,16 @@ export const init = async model => {
         },
 
         LOGIN: {
-            DISABLED: true,
+            INACTIVE: false,
             NAME: "Liwei",
             SAVE: false,
+            OUT: false,
+            CD: 0,
 
+        },
+        SAVING:{
+            INACTIVE: false,
+            OPEN: false,
         },
 
         PERSPECTIVE: {
@@ -131,17 +149,31 @@ export const init = async model => {
         },
 
         GLOBAL_MENU: {
-            ACTION: null,
+            ACTION: {
+                op: null,
+                user: null,
+            },
             INACTIVE: true,
             OPEN: false,
             SELECT: null,
         },
+        SEND : {
+            USER: null,
+            OP: null,
+            ACT: null,
+        },
+        REV : {
+            USER: null,
+            OP: null,
+            ACT: null,
+        }
 
     }
 
     let multi_controller = new CreateMultiplayerController(sandbox);
     multi_controller.init(state_msg.MODE.IN_ROOM);
     multi_controller.debug = false;
+    model.message_collection = message_collection;
     model.multi_controller = multi_controller;
 
     let checkStateCode = (state) =>{
@@ -150,39 +182,43 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_18.99');
+    croquet.register('croquetDemo_23.11');
 
     let debug = true;
 
     model.animate(() => {
-        window.demoDemoSandboxState = true;
+
         state_msg.RESUME =true;
 
-        let state_code = login_controller.animate(model.time, state_msg);
+        let state_code = login_controller.animate(model.time, state_msg, sandbox);
         state_msg = checkStateCode(state_code);
-        login_controller.clearState(state_msg, sandbox);
 
         state_code = saving_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-        if(debug && model.time > 5){
-            state_msg.LOGIN.SAVE = true
-            debug = false;
-        }
-        state_msg = saving_controller.clearState(model.time, state_msg, sandbox);
+        state_msg = saving_controller.clearState(model.time, state_msg, multi_controller);
 
-        //state_code = share_menu_controller.animate(model.time, state_msg);
-        //state_msg = checkStateCode(state_code);
-        //state_msg = share_menu_controller.clearState(state_msg);
+        state_code = share_menu_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = share_menu_controller.clearState(model.time, state_msg, message_collection);
+
+        state_code = message_collection.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = message_collection.clearState(model.time, state_msg);
+
+        state_code = invitation_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = invitation_controller.clearState(model.time, state_msg);
 
         state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
 
+
         state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = multi_controller.clearState(model.time, state_msg)
 
-
+        multi_controller.init(state_msg.MODE.IN_ROOM);
         state_code = room_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = room_controller.clearState(model.time, state_msg);

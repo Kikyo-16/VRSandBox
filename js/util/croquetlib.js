@@ -1,11 +1,14 @@
 
 // YOUR APPLICATION SHOULD REDEFINE THESE FUNCTIONS:
 
-import { updateModelScene,  updateModelPlayer, updateModelWholeScene} from "../scenes/demoSandbox.js";
+import {
+    updateModelScene,
+    updateModelPlayer,
+    updateModelWholeScene,
+    updateModelMsg
+} from "../scenes/demoSandbox.js";
 import { diffData } from "../sandbox/vr_sandbox.js";
 import {diffPlayer} from "../sandbox/multiplayerController.js"
-import { controllerMatrix,  buttonState, joyStickState} from "../render/core/controllerInput.js";
-import { initAvatar } from "../primitive/avatar.js";
 import * as ut from "../sandbox/utils.js";
 import * as global from "../global.js";
 
@@ -30,32 +33,34 @@ export class Model extends Croquet.Model {
       this.subscribe("scene", "updateWholeScene"   , this.updateWholeScene );
       this.subscribe("scene", "updateScene" , this.updateScene );
       this.subscribe("scene", "updatePlayer" , this.updatePlayer );
-
+      this.subscribe("scene", "updateMsg" , this.updateMsg );
       this.initSettings();
    }
    initSettings(){
        window.croquetModel = this;
    }
    updateWholeScene(e) {
-      if (window.croquetModel)
-         updateModelWholeScene(e);
-      else {
-         window.croquetModel = this;
-      }
+      if (!window.croquetModel)
+          window.croquetModel = this;
+      updateModelWholeScene(e);
+
+   }
+   updateMsg(e){
+       if (!window.croquetModel)
+          window.croquetModel = this;
+      updateModelMsg(e);
    }
    updateScene(e) {
-      if (window.croquetModel)
-         updateModelScene(e);
-      else {
-         window.croquetModel = this;
-      }
+      if (!window.croquetModel)
+          window.croquetModel = this;
+      updateModelScene(e);
+
    }
    updatePlayer(e) {
-      if (window.croquetModel)
-         updateModelPlayer(e);
-      else {
-         window.croquetModel = this;
-      }
+      if (!window.croquetModel)
+          window.croquetModel = this;
+      updateModelPlayer(e);
+
    }
 }
 
@@ -65,10 +70,16 @@ export class View extends Croquet.View {
       this.croquetModel = croquetModel;
       this.pre_scene = null;
       this.pre_player = null;
+
+
+
       this.future(50).sceneEvent();
       this.future(50).playerEvent();
+      this.future(50).messageEvent();
       this.future(5000).wholeSceneEvent();
+
    }
+   updateMsg(info) { this.publish("scene", "updateMsg", info); }
    updateScene(info) { this.publish("scene", "updateScene", info); }
    updatePlayer(info) { this.publish("scene", "updatePlayer", info); }
    updateWholeScene(info) { this.publish("scene", "updateWholeScene", info); }
@@ -84,39 +95,54 @@ export class View extends Croquet.View {
            this.updateWholeScene(sent);
 
        }
-
        this.future(10000).wholeSceneEvent();
    }
-
+   messageEvent(){
+       let msg = window.clay.model.message_collection.send_queue;
+       let name = window.clay.model.multi_controller.name;
+       if(name !== null) {
+           msg.set(ut.WHO_KEY, name);
+           console.log("sentmsg", msg);
+           this.updateMsg(msg);
+       }
+       this.future(50).messageEvent();
+   }
    sceneEvent() {
+
        let scene = window.clay.model.multi_controller.scene;
        let name = window.clay.model.multi_controller.name;
+       //console.log("ss sent...........................")
 
-       if(name !== null){
-           let diff_scene = null;
-           if(scene !== null && this.pre_scene === null) {
-               diff_scene = scene;
-           }else if(scene !== null){
-               diff_scene = diffData(scene, this.pre_scene);
-           }
-           this.pre_scene = scene;
-           if(diff_scene !== null){
-               let sent = new Map();
-               sent.set(ut.WHO_KEY, name);
-               sent.set(ut.SCENE_KEY, diff_scene);
-               this.updateScene(sent);
-           }
-
+       if(name !== null) {
+            let diff_scene = null;
+            if (scene !== null && this.pre_scene === null) {
+                diff_scene = scene;
+            } else if (scene !== null) {
+                diff_scene = diffData(scene, this.pre_scene);
+            }
+            this.pre_scene = scene;
+            if (diff_scene !== null) {
+                let sent = new Map();
+                sent.set(ut.WHO_KEY, name);
+                sent.set(ut.SCENE_KEY, diff_scene);
+                this.updateScene(sent);
+                //console.log("s sent", sent);
+            }
        }
-       this.future(50).sceneEvent();
 
+       this.future(50).sceneEvent();
    }
    playerEvent(){
        let name = window.clay.model.multi_controller.name;
        let player = window.clay.model.multi_controller.player;
 
        if(name !== null){
-           let diff_player = null;
+           let sent = new Map();
+           sent.set(ut.WHO_KEY, name);
+           sent.set(ut.PLAYER_KEY, player);
+           this.updatePlayer(sent);
+           //console.log("sent", player);
+           /*let diff_player = null;s
            if(player !== null && this.pre_player === null) {
                diff_player = player;
            }else if(player !== null){
@@ -129,7 +155,7 @@ export class View extends Croquet.View {
                sent.set(ut.PLAYER_KEY, diff_player);
 
                this.updatePlayer(sent);
-           }
+           }*/
 
        }
        this.future(50).playerEvent();
