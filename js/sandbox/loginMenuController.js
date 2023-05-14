@@ -109,7 +109,7 @@ export class CreateLoginMenuController {
                 g2.drawWidgets(selectUserText);
             }).scale(1.5,7.5,1).move(0,0,0.1);
 
-            // TODO :set state as required
+            // TODO :set state as required - update list of users in sandbox
             state.LOGIN.NAME = userName;
             this.logInMenu.opacity(0.0001);
             state.LOGIN.DISABLED = true;

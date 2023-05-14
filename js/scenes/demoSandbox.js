@@ -8,6 +8,9 @@ import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
 import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
 import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js";
+import {CreateInfoBannerController} from "../sandbox/infoBannerController.js";
+import {CreateInvitationARController} from "../sandbox/invitationAcceptOrReject.js";
+import {CreateControlsViewController} from "../sandbox/controlsViewController.js";
 
 import * as ut from '../sandbox/utils.js'
 import * as wu from '../sandbox/wei_utils.js'
@@ -42,6 +45,9 @@ export const init = async model => {
     let multi_model = model.add()
     let shared_menu_model = model.add();
     let login_menu_model = model.add();
+    let info_banner_model = model.add();
+    let invitation_ar_banner_model = model.add();
+    let controls_view_box = model.add();
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
@@ -65,7 +71,14 @@ export const init = async model => {
     let login_controller = new CreateLoginMenuController();
     login_controller.init(login_menu_model);
 
+    let infoBanner = new CreateInfoBannerController();
+    infoBanner.init(info_banner_model,[0,0.38,0]);
 
+    let invitationARBanner = new CreateInvitationARController();
+    invitationARBanner.init(invitation_ar_banner_model,[0,0.3,0], 10);
+
+    let controlsViewBox = new CreateControlsViewController();
+    controlsViewBox.init(controls_view_box);
 
     let test_players = new Map();
     let names = ["Mike_1111", "Mike_1112", "Mike_1113", "Mike_1114"]
@@ -130,7 +143,22 @@ export const init = async model => {
             INACTIVE: true,
             OPEN: false,
             SELECT: null,
-        }
+        },
+
+        // INVITATION_PERSPECTIVE_SEND: {
+        //     USER : new Map(),
+        //     // SENT: null,
+        //     // SENT_TO: null,
+        //     // ACCEPTED: false,
+        //     // SESSION_ON: false
+        // },
+
+        // INVITATION_PERSPECTIVE_RECEIVE: {
+        //     FROM: null,
+        //     ACCEPTED: false,
+        //     SESSION_ON: false
+        // }
+
 
     }
 
@@ -162,6 +190,11 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
 
+
+        infoBanner.animate(state_msg);
+        invitationARBanner.animate(state_msg);
+        controlsViewBox.animate(state_msg);
+        
 
         state_code = room_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
