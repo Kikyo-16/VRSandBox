@@ -102,7 +102,7 @@ export class View extends Croquet.View {
        let name = window.clay.model.multi_controller.name;
        if(name !== null) {
            msg.set(ut.WHO_KEY, name);
-           console.log("sentmsg", msg);
+           //console.log("sentmsg", msg);
            this.updateMsg(msg);
        }
        this.future(50).messageEvent();

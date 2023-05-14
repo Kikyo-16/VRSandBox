@@ -110,14 +110,16 @@ export class CreateInvitationMenuController {
       this.rt_prev = rt;
       return [false, state];
    }
-   clearState = (t, state) =>{
+   clearState = (t, state, msg_collection) =>{
       let msg = state.REV;
       if(!wu.isNull(msg.USER) && !wu.isNull(msg.OP) && !wu.isNull(msg.ACT)){
          console.log("clear", msg.USER, msg.OP, msg.ACT);
-         state.REV.USER = null;
-         state.REV.OP = null;
-         state.REV.ACT = null;
          state["MODE"]["TMP_MODE"] = null;
+         let user = msg.USER, op = msg.OP, act = msg.ACT;
+         msg.USER = null;
+         msg.OP = null;
+         msg.ACT = null;
+         msg_collection.sendReply(user, op, act);
       }
       return state;
    }

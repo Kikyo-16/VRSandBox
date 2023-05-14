@@ -30,6 +30,8 @@ export let USER_KEY = "T"
 export let OP_KEY = "U"
 export let ACT_KEY = "V"
 
+export let INVITATION_KEY = "W"
+
 
 export let PERSPECTIVE_SHARE_MSG = "perspective-share"
 export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
