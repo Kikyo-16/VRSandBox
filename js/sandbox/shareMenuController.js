@@ -301,8 +301,6 @@ export class CreateShareMenuController {
                   // close all open menus and return selected values - assign default values to variables
                   let user = this.playerNames[this.selectedPlayerIndex - 1];
                   let op = this.operationTypes[this.selectedOperationIndex - 1];
-                  console.log(this.playerNames, this.operationTypes);
-                  console.log("seleeeeeeeee", user, op, this.selectedPlayerIndex, this.selectedOperationIndex);
                   this.closeMenu(model);
                   selected = this.returnObject(user, op);
                   flag = true;
@@ -312,7 +310,6 @@ export class CreateShareMenuController {
          }
          this.rt_prev = rt;
          if(flag){
-            console.log("selected", selected);
             state_msg.GLOBAL_MENU.ACTION = selected;
          }
 
@@ -325,11 +322,11 @@ export class CreateShareMenuController {
       if(!wu.isNull(state.GLOBAL_MENU.ACTION.op)){
          if(state.GLOBAL_MENU.ACTION.op === ut.PERSP_SHARING_MSG){
             state["MODE"]["TMP_MODE"] = ut.PERSP_SHARING_MSG;
-            console.log("hereeeeeeeeeeeeeeee")
          }else if(state.GLOBAL_MENU.ACTION.op === ut.POS_EXCHANGE_MSG){
             state.SEND.USER = state.GLOBAL_MENU.ACTION.user;
             state.SEND.OP = state.GLOBAL_MENU.ACTION.op;
             state.SEND.ACT = null;
+            console.log("click", state.SEND);
             msg_collection.sendInvitation(state);
          }
          state.GLOBAL_MENU.ACTION.op = null;

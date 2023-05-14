@@ -160,7 +160,7 @@ export function CreateMultiplayerController(sandbox){
 
     this.updatePlayer = (e) =>{
         let who = e.get(ut.WHO_KEY);
-        console.log("player", who);
+        //console.log("player", who);
         if(wu.isNull(this.name) || wu.isNull(who) || who === this.name)
             return
 

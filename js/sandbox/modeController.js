@@ -61,7 +61,7 @@ export function CreateModeController(model){
                 text = "You are viewing " + state.GLOBAL_MENU.ACTION.user + "'s view";
                 break;
             case ut.RECEIVE_MSG:
-                text = RECEIVE_MSG + state.MSG.USER;
+                text = RECEIVE_MSG + state.REV.USER;
                 break;
             default:
                 let bug = "you got a bug here";

@@ -179,6 +179,7 @@ export function CreateSavingController(model, sandbox){
                     break;
                 case ut.LOGOUT_MSG:
                     state.LOGIN.OUT = true;
+
                     break;
                 default:
 
@@ -193,13 +194,21 @@ export function CreateSavingController(model, sandbox){
         return [false, state];
     }
 
-    this.clearState = (t, state, multi_player) =>{
+    this.clearState = (t, state, multi_player, msg_collect) =>{
         if(state.LOGIN.OUT){
             state.LOGIN.OUT = false;
             state.LOGIN.INACTIVE = false;
             state.LOGIN.CD = 10;
 
+            state.SEND.USER = null;
+            state.SEND.OP = null;
+            state.SEND.ACT = null;
+            state.REV.USER = null;
+            state.REV.OP = null;
+            state.REV.ACT = null;
+
             sandbox.setName(null);
+            msg_collect.reset();
             multi_player.reset();
         }
         return state

@@ -195,7 +195,7 @@ export const init = async model => {
 
         state_code = saving_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-        state_msg = saving_controller.clearState(model.time, state_msg, multi_controller);
+        state_msg = saving_controller.clearState(model.time, state_msg, multi_controller, message_collection);
 
         state_code = share_menu_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
