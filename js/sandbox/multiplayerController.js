@@ -56,6 +56,9 @@ export function CreateMultiplayerController(sandbox){
         this.wholeScene = sandbox.getScene(false);
         this.player_list.set(this.name, this.player)
         avatar_controller.initialize(this.player_list, this.name);
+
+        console.log("local user", this.name)
+        console.log(this.player_list);
         console.log("init!!!!!!!!!!!")
 
     }
@@ -283,14 +286,14 @@ export function CreateMultiplayerController(sandbox){
         this.player = this.getPlayer(in_room);
         this.player_list.set(this.name, this.player);
 
-        //let send_player_list = updateSendList(this.player_list, state);
+        let send_player_list = updateSendList(this.player_list, state);
         
         // debug
         debuAnimate(t, in_room, state);
 
-        //console.log("sss", send_player_list);
-        //if(avatar_controller.local_user !== null)
-        //    state = avatar_controller.animate(send_player_list, state);
+        console.log("sss", send_player_list);
+        if(avatar_controller.local_user !== null)
+           state = avatar_controller.animate(send_player_list, state);
         state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;
         state["PERSPECTIVE"]["SELF"] = this.name;
         return [true, state];

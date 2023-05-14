@@ -21,6 +21,8 @@ export function CreateAvatarController(sandbox){
 
 	let prevInBox = false;
 	let prev_rp = null;
+
+	let prev_vm = null;
 	
 	this.initialize = (msg, local_user) => {
 		// msg: {NAME: {ID, IN_BOX, FLOOR, RM, VM}}, include local user, RM: relative to mini sandbox
@@ -95,6 +97,7 @@ export function CreateAvatarController(sandbox){
 
 		// update location and scale in mini sandbox
 		this.mini_avatars.get(this.local_user).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc);
+		console.log("local mini: ", rLoc, inBox, this.mini_avatars.get(this.local_user).getLoc())
 
 		return state;
 	}
@@ -153,12 +156,22 @@ export function CreateAvatarController(sandbox){
 			console.log("avatar ", state.PERSPECTIVE.ACTION.MSG)
 			if (state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_SHARE_MSG) {
 				// compensate for view offset??
+				// update to the other player's view
 				let vm = info.get("VM");
 				vm[12] = 0;
 				vm[13] = 0;
 				vm[14] = 0;
 				sandbox.changeView(vm);
+
+				// lock local player's view
+				let local_vm = window.avatars[0].headset.matrix;
+				if (prev_vm !== null){
+					local_vm = cg.subtract(local_vm, prev_vm); // ????? 
+					sandbox.changeView(local_vm); 
+				}
+				prev_vm = local_vm;
 			} else {
+				prev_vm = null;
 				sandbox.resetView();
 			}
 		}
