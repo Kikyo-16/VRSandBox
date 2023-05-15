@@ -176,8 +176,6 @@ export const init = async model => {
 
     model.animate(() => {
 
-        name_selected = login_controller.animate(model);
-
         state_msg.RESUME =true;
 
         let state_code = login_controller.animate(model, state_msg);
