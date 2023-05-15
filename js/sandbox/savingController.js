@@ -122,7 +122,7 @@ export function CreateSavingController(model, sandbox){
     let exportState = (state) =>{
         let v = sandbox.getScene(false);
         let json_data = parseState(v);
-        const jsonFromMap = JSON.stringify(json_data);
+        const jsonFromMap = JSON.stringify([json_data]);
         let file_name = state.LOGIN.NAME.toString() + "_" + sandbox.timer.newTime();
         const a = document.createElement("a");
         const file = new Blob([jsonFromMap], {type: 'text/plain'});

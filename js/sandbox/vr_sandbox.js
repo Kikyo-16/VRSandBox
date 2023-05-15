@@ -3,6 +3,7 @@ import * as wu from "../sandbox/wei_utils.js"
 import * as ut from "../sandbox/utils.js"
 import {CreateTimer} from "../sandbox/timer.js"
 import {CreateSandbox} from "../sandbox/sandbox.js"
+import {COLOR_KEY, FORM_KEY, LATEST_KEY, NUM_FLOORS_KEY, P_KEY, TEXTURE_KEY} from "../sandbox/utils.js";
 
 let NAME_LIST = ["Mike"];
 
@@ -41,7 +42,7 @@ export function CreateVRSandbox(model){
             ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.N_WALL_TIMER]);
         model.move(0, .8, -.4);
         this.addFloor(false);
-        console.log("init", this.mini_sandbox.boxes.length)
+        //console.log("init", this.mini_sandbox.boxes.length)
         this.active_floor = 0;
         mini_sandbox.activeFloor(this.active_floor);
         room.activeFloor(this.active_floor);
@@ -394,8 +395,69 @@ export function CreateVRSandbox(model){
         }
     }
 
+    let parseMap = (obj, type, bt) =>{
+        let res = obj;
+        if(type === "map"){
+            res = new Map();
+            for(let k in obj) {
+                if(k === ut.TEXTURE_KEY || k === ut.FORM_KEY || k === ut.NUM_FLOORS_KEY || k === ut.LATEST_KEY){
+                    res.set(k, obj[k]);
+                    console.log(k, ut.TEXTURE_KEY, obj[k]);
+                }else if(k === ut.P_KEY || k === ut.RM_KEY || k === ut.COLOR_KEY){
+                    res.set(k, parseMap(obj[k], "array", true));
+                }else{
+                    res.set(k, parseMap(obj[k], "map", false));
+                }
+
+            }
+        }else if(type === "array"){
+            res = Array(0);
+            for(let k in obj) {
+                if(bt){
+                    res.push(obj[k]);
+                }else{
+                    res.push(parseMap(obj[k], "map", bt));
+                }
+
+            }
+            if(res.length === 0){
+                return null;
+            }
+        }
+        return res;
+    }
+    let parseJson = (obj) =>{
+        let res = new Map();
+        for(let k in obj){
+            if(k === ut.FLOOR_TIMER){
+                res.set(k, parseMap(obj[k], "map", false));
+            }else{
+                res.set(k, parseMap(obj[k], "array", false));
+                /*let sub_res = Array(0);
+                for(let v in obj[k]){
+                    console.log(k, obj[k][v]);
+                    sub_res.push(parseMap(obj[k][v], ["map"], 1));
+                }
+                if(sub_res.length === 0){
+                    res.set(k, null);
+                }else{
+                    res.set(k, sub_res);
+                }*/
+
+            }
+        }
+        return res;
+
+    }
+
     this.loadScene = (e) =>{
-        this.setScene(e, false);
+
+        const obj = JSON.parse(e)[0];
+        let res = parseJson(obj);
+        //console.log("???", e);
+        //console.log("after", res);
+        this.setScene(res, false);
+        //console.log("here", this.getScene(false));
     }
 
     this.setName = (n) =>{

@@ -14,7 +14,7 @@ export function MakeWall(model, p1, p2, h, d, ddt, uid){
     this.wall = wall;
     this.focus_edge = null;
     this._color = [1, 1, 1];
-    this._texture = undefined;
+    this._texture = null;
     this.wall.color(this._color);
     this.focus_flag = 0;
     this.in_active_floor = false;
