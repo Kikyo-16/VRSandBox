@@ -44,16 +44,20 @@ export function CreateSandbox(model){
             e = edge;
         }
         this.boxes.push(new CreateBox(box_model, p1, p2, p3, p4, h, d, e, new_level));
-        let dt = 0;
-        let shift_dt =  this.shift_status[this.shift_status.length - 1];
+        let dt;
+        let shift_dt = 0;
+        if(this.shift_status.length > 0){
+            shift_dt = this.shift_status[this.shift_status.length - 1];
+        }
         if(this.shift_status.length > 1){
             dt = this.shift_status[1] - this.shift_status[0];
             dt += shift_dt;
         }else{
             dt = shift_dt;
         }
-        this.boxes[-1].shift(dt, 0, 0);
+        this.boxes[this.boxes.length - 1].shift(dt, 0, 0);
         this.shift_status.push(dt);
+        console.log("shift_status", this.shift_status);
 
     }
 
