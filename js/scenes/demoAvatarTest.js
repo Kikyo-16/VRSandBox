@@ -52,6 +52,7 @@ export const init = async model => {
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
             ARG: null,
+            ARG_FLOOR: null,
         },
         MENU: {
             INACTIVE: true,

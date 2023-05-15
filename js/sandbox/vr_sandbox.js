@@ -12,8 +12,6 @@ export function CreateVRSandbox(model){
     let room = new CreateSandbox(model);
     let effect = new CreateSandbox(model);
     let boxes = [mini_sandbox, room, effect];
-    //let wrapped_model = new Object();
-    //wrapped_model.vallinaInit(model)
     this.timer = new CreateTimer();
 
 
@@ -42,8 +40,9 @@ export function CreateVRSandbox(model){
             ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.N_WALL_TIMER]);
         model.move(0, .8, -.4);
         this.addFloor(false);
+        this.addFloor(false);
         console.log("init", this.mini_sandbox.boxes.length)
-        this.active_floor = 0;
+        this.active_floor = 1;
         mini_sandbox.activeFloor(this.active_floor);
         room.activeFloor(this.active_floor);
         effect.activeFloor(this.active_floor);
@@ -51,6 +50,9 @@ export function CreateVRSandbox(model){
         this.is_diving = false;
         this.leaveRoom();
         this.timer.reset();
+
+        this.is_collapse = true;
+        this.expand();
     }
 
     let deleteTmpFocus = () =>{
@@ -131,8 +133,6 @@ export function CreateVRSandbox(model){
         boxes[1].boxes[floor].split(uid, time);
         boxes[2].boxes[floor].split(uid, time);
         deleteTmpFocus();
-
-
     }
 
     this.reviseFocus = (args) =>{
@@ -211,22 +211,12 @@ export function CreateVRSandbox(model){
             mini_sandbox.flyAway();
             room.flyAway();
             this.active_floor = floor;
-            mini_sandbox.activeFloor(floor);
+            //mini_sandbox.activeFloor(floor);
             mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
         }
 
-    }
-
-     this.changePerspective = (mode, rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.01) {
-            return
-        }
-        //rp = [-.5,0,-.5];
-        mini_sandbox.walkAway(rp);
-        room.walkAway(rp);
     }
 
     this.getObjCollection = (mode) =>{
@@ -243,6 +233,12 @@ export function CreateVRSandbox(model){
 
     this.getRobotPosition = (mode, p) =>{
         return boxes[mode].getRobotMPosition(p);
+    }
+    this.getFloorGPosition = (mode, p, floor) =>{
+        return boxes[mode].getGPosition(p, floor);
+    }
+    this.getFloorRPosition = (mode, p, floor) =>{
+        return boxes[mode].getMPosition(p, floor);
     }
 
     this.getGPosition = (mode, p) =>{
@@ -301,13 +297,14 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.changePerspective = (rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.05) {
-            return
-        }
-
-        room.walk(rp);
+    this.changePerspective = (rp, floor) => {
+        // move to relative loc rp in room
+        //room.walk(rp); // walk rp
+        this.active_floor = floor
+        mini_sandbox.activeFloor(floor);
+        room.activeFloor(floor);
+        effect.activeFloor(floor);
+        room.relocate(rp, this.active_floor, sc);
     }
 
     this.changeView = (vm) => {

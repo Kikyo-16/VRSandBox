@@ -21,6 +21,7 @@ export function CreateAvatarController(sandbox){
 
 	let prevInBox = false;
 	let prev_rp = null;
+	let prev_floor = null;
 	
 	this.initialize = (msg, local_user) => {
 		// msg: {NAME: {ID, IN_BOX, FLOOR, RM, VM}}, include local user, RM: relative to mini sandbox
@@ -28,25 +29,25 @@ export function CreateAvatarController(sandbox){
 		this.local_user = local_user;
 		for (const [name, info] of msg) {
 			if (name !== this.local_user) {
-				let avatar = new CreateAvatar(sandbox.room.robot_model, name, MINI_SCALE_OUT);
-				let effect_avatar = new CreateAvatar(sandbox.effect.robot_model, name, MINI_SCALE_OUT);
+				let avatar = new CreateAvatar(sandbox.room, name, MINI_SCALE_OUT);
+				let effect_avatar = new CreateAvatar(sandbox.effect, name, MINI_SCALE_OUT);
 				this.avatars.set(name, avatar);
 				this.effect_avatars.set(name, effect_avatar);
 			}
-			let mini_avatar = new CreateAvatar(sandbox.mini_sandbox.robot_model, name, MINI_SCALE_OUT);
+			let mini_avatar = new CreateAvatar(sandbox.mini_sandbox, name, MINI_SCALE_OUT);
 			this.mini_avatars.set(name, mini_avatar);
 		}
 		this.mini_avatars.get(this.local_user).setColor([1,0,0]);
 	}
 
-	this.update = (name, inBox, rm) => {
+	this.update = (name, inBox, rm, floor) => {
 		// update visualization of a given avatar
 		let rLoc = rm.slice(12, 15);
-		this.mini_avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc);
+		this.mini_avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc, floor);
 		// only update non-local-users' room avatar location and scale
 		if (name !== this.local_user) {
-			this.avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc);
-			this.effect_avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc);
+			this.avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc, floor);
+			this.effect_avatars.get(name).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc, floor);
 		}
 	}
 
@@ -62,27 +63,29 @@ export function CreateAvatarController(sandbox){
 				if (prevInBox && inBox) {
 					// from inbox to inbox
 					let rp = cg.subtract(prev_rp, rLoc);
-					// console.log("move in room");
-					sandbox.changePerspective(rp);
+					// if (!(cg.norm(rp) < 0.05 && floor === prev_floor)) {
+					if (!(cg.norm(rp) < 0.05 && floor === sandbox.active_floor)) {
+						console.log("move in room");
+						sandbox.changePerspective(rLoc, floor);
+					}
 				} else if (!prevInBox && !inBox) { 
 					// from outside to outside
 					// do nothing
 				} else if (!prevInBox && inBox) { 
 					// from outside to inbox
-					let loc = sandbox.getGPosition(0, rLoc);
-					// console.log("dive", prevInBox, inBox, loc);
+					let loc = sandbox.getFloorGPosition(0, rLoc, floor);
+					console.log("dive", prevInBox, inBox, loc);
 					state.MODE["MODE"] = ut.DIVING_MSG;
 					state.BOX.ACTION.MSG = ut.DIVING_MSG;
 					state.BOX.ACTION.ARG = loc;
 					state.MODE.ARG = null;
 				} else { 
 					// from inbox to outside
-					// console.log("leave room")
+					console.log("leave room")
 					state.MODE["MODE"] = ut.BOX_VIEW_MSG;
 					state.BOX.ACTION.MSG = ut.NON_ACTION_MSG;
 					state.BOX.ACTION.ARG = null;
 				}
-				//state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
 			}
 			prevInBox = inBox;
 			prev_rp = rLoc;
@@ -94,7 +97,7 @@ export function CreateAvatarController(sandbox){
 		}
 
 		// update location and scale in mini sandbox
-		this.mini_avatars.get(this.local_user).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc);
+		this.mini_avatars.get(this.local_user).update(inBox ? MINI_SCALE_IN : MINI_SCALE_OUT, rLoc, floor);
 
 		return state;
 	}
@@ -131,21 +134,21 @@ export function CreateAvatarController(sandbox){
 
 		// move sandbox to update local avatar
 		let info = msg.get(this.local_user);
-		state = this.updateLocal(info.get("IN_BOX"), info.get["FLOOR"], info.get("RM"), info.get("VM"), sandbox, state);
+		state = this.updateLocal(info.get("IN_BOX"), info.get("FLOOR"), info.get("RM"), info.get("VM"), sandbox, state);
 
 		// update other avatars
 		for (const [name, info] of msg) {
 			if (name !== this.local_user) {
 				// add new users
 				if (!this.avatars.has(name)) {
-					let avatar = new CreateAvatar(sandbox.room.robot_model, name, MINI_SCALE_OUT);
-					let mini_avatar = new CreateAvatar(sandbox.mini_sandbox.robot_model, name, MINI_SCALE_OUT);
-					let effect_avatar = new CreateAvatar(sandbox.effect.robot_model, name, MINI_SCALE_OUT);
+					let avatar = new CreateAvatar(sandbox.room, name, MINI_SCALE_OUT);
+					let mini_avatar = new CreateAvatar(sandbox.mini_sandbox, name, MINI_SCALE_OUT);
+					let effect_avatar = new CreateAvatar(sandbox.effect, name, MINI_SCALE_OUT);
 					this.avatars.set(name, avatar);
 					this.mini_avatars.set(name, mini_avatar);
 					this.effect_avatars.set(name, effect_avatar);
 				}
-				this.update(name, info.get("IN_BOX"), info.get("RM"));
+				this.update(name, info.get("IN_BOX"), info.get("RM"), info.get("FLOOR"));
 			}
 		}
 

@@ -20,6 +20,7 @@ export function CreateMultiplayerController(sandbox){
     this.init =(in_room) =>{
         if (debug)
             this.debug_init();
+            console.log("local_user", sandbox._name)
         let name = sandbox._name;
         this.player = this.getPlayer(in_room);
         this.scene = sandbox.getScene();
@@ -29,9 +30,7 @@ export function CreateMultiplayerController(sandbox){
 
     this.getPlayer = (in_room) =>{
         let vm_ = window.avatars[0].headset.matrix;
-        // let vm = window.views[0]._viewMatrix;
         let rm = in_room ? sandbox.getRobotPosition(1,  vm_.slice(12, 15)) : out_pos;
-        // let rm = in_room ? sandbox.getRPosition(1, vm_.slice(12, 15)) : out_pos;
         rm = cg.mTranslate(rm);
         let msg = new Map();
         msg.set("VM", vm_);
@@ -66,22 +65,33 @@ export function CreateMultiplayerController(sandbox){
         let NAME_LIST = ["Mike", "SAM", "TOM", "TIM"];
         for (let i = 0; i < 10; ++i) {
             let vm = cg.mIdentity();
-            let in_room = i % 2 == 0 ? true : false;
+            let in_room = Math.random() > 0.4 ? true : false;
+            // let rm = in_room ? [Math.random(), (i % 2)*.05*2 + .8*.05, Math.random()] : [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
             let rm = in_room ? [Math.random(), .8*.05, Math.random()] : [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
             rm = cg.mTranslate(rm);
             let msg = new Map();
             msg.set("VM", vm);
             msg.set("RM", rm);
             msg.set("IN_BOX", in_room);
-            msg.set("FLOOR", sandbox.active_floor);
+            msg.set("FLOOR", in_room ? i % 2 : -1);
             this.player_list.set(NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString(), msg)
-        }  
+        }
+        console.log(this.player_list)
     }
 
-    this.debug_exchange_in_room = () => {
-        console.log("debug move player")
+    this.debug_exchange_in_room_across_floor = () => {
+        console.log("debug move player between floors")
         if (this.player_list.get(sandbox._name).get("IN_BOX")) {
-            this.player_list.get(sandbox._name).set("RM", cg.mTranslate([.88 - .6*Math.random(), .8*.05, .33+.5*Math.random()]))
+            this.player_list.get(sandbox._name).set("RM", cg.mTranslate([.88 - .6*Math.random(), .8*.05, .33+.5*Math.random()]));
+            this.player_list.get(sandbox._name).set("FLOOR", 1-this.player_list.get(sandbox._name).get("FLOOR"));
+        }
+    }
+
+    this.debug_exchange_in_room_within_floor = () => {
+        console.log("debug move player within floors")
+        if (this.player_list.get(sandbox._name).get("IN_BOX")) {
+            this.player_list.get(sandbox._name).set("RM", cg.mTranslate([.88 - .6*Math.random(), .8*.05, .33+.5*Math.random()]));
+            this.player_list.get(sandbox._name).set("FLOOR", this.player_list.get(sandbox._name).get("FLOOR"));
         }
     }
 
@@ -89,12 +99,21 @@ export function CreateMultiplayerController(sandbox){
         console.log("debug move player in")
         this.player_list.get(sandbox._name).set("IN_BOX", true)
         this.player_list.get(sandbox._name).set("RM", cg.mTranslate([.23+.6*Math.random(), .8*.05, .25+.6*Math.random()]))
+        this.player_list.get(sandbox._name).set("FLOOR", Math.random() > .5 ? 1 : 0);
     }
 
     this.debug_leave_room = () => {
         console.log("debug move player out")
         this.player_list.get(sandbox._name).set("IN_BOX", false)
         this.player_list.get(sandbox._name).set("RM", cg.mTranslate([.75, .8*.05, 1.25]))
+    }
+
+    this.debug_remove_player = () => {
+        for (const [name, info] of this.player_list) {
+            if (name !== sandbox._name && Math.random() > .7) {
+                this.player_list.delete(name);
+            }
+        }
     }
 
 
@@ -106,60 +125,51 @@ export function CreateMultiplayerController(sandbox){
 
         // debug
         if (this.debug) {
-            if (t_ >= 300 && t_ < 1230 ) {
-                console.log("share view");
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_SHARE_MSG;
-            }
 
             if (t_ == 200 ) {
                 console.log("elapse time", t_)
                 this.debug_div_in();
                 console.log(this.player_list.get(sandbox._name));
-                // state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
+                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
             } 
-
-            if (t_ == 400 || t_ == 800 || t_ == 900 || t_ == 1000) {
+            if (t_ == 450 || t_ == 600 || t_ == 1000 || t_ == 1200) {
                 console.log("elapse time", t_)
-                this.debug_exchange_in_room();
+                if (Math.random() > 0.5) {
+                    this.debug_exchange_in_room_across_floor();
+                } else {
+                    this.debug_exchange_in_room_within_floor();
+                }
+                
                 console.log(this.player_list.get(sandbox._name));
-                // state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
+                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
             }
-
-
-            if (t_ == 600) {
-                console.log("elapse time", t_)
-                this.debug_leave_room();
-                console.log(this.player_list.get(sandbox._name));
-                // state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t_ == 1100) {
+            if (t_ == 1300) {
                 console.log("elapse time", t_)
                 this.debug_leave_room();
                 console.log(this.player_list.get(sandbox._name));
-                // state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
+                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
 
-            if (t == 1250 ) {
-                console.log("stop share view");
-                state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
+                this.debug_remove_player();
             }
+            
 
-            if (t == 1270) {
+            if (t_ == 1500) {
                 console.log("elapse time", t_)
                 this.debug_div_in();
                 console.log(this.player_list.get(sandbox._name));
                 state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
             }
-
-            if (t_ == 1290) {
+            if (t_ == 1750 || t_ == 1850 || t_ == 1950 ) {
                 console.log("elapse time", t_)
-                this.debug_div_in();
+                if (Math.random() > 0.5) {
+                    this.debug_exchange_in_room_across_floor();
+                } else {
+                    this.debug_exchange_in_room_within_floor();
+                }
                 console.log(this.player_list.get(sandbox._name));
                 state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            } 
-
-            if (t_ == 1320) {
+            }
+            if (t_ == 2000) {
                 console.log("elapse time", t_)
                 this.debug_leave_room();
                 console.log(this.player_list.get(sandbox._name));
