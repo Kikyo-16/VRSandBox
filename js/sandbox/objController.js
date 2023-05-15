@@ -205,6 +205,7 @@ export function CreateObjController(obj_model){
             //this.rotateObj(obj);
         }
         if(!wu.isNull(obj) && this.isLeftTriggerPressed() && hand === 0){
+            this.moveObj(obj, p);
             this.rotateObj(obj);
         }
 
