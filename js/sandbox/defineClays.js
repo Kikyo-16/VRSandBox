@@ -141,7 +141,22 @@ export let customClays = () => {
       [ 'cube', fridgeBottomDoorHandle, [ 0.3, 0.3, 0.3]],
    ]));
 
+   let computerTop = cg.scaleO(cg.mTranslate(0,0.1,0),1,0.15,0.7);
+   let computerTopBase = cg.scaleO(cg.mTranslate(0,-0.1,0),1.25,0.2,0.75);
 
-   return [ "table", "chair", "bed", "table-storage", "lamp-small", "fridge"];//, "microwave"
+   let computerStand = cg.scaleO(cg.mTranslate(0,0.55,0.1),0.1,0.27,0.1);
+   let computerCube = cg.scaleO(cg.mTranslate(0,1.5,0),1,0.7,0.7);
+   let computerCubeInside = cg.scaleO(cg.mTranslate(0,1.5,0.1),0.8,0.5,0.7);
+
+   clay.defineMesh('computer', clay.combineMeshes([
+      [ 'cube',  computerTop,  [ 1, 1, 1]],
+      [ 'cube',  computerTopBase,  [ 0.5, 0.5, 0.5]],
+      [ 'tubeY', computerStand, [0.48, 0.48, 0.48]],
+      [ 'cube',  computerCubeInside,  [ 0, 0, 0]],
+      [ 'cube',  computerCube,  [ 1, 1, 1]],
+      
+   ]));
+
+   return [ "table", "chair", "bed", "table-storage", "lamp-small", "fridge", "computer"];//, "microwave"
 
 }
