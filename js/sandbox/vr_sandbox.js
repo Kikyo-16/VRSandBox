@@ -211,7 +211,6 @@ export function CreateVRSandbox(model){
             room.flyAway();
             this.active_floor = floor;
             mini_sandbox.activeFloor(floor);
-            mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
         }
@@ -296,7 +295,18 @@ export function CreateVRSandbox(model){
             boxes[2].reviseObj(floor, obj_state);
         }
         return flag;
+    }
 
+    this.copyObj = (names) =>{
+        let flag = false;
+        let floor = this.active_floor;
+        let time = this.timer.newTime();
+        for(let i =0; i< names.length; ++ i){
+            flag = flag || !wu.isNull(boxes[0].copyObjByName(floor, names[i], time));
+            boxes[1].copyObjByName(floor, names[i], time);
+            boxes[2].copyObjByName(floor, names[i], time);
+        }
+        return flag;
     }
 
     this.changePerspective = (rp) => {
@@ -370,6 +380,9 @@ export function CreateVRSandbox(model){
         effect.walkAway(rp);
     }
     this.animate = (t, state) =>{
+        mini_sandbox.activeFloor(this.active_floor);
+        room.activeFloor(this.active_floor);
+        effect.activeFloor(this.active_floor);
         return this.divAnimation(state)
     }
 

@@ -95,7 +95,6 @@ export function CreateMultiplayerController(sandbox){
         msg.set("FLOOR", sandbox.active_floor);
         msg.set(ut.LATEST_KEY, sandbox.timer.newTime());
         return msg;
-
     }
 
     this.getScene = () =>{
@@ -233,7 +232,7 @@ export function CreateMultiplayerController(sandbox){
         this.player_list.set(this.name, this.player);
 
         // let send_player_list = updateSendList(this.player_list, state);
-        updateSendList(state);
+        //updateSendList(state);
 
         console.log("sss", this.player_list);
         if(avatar_controller.local_user !== null)

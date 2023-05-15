@@ -42,6 +42,18 @@ export function FurnitureCollection(model){
         return null;
     }
 
+    this.copyObjByName = (name, time) =>{
+        if(this.objCollection.has(name)){
+            let n_name = name + "_cp";
+            let obj = this.objCollection.get(name).copy(n_name);
+            this.objCollection.set(n_name, obj);
+            obj._revised = true;
+            obj._latest = time;
+            return obj;
+        }
+        return null;
+    }
+
     /*this.removeObjOfIdx = (idx, time) =>{
         let n_objCollection = Array(0);
         for(let i = 0; i < this.objCollection.length; ++ i){

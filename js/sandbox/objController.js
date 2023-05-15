@@ -28,6 +28,10 @@ export function CreateObjController(obj_model){
     this.m = controllerMatrix;
     this.bs = buttonState;
     this.js = joyStickState;
+    this.prev_lm = null;
+    this.prev_obj_m = null;
+    this.cold_down = 0;
+    let CD = 10;
     
     // for resize
     let resize_lock = false;
@@ -48,6 +52,28 @@ export function CreateObjController(obj_model){
     // press either trigger to grab an obj, ctr has to intersect with the obj
     this.isLeftTriggerPressed = () => this.bs.left[0].pressed; 
     this.isRightTriggerPressed = () => this.bs.right[0].pressed;
+    this.isLeftYTriggerPressed = () => this.bs.left[5].pressed;
+
+    this.rotateObj = (obj, p) =>{
+        return
+        if(wu.isNull(obj)){
+            this.prev_lm = null;
+            this.prev_obj_m = null;
+            return
+        }
+        if(this.isLeftTriggerPressed()){
+            if(wu.isNull(this.prev_lm) || wu.isNull(this.prev_obj_m)) {
+                this.prev_lm = cg.mInverse(this.m.left);
+                this.prev_obj_m = obj.getMatrix();
+            }else{
+                //let m = cg.mMultiply(cg.mMultiply(this.m.left,  this.prev_lm), this.prev_obj_m);
+                obj.setMatrix(this.prev_obj_m);
+            }
+        }else{
+            this.prev_lm = null;
+            this.prev_obj_m = null;
+        }
+    }
     
     // press both side triggers to delete
     this.isDelete = () => this.bs.left[1].pressed && this.bs.right[1].pressed;
@@ -110,12 +136,13 @@ export function CreateObjController(obj_model){
         obj.updateLoc(cg.add(obj.getLoc(), cg.scale(direction, this.js.right.y*move_speed)));
     }
 
-    this.rotateObj = (obj) => {
+    /*this.rotateObj = (obj) => {
         // up down to rotate along X, left right to rotate along Y
-        let thetaX = this.js.left.y*rotate_speed;
-        let thetaY = this.js.left.x*rotate_speed;
-        obj.rotate(thetaX, thetaY);
-    }
+        //let thetaX = this.js.left.y*rotate_speed;
+        //let thetaY = this.js.left.x*rotate_speed;
+        //obj.rotate(thetaX, thetaY);
+
+    }*/
 
     this.hitByBeam = (objs, hand) => {
         // hand: 0 for left, 1 for right
@@ -156,32 +183,43 @@ export function CreateObjController(obj_model){
         if (objs.length === 0 || objInfo[1] < 0) return 
         let objIdx = objInfo[0];
         let p = objInfo[1];
-        
         let obj = objs[objIdx];
-        let triggerPressed = (hand === 0 && this.isLeftTriggerPressed()) || (hand === 1 && this.isRightTriggerPressed());
-        
-        if (!wu.isNull(obj) && triggerPressed) {
+        if (!wu.isNull(obj) && this.isRightTriggerPressed()&& hand === 1) {
 
-            if (this.debug)
-                obj.setColor(this.isLeftTriggerPressed() ? [1,0,0] : [0,1,0]);
-            
             // press one left/right trigger to grab objects with ctr
             this.moveObj(obj, p); //
 
             // use right joystick to move along the beam
-            this.moveObjAlongBeam(obj, hand);
+            this.moveObjAlongBeam(obj, 1);
 
             // use left joystick to rotate the object
-            this.rotateObj(obj);
+            //this.rotateObj(obj);
         }
+        if(!wu.isNull(obj) && this.isLeftTriggerPressed() && hand === 0){
+            this.rotateObj(obj, p);
+        }
+
     } 
 
-    // this.copyObj = (obj, t) => {
-    //     if (obj == null || t - copy_t < 0.5) 
-    //         return null;
-    //     copy_t = t;
-    //     return obj.copy();
-    // }
+    this.copyObj = (objs, objInfo) => {
+        if (objs.length === 0 || objInfo[1] < 0) return
+        let objIdx = objInfo[0];
+        //let p = objInfo[1];
+        let obj = objs[objIdx];
+        if(this.cold_down > 0){
+            this.cold_down -= 1;
+            return -1;
+        }
+        console.log("wei ", !wu.isNull(obj), this.isLeftYTriggerPressed());
+        if(!wu.isNull(obj) && this.isLeftYTriggerPressed()){
+            this.cold_down = CD;
+            console.log("wei copy obj...")
+            return objIdx;
+        }
+        return -1;
+    }
+
+
 
     this.animate = (t, objs, state) => {
         // objs: obj_collection, list of objects
@@ -193,6 +231,7 @@ export function CreateObjController(obj_model){
 
         let delete_obj_idx = -1;
         let selected_obj_idx = Array(0);
+        let copy_idx = -1;
         //let copied_obj = null;
 
         // select (grab) obj, press one left/right trigger to grab objects with ctr
@@ -227,12 +266,16 @@ export function CreateObjController(obj_model){
                 //     }
                 // }
             this.operateSingleObj(objs, resl, 0);
-            this.operateSingleObj(objs, resr, 1); 
+            this.operateSingleObj(objs, resr, 1);
+            copy_idx = this.copyObj(objs, resl);
         }
 
         let deleted_name = -1;
+        let copy_name = -1;
         if(delete_obj_idx > -1)
             deleted_name = objs[delete_obj_idx]._name;
+        if(copy_idx > -1)
+            copy_name = objs[copy_idx]._name;
         let selected_names = Array(0)
 
         for(let i =0; i < selected_obj_idx.length; ++ i){
@@ -243,6 +286,7 @@ export function CreateObjController(obj_model){
 
         state.OBJ.ACTION["DELETE"] = deleted_name;
         state.OBJ.ACTION["REVISE"] = selected_names;
+        state.OBJ.ACTION["COPY"] = copy_name;
 
         return [false, state]
 
@@ -252,6 +296,7 @@ export function CreateObjController(obj_model){
     this.clearState = (t, state, sandbox, collection_mode) =>{
         let revised_lst = state.OBJ.ACTION.REVISE;
         let delete_name = state.OBJ.ACTION.DELETE;
+        let copy_name = state.OBJ.ACTION.COPY;
         if(revised_lst.length > 0){
             sandbox.refreshObj(revised_lst);
             state.OBJ.ACTION["REVISE"] = Array(0);
@@ -259,6 +304,10 @@ export function CreateObjController(obj_model){
         if(delete_name !== -1){
             sandbox.removeObjOfName(delete_name, collection_mode);
             state.OBJ.ACTION["DELETE"] = -1;
+        }
+        if(copy_name !== -1){
+            sandbox.copyObj([copy_name]);
+            state.OBJ.ACTION["COPY"] = -1;
         }
 
         return state

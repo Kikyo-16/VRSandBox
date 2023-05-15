@@ -114,6 +114,7 @@ export const init = async model => {
             INACTIVE: true,
             ACTION: {
                 DELETE: -1,
+                COPY: -1,
                 REVISE: Array(0),
             }
         },

@@ -9,6 +9,7 @@ export class Object{
         this.dead = false;
         this.parent = null;
         this.obj_node = null;
+        this.detect_node = null;
         this.time = null;
         this.rid = null;
 
@@ -19,6 +20,8 @@ export class Object{
         this._name = Math.round(Math.random() * 10000).toString();
     	this.parent = model;
         this.obj_node = this.parent.add(form);
+        this.detect_node = this.parent.add("cube");
+        this.detect_node.opacity(0.0001);
         this.time = time;
         this.rid = time.toString() + "_" + Math.round(Math.random() * 10000).toString();
         this.scale = 1;
@@ -52,8 +55,11 @@ export class Object{
     }
 
     setMatrix(m) {
-     	if (this.obj_node !== null)
-     		this.obj_node.setMatrix(m);
+     	if (this.obj_node !== null){
+             this.obj_node.setMatrix(m);
+             this.detect_node.setMatrix(m);
+        }
+
      }
 
     getLoc(){ // return global location
@@ -63,6 +69,7 @@ export class Object{
     updateScale(scale){
     	if (this.obj_node !== null) {
     		this.obj_node.scale(scale);
+            this.detect_node.scale(scale);
     	}
     }
 
@@ -70,18 +77,21 @@ export class Object{
     	if (this.obj_node !== null) {
 	    	let mTr = cg.mTranslate(cg.subtract(loc, this.getLoc()));
 	    	this.obj_node.setMatrix(ut.transform(mTr, this.obj_node));
+            this.detect_node.setMatrix(ut.transform(mTr, this.detect_node));
 	    }
     }
 
     rotate(thetaX, thetaY) {
     	if (this.obj_node !== null) {
     		this.obj_node.turnX(thetaX).turnY(thetaY);
+            this.detect_node.turnX(thetaX).turnY(thetaY);
     	}
     }
 
     move(x, y, z) {
     	if (this.obj_node !== null) {
     		this.obj_node.move(x, y, z);
+            this.detect_node.move(x, y, z);
     	}
     }
 
@@ -119,6 +129,7 @@ export class Object{
     transform(m) {
     	if (this.obj_node !== null) {
     		this.obj_node.setMatrix(ut.transform(m, this.obj_node));
+            this.detect_node.setMatrix(ut.transform(m, this.detect_node));
     	}
     }
 
@@ -128,6 +139,8 @@ export class Object{
             obj._form = this.obj_node._form;
             obj.parent = this.parent;
             obj.obj_node = obj.parent.add(obj._form);
+            obj.detect_node = obj.parent.add("cube");
+            obj.detect_node.opacity(0.0001);
             let t = new Date();
             obj.time = t.getTime();
             obj.rid = obj.time.toString() + "_" + Math.round(Math.random() * 10000).toString();
@@ -143,24 +156,17 @@ export class Object{
         if (this.obj_node === null || this._form === null)
             return false;
 
-        let mGA = this.obj_node.getGlobalMatrix();
+        let mGA = this.detect_node.getGlobalMatrix();
         let m = cg.mTransform(cg.mInverse(mGA), p);
-        let inside = false;
-        if (this._form === 'cube') {
-            inside = m[0] > - 1 && m[0] < 1 &&
+        return m[0] > - 1 && m[0] < 1 &&
                      m[1] > - 1 && m[1] < 1 &&
                      m[2] > - 1 && m[2] < 1;
-        } else if (this._form === 'sphere') {
-            inside = cg.norm(m) < 1;
-        } else if (this._form === 'donut') {
-            inside = Math.abs(m[2]) < .25 && cg.norm([m[0], m[1]]) < 1;
-        }
-        return inside;
     }
 
     delete() {
     	if (this.obj_node !== null) {
     		this.parent.remove(this.obj_node);
+            this.parent.remove(this.detect_node);
     	}
     	this.dead = true;
     }

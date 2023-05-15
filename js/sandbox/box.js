@@ -55,6 +55,7 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
 
+
     this.deleteWall = (w, time) =>{
         this.wall_collection.remove(w._name, time);
     }
@@ -91,6 +92,9 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
     this.reviseObj = (obj, revised) =>{
         return this.furniture_collection.reviseObj(obj, revised);
+    }
+    this.copyObjByName = (name, time) =>{
+        return this.furniture_collection.copyObjByName(name, time);
     }
 
     this.getObjByName = (name) => {

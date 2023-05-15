@@ -219,6 +219,9 @@ export function CreateSandbox(model){
             this.timer.set(ut.OBJ_TIMER, obj_state._latest);
         return flag;
     }
+    this.copyObjByName = (floor, name, time) =>{
+        return this.boxes[floor].copyObjByName(name, time);
+    }
 
     this.newObj = (floor, obj, m) =>{
         this.timer.set(ut.OBJ_TIMER, obj._latest);
