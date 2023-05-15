@@ -3,7 +3,7 @@ import * as cg from "../render/core/cg.js";
 import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import { lcb, rcb } from '../handle_scenes.js';
 import * as ut from "../sandbox/utils.js"
-import {customClays} from "./defineClays.js"
+import {customClays} from "../sandbox/defineClays.js"
 
 export class CreateMenuController {
    constructor() {

@@ -54,31 +54,29 @@ export function CreateObjController(obj_model){
     this.isRightTriggerPressed = () => this.bs.right[0].pressed;
     this.isLeftYTriggerPressed = () => this.bs.left[5].pressed;
 
-    this.rotateObj = (obj, p) =>{
-        return false
-        let m = cg.mMultiply(this.m.left, cg.mIdentity());
-        m[12] = p[0];
-        m[13] = p[1];
-        m[14] = p[2];
+    this.rotateObj_v2 = (obj, p) =>{
 
-        return
+
+
         if(wu.isNull(obj)){
             this.prev_lm = null;
             this.prev_obj_m = null;
             return
         }
         if(this.isLeftTriggerPressed()){
-
+            let m = this.m.left;
             if(wu.isNull(this.prev_lm) || wu.isNull(this.prev_obj_m)) {
-                let m = cg.mMultiply(this.m.left, cg.mIdentity());
-                m[12] = p[0];
-                m[13] = p[1];
-                m[14] = p[2];
-                this.prev_lm = cg.mInverse(this.m.left);
+                this.prev_lm = m;
+
+                let v = cg.mMultiply(obj.getMatrix(), cg.mIdentity());
+                v[12] = p[0];
+                v[13] = p[1];
+                v[14] = p[2];
                 this.prev_obj_m = obj.getMatrix();
             }else{
-                //let m = cg.mMultiply(cg.mMultiply(this.m.left,  this.prev_lm), this.prev_obj_m);
-                obj.setMatrix(this.prev_obj_m);
+                m = cg.mMultiply(this.m.left, cg.mInverse(this.prev_lm));
+                m = cg.mMultiply(m, this.prev_obj_m);
+                obj.setMatrix(m);
             }
         }else{
             this.prev_lm = null;
@@ -147,13 +145,13 @@ export function CreateObjController(obj_model){
         obj.updateLoc(cg.add(obj.getLoc(), cg.scale(direction, this.js.right.y*move_speed)));
     }
 
-    /*this.rotateObj = (obj) => {
+    this.rotateObj = (obj) => {
         // up down to rotate along X, left right to rotate along Y
-        //let thetaX = this.js.left.y*rotate_speed;
-        //let thetaY = this.js.left.x*rotate_speed;
-        //obj.rotate(thetaX, thetaY);
+        let thetaX = this.js.left.y*rotate_speed;
+        let thetaY = this.js.left.x*rotate_speed;
+        obj.rotate(thetaX, thetaY);
 
-    }*/
+    }
 
     this.hitByBeam = (objs, hand) => {
         // hand: 0 for left, 1 for right
@@ -207,7 +205,7 @@ export function CreateObjController(obj_model){
             //this.rotateObj(obj);
         }
         if(!wu.isNull(obj) && this.isLeftTriggerPressed() && hand === 0){
-            this.rotateObj(obj, p);
+            this.rotateObj(obj);
         }
 
     } 
