@@ -66,6 +66,7 @@ export let SAVE_MSG = "Save"
 export let LOGOUT_MSG = "Log out"
 export let CANCEL_MSG = "Cancel"
 export let RECEIVE_MSG = "New message from "
+export let REFRESH_MSG = "Refresh"
 
 export let POS_EXCHANGE_MSG = "Position Exchange" // exchange position
 export let PERSP_SHARING_MSG = "Perspective Share" // inspect other people's view, lose control

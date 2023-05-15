@@ -18,16 +18,9 @@ export function CreateAvatar(model, name, scale){
     let rightLeg = spine.add('cube').move(.08, -.45, 0).scale(.06, .2, .06).color(.1,.1,.1);
 
     let tag = avatar.add().move(0, .2, 0).scale(.2, .1,.0001);
-    let nameTag = tag.add("cube").color(1,1,1).texture(() => {
-            g2.setColor(nameTag.color);
-            g2.fillRect(0,0,1,1);
-            g2.setColor('black');
-            g2.textHeight(.5);
-            g2.fillText(nameTag.text, .5, .5, 'center');
-            g2.drawWidgets(nameTag);
-    });
-    nameTag.text = name;
-    nameTag.color = [1,1,1];
+    this.nameTag = tag.add("cube").color(1,1,1);
+    this.nameTag.text = name;
+    this.nameTag.color = [1,1,1];
 
     this.getScale = () => _scale;
     this.getLoc = () => _loc;
@@ -45,8 +38,17 @@ export function CreateAvatar(model, name, scale){
         model.remove(avatar);
     }
 
+    let textureFn = () =>{
+        g2.setColor(this.nameTag.color);
+        g2.fillRect(0,0,1,1);
+        g2.setColor('black');
+        g2.textHeight(.5);
+        g2.fillText(this.nameTag.text, .5, .5, 'center');
+        g2.drawWidgets(this.nameTag);
+    }
+
     this.animate = () => {
         //nameTag.text = name;
-        nameTag.texture();
+        this.nameTag.texture(textureFn);
     }
 }

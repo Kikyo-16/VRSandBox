@@ -6,6 +6,7 @@ export function CreateMessageCollection(sandbox){
     this.name = null;
     this.send_queue = new Map();
     this.solve_msg = new Map();
+    this.latest = -1;
 
     this.sendInvitation = (state) => {
         let send_msg = state.SEND;
@@ -66,10 +67,14 @@ export function CreateMessageCollection(sandbox){
     }
     this.updateRev = (e) =>{
         let who = e.get(ut.WHO_KEY);
+        let when = e.get(ut.LATEST_KEY);
+        if(wu.isNull(when) || when < this.latest)
+            return;
         if(!wu.isNull(sandbox._name) && sandbox._name!==who){
-
+            console.log("whole", e);
             for(let [key, info] of e){
-                if(key === ut.WHO_KEY)
+                console.log("debug rev", key, info);
+                if(key === ut.WHO_KEY || key === ut.LATEST_KEY)
                     continue;
                 let user = info.get(ut.USER_KEY);
                 if(user !== sandbox._name)
@@ -97,6 +102,8 @@ export function CreateMessageCollection(sandbox){
     this.animate = (t, state) =>{
         let send_msg = state.SEND;
         let rev_msg = state.REV;
+        this.latest = state.RESET;
+        this.send_queue.set(ut.LATEST_KEY, sandbox.timer.newTime());
         if(!wu.isNull(send_msg.USER)&&!wu.isNull(send_msg.OP)&&wu.isNull(send_msg.ACT)){
             let k = send_msg.USER + "_" + send_msg.OP;
 
@@ -109,8 +116,9 @@ export function CreateMessageCollection(sandbox){
                     if(this.solve_msg.has(check_key) && rev.get(ut.LATEST_KEY) <= this.solve_msg.get(check_key)){
                         //console.log("reqqqqq", k, rev.get(ut.LATEST_KEY), this.solve_msg.get(check_key), this.send_queue.has(k), receive_queue.has(k + "_r"));
                     }else{
+
                         send_msg.ACT = rev.get(ut.ACT_KEY);
-                        this.send_queue.set(ut.ACT_KEY, true);
+                        this.send_queue.get(k).set(ut.ACT_KEY, true);
                         this.solve_msg.set(check_key, rev.get(ut.LATEST_KEY));
                         console.log("response----------------------------");
                     }

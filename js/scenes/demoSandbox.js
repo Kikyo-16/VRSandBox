@@ -161,7 +161,8 @@ export const init = async model => {
             OP: null,
             ACT: null,
             ANS: null,
-        }
+        },
+        RESET: -1,
 
     }
 
@@ -177,21 +178,14 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_23.11');
+    if(!wu.isNull(window.temporal)){
+        sandbox.loadScene(window.temporal);
+        state_msg.RESET = sandbox.timer.newTime();
+    }
 
-    let debug = true;
-
-    let debug_cube = sandbox.room.debug_cube;
-    let debug_cube1 = sandbox.mini_sandbox.debug_cube;
+    croquet.register('croquetDemo_24.11');
 
     model.animate(() => {
-
-        let vm = window.views[0]._viewMatrix; //window.avatars[0].headset.matrix;//
-        let vm_inverse = cg.mInverse(vm);
-        debug_cube.identity();
-        debug_cube.setMatrix(vm_inverse).move(0,-1,-1.4).scale(.1);
-        debug_cube1.setMatrix(vm_inverse).move(0,-1,-1.4).scale(.1);
-        console.log("global_pos", debug_cube.getGlobalMatrix().slice(12, 15))
 
         state_msg.RESUME =true;
 

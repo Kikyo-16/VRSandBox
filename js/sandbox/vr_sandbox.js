@@ -409,6 +409,56 @@ export function CreateVRSandbox(model){
         this._name = n;
     }
 
+    let parseMap = (obj, type, bt) =>{
+        let res = obj;
+        if(type === "map"){
+            res = new Map();
+            for(let k in obj) {
+                if(k === ut.TEXTURE_KEY || k === ut.FORM_KEY || k === ut.NUM_FLOORS_KEY || k === ut.LATEST_KEY){
+                    res.set(k, obj[k]);
+                }else if(k === ut.P_KEY || k === ut.RM_KEY || k === ut.COLOR_KEY){
+                    res.set(k, parseMap(obj[k], "array", true));
+                }else{
+                    res.set(k, parseMap(obj[k], "map", false));
+                }
+
+            }
+        }else if(type === "array"){
+            res = Array(0);
+            for(let k in obj) {
+                if(bt){
+                    res.push(obj[k]);
+                }else{
+                    res.push(parseMap(obj[k], "map", bt));
+                }
+
+            }
+            if(res.length === 0){
+                return null;
+            }
+        }
+        return res;
+    }
+    let parseJson = (obj) =>{
+        let res = new Map();
+        for(let k in obj){
+            if(k === ut.FLOOR_TIMER){
+                res.set(k, parseMap(obj[k], "map", false));
+            }else {
+                res.set(k, parseMap(obj[k], "array", false));
+            }
+
+        }
+        return res;
+
+    }
+
+    this.loadScene = (e) =>{
+        const obj = JSON.parse(e)[0];
+        let res = parseJson(obj);
+        console.log(res);
+        this.setScene(res, false);
+    }
 }
 
 

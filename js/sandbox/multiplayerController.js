@@ -31,6 +31,7 @@ export function CreateMultiplayerController(sandbox){
     this.reloadedScene = null;
     this.pre = -1;
     this.has_init = false;
+    this.latest = -1;
 
     let out_pos = [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
 
@@ -92,21 +93,29 @@ export function CreateMultiplayerController(sandbox){
         msg.set("RM", rm);
         msg.set("IN_BOX", in_room);
         msg.set("FLOOR", sandbox.active_floor);
+        msg.set(ut.LATEST_KEY, sandbox.timer.newTime());
         return msg;
 
     }
 
     this.getScene = () =>{
-        return sandbox.getScene(true);
+        let v = sandbox.getScene(true);
+        v.set(ut.LATEST_KEY, sandbox.timer.newTime());
+        return v;
 
     }
     this.getWholeScene = () =>{
-        return sandbox.getScene(false);
+        let v = sandbox.getScene(false);
+        v.set(ut.LATEST_KEY, sandbox.timer.newTime());
+        return v;
     }
 
     this.updateScene = (e) =>{
         let who = e.get(ut.WHO_KEY);
-        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name)
+        let when = null;
+        if(e.has(ut.SCENE_KEY))
+            when = e.get(ut.SCENE_KEY).get(ut.LATEST_KEY);
+        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name  || wu.isNull(when) || when < this.latest )
             return
         if(e.has(ut.SCENE_KEY)){
             console.log("aw", who, e.get(ut.SCENE_KEY), this.name);
@@ -155,7 +164,10 @@ export function CreateMultiplayerController(sandbox){
 
     this.updateWholeScene = (e) =>{
         let who = e.get(ut.WHO_KEY);
-        if(wu.isNull(who) || (!wu.isNull(this.name) && who === this.name))
+        let when = null;
+        if(e.has(ut.WHOLE_KEY))
+            when = e.get(ut.WHOLE_KEY).get(ut.LATEST_KEY);
+        if(wu.isNull(who) || (!wu.isNull(this.name) && who === this.name) || wu.isNull(when) || when < this.latest )
             return
         console.log("asasa", e, ut.WHO_KEY, who, this.name)
         this.reloadedScene = e.get(ut.WHOLE_KEY);
@@ -163,8 +175,11 @@ export function CreateMultiplayerController(sandbox){
 
     this.updatePlayer = (e) =>{
         let who = e.get(ut.WHO_KEY);
+        let when = null;
+        if(e.has(ut.PLAYER_KEY))
+            when = e.get(ut.PLAYER_KEY).get(ut.LATEST_KEY);
         //console.log("player", who);
-        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name)
+        if(wu.isNull(this.name) || wu.isNull(who) || who === this.name|| wu.isNull(when) || when < this.latest )
             return
 
         if(e.has(ut.PLAYER_KEY)) {
@@ -209,6 +224,7 @@ export function CreateMultiplayerController(sandbox){
 
 
     this.animate = (t, in_room, state) =>{
+        this.latest = state.RESET;
         if(!this.has_init)
             return [false, state];
         this.scene = this.getScene();

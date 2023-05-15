@@ -8,7 +8,7 @@ import * as ut from "../sandbox/utils.js"
 export function CreateSavingController(model, sandbox){
 
     let menu = model.add();
-    let userNamesAll = [ut.LOAD_MSG, ut.SAVE_MSG, ut.LOGOUT_MSG, ut.CANCEL_MSG];
+    let userNamesAll = [ut.SAVE_MSG, ut.REFRESH_MSG, ut.LOGOUT_MSG, ut.CANCEL_MSG];
 
     this.availableUserNames = [];
     this.userNameTilesObjectList = [];
@@ -133,7 +133,7 @@ export function CreateSavingController(model, sandbox){
     let exportState = (state) =>{
         let v = sandbox.getScene(false);
         let json_data = parseState(v);
-        const jsonFromMap = JSON.stringify(json_data);
+        const jsonFromMap = JSON.stringify([json_data]);
         let file_name = state.LOGIN.NAME.toString() + "_" + sandbox.timer.newTime();
         const a = document.createElement("a");
         const file = new Blob([jsonFromMap], {type: 'text/plain'});
@@ -169,17 +169,17 @@ export function CreateSavingController(model, sandbox){
         if(res > -1){
             let op = this.availableUserNames[res];
             switch (op) {
-                case ut.LOAD_MSG:
-                    file_input.click();
-                    break;
                 case ut.SAVE_MSG:
                     exportState(state);
+                    state.RESET = sandbox.timer.newTime();
                     break;
                 case ut.CANCEL_MSG:
                     break;
                 case ut.LOGOUT_MSG:
                     state.LOGIN.OUT = true;
-
+                    break;
+                case ut.REFRESH_MSG:
+                    state.RESET = sandbox.timer.newTime();
                     break;
                 default:
 

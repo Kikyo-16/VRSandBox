@@ -3,6 +3,7 @@ import * as cg from "../render/core/cg.js";
 import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import { lcb, rcb } from '../handle_scenes.js';
 import * as ut from "../sandbox/utils.js"
+import {customClays} from "./defineClays.js"
 
 export class CreateMenuController {
    constructor() {
@@ -42,6 +43,8 @@ export class CreateMenuController {
       let objectList = [];
       let objectPickerLeftOffset = -0.2;
       let objectMeshList = ['cube', 'sphere', 'donut'];
+
+      objectMeshList = objectMeshList.concat(customClays());
 
       // Menu interaction
       let rotationSpeedDivider = 2000;
@@ -124,7 +127,7 @@ export class CreateMenuController {
          let objectPickerBG = objectPicker.add('cube').texture('../media/textures/menu/png-small/rectangle-boundary.png').scale(5,0.8,0.001).color(0.1,0.1,1).move(0.26,-0.05,0);
          let spaceBetweenObjects = 1;
          for (let i = 0; i < objectMeshList.length; i++) {
-            let objectPickerItem = objectPicker.add(objectMeshList[i]).move(spaceBetweenObjects * i, 0, 0).scale(0.3);
+            let objectPickerItem = objectPicker.add(objectMeshList[i]).move(-3 + spaceBetweenObjects * i, 0, 0).scale(0.3);
             objectList.push(objectPickerItem);
          }
 
