@@ -180,9 +180,8 @@ export const init = async model => {
 
     if(!wu.isNull(window.temporal)){
         sandbox.loadScene(window.temporal);
-        state_msg.RESET = sandbox.timer.newTime();
     }
-
+    state_msg.RESET = sandbox.timer.newTime();
     croquet.register('croquetDemo_24.11');
 
     model.animate(() => {

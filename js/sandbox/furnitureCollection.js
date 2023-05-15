@@ -16,7 +16,9 @@ export function FurnitureCollection(model){
         }
         return false;
     }
-
+    this.numCollection = () =>{
+        return this.objCollection.size;
+    }
     this.newObj = (obj, m) => {
         let n_obj = new Object();
         n_obj.init(model, obj._form, [0, 0, 0], 1, 0);

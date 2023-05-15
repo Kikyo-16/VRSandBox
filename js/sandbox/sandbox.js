@@ -17,6 +17,7 @@ export function CreateSandbox(model){
     let robot = box_model;
     this.robot = robot;
     this.boxes = Array(0);
+    this.shift_status = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];
     let p3 = [1, 0, 1];
@@ -43,15 +44,30 @@ export function CreateSandbox(model){
             e = edge;
         }
         this.boxes.push(new CreateBox(box_model, p1, p2, p3, p4, h, d, e, new_level));
+        let dt = 0;
+        let shift_dt =  this.shift_status[this.shift_status.length - 1];
+        if(this.shift_status.length > 1){
+            dt = this.shift_status[1] - this.shift_status[0];
+            dt += shift_dt;
+        }else{
+            dt = shift_dt;
+        }
+        this.boxes[-1].shift(dt, 0, 0);
+        this.shift_status.push(dt);
+
     }
 
     this.removeFloor = (time) =>{
         if(this.boxes.length === 0)
             return false;
         this.timer.set(ut.FLOOR_TIMER, time);
-        this.boxes[this.boxes.length - 1].remove();
-        this.boxes.pop();
-        return true;
+        if(this.boxes[this.boxes.length - 1].remove()){
+            this.boxes.pop();
+            this.shift_status.pop();
+            return true;
+        }
+
+        return false;
     }
 
     this.remove = () =>{
@@ -60,14 +76,16 @@ export function CreateSandbox(model){
         }
     }
     this.expand = (active_floor) =>{
-        let dx = 0;
+        let dx = this.shift_status[0];
         if(active_floor >= 0){
-            dx = - active_floor;
+            dx = this.shift_status[active_floor];
         }
+        let shift_status = Array(0);
         for(let i = 0; i < this.boxes.length; ++i){
             this.boxes[i].shift(dx, 0, 0);
-            dx += 1;
+            shift_status.push(dx);
         }
+        this.shift_status = shift_status;
 
 
     }
@@ -77,10 +95,13 @@ export function CreateSandbox(model){
         if(active_floor >= 0){
             dx = active_floor;
         }
+        let shift_status = Array(0);
         for(let i = 0; i < this.boxes.length; ++i){
+            shift_status.push(dx);
             this.boxes[i].shift(dx, 0, 0);
             dx -= 1;
         }
+        this.shift_status = shift_status;
 
     }
 

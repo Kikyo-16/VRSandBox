@@ -60,14 +60,19 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
     this.remove = () =>{
-        model.remove(node_1);
+        if(this.furniture_collection.numCollection() === 0){
+            model.remove(node_1);
+            return true;
+        }
+        return false;
+
     }
 
     this.resetPos = (active_floor) =>{
         node_2.identity().move(active_floor, y, z);
     }
     this.shift = (x, y, z) => {
-        node_2.move(x, y, z);
+        node_2.identity().move(x, y, z);
     }
     this.isInbox = (p) =>{
         let pos = wu.objMatrix(cg.mTranslate(p), box).slice(12, 15);
