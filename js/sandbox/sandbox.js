@@ -75,7 +75,7 @@ export function CreateSandbox(model){
             this.removeFloor();
         }
     }
-    this.expand = (active_floor) =>{
+    this.collapse = (active_floor) =>{
         let dx = this.shift_status[0];
         if(active_floor >= 0){
             dx = this.shift_status[active_floor];
@@ -90,16 +90,16 @@ export function CreateSandbox(model){
 
     }
 
-    this.collapse = (active_floor) =>{
-        let dx = 0;
+    this.expand = (active_floor) =>{
+        let dx = this.shift_status[0];
         if(active_floor >= 0){
-            dx = active_floor;
+            dx = this.shift_status[active_floor] - active_floor;
         }
         let shift_status = Array(0);
         for(let i = 0; i < this.boxes.length; ++i){
             shift_status.push(dx);
             this.boxes[i].shift(dx, 0, 0);
-            dx -= 1;
+            dx += 1;
         }
         this.shift_status = shift_status;
 
