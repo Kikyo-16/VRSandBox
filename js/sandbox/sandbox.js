@@ -108,7 +108,6 @@ export function CreateSandbox(model){
 
     }
     this.getGPosition = (p, floor) =>{
-        console.log(floor, this.boxes[floor])
         return this.boxes[floor].getGPosition(p);
     }
 

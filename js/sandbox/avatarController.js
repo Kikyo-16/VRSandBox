@@ -66,6 +66,7 @@ export function CreateAvatarController(sandbox){
 					// if (!(cg.norm(rp) < 0.05 && floor === prev_floor)) {
 					if (!(cg.norm(rp) < 0.05 && floor === sandbox.active_floor)) {
 						console.log("move in room");
+						//console.log(rLoc, floor);
 						sandbox.changePerspective(rLoc, floor);
 					}
 				} else if (!prevInBox && !inBox) { 

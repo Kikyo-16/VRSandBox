@@ -53,6 +53,7 @@ export function CreateVRSandbox(model){
 
         this.is_collapse = true;
         this.expand();
+        this.collapse();
     }
 
     let deleteTmpFocus = () =>{
@@ -297,14 +298,19 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.changePerspective = (rp, floor) => {
+    this.changePerspective = (rloc, floor) => {
         // move to relative loc rp in room
         //room.walk(rp); // walk rp
         this.active_floor = floor
         mini_sandbox.activeFloor(floor);
         room.activeFloor(floor);
         effect.activeFloor(floor);
-        room.relocate(rp, this.active_floor, sc);
+        // get node matrix
+        // let gloc = mini_sandbox.getGPosition(rloc, floor);
+        // let div_pos = mini_sandbox.getNodeMatrix(gloc);
+        let gloc = room.getGPosition(rloc, floor);
+        let div_pos = cg.scale(room.getNodeMatrix(gloc), 1/sc); // mind scale
+        room.relocate(div_pos, this.active_floor, sc);
     }
 
     this.changeView = (vm) => {
