@@ -55,6 +55,12 @@ export function CreateObjController(obj_model){
     this.isLeftYTriggerPressed = () => this.bs.left[5].pressed;
 
     this.rotateObj = (obj, p) =>{
+        return false
+        let m = cg.mMultiply(this.m.left, cg.mIdentity());
+        m[12] = p[0];
+        m[13] = p[1];
+        m[14] = p[2];
+
         return
         if(wu.isNull(obj)){
             this.prev_lm = null;
@@ -62,7 +68,12 @@ export function CreateObjController(obj_model){
             return
         }
         if(this.isLeftTriggerPressed()){
+
             if(wu.isNull(this.prev_lm) || wu.isNull(this.prev_obj_m)) {
+                let m = cg.mMultiply(this.m.left, cg.mIdentity());
+                m[12] = p[0];
+                m[13] = p[1];
+                m[14] = p[2];
                 this.prev_lm = cg.mInverse(this.m.left);
                 this.prev_obj_m = obj.getMatrix();
             }else{
