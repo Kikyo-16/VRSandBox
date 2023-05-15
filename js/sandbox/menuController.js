@@ -32,9 +32,25 @@ export class CreateMenuController {
       let texturePreviewObjectsBG = [];
       let spaceBetweenTextures = 0.5;
       let textureList = [
-         '../media/textures/NO_TEXTURE.png',
-         '../media/textures/brick.png',
-         '../media/textures/concrete.png'
+         '../media/textures/sandbox/NO_TEXTURE.png',
+         '../media/textures/sandbox/brick.png',
+         '../media/textures/sandbox/concrete.png',
+         '../media/textures/sandbox/silver-old.png',
+         '../media/textures/sandbox/wood-1.png',
+         '../media/textures/sandbox/wood-2.png',
+         '../media/textures/sandbox/wood-3.png',
+         '../media/textures/sandbox/wood-4.png',
+         //'../media/textures/sandbox/blackboard.png',
+         '../media/textures/sandbox/rainbow-1.png',
+         //'../media/textures/sandbox/rainbow-2.png',
+         '../media/textures/sandbox/silver.png',
+         '../media/textures/sandbox/wood-5.png',
+         '../media/textures/sandbox/wood-white.png',
+         
+         '../media/textures/sandbox/carpet-1.png',
+         '../media/textures/sandbox/carpet-2.png',
+         '../media/textures/sandbox/carpet-3.png',
+         '../media/textures/sandbox/carpet-4.png',
       ];
       let textureTilesDefaultColor = [0.5,0.5,1];
       let textureTilesHoverColor = [0.1,0.1,1];
@@ -115,10 +131,10 @@ export class CreateMenuController {
       
 
          for (let i = 0; i < textureList.length; i++) {
-            let yLoc = spaceBetweenTextures - 2.2 * Math.floor(i/2) * textureScale;
-            let xLoc = (i%2)*0.5;
-            let texturePanelItem = texturePicker.add('cube').move(-0.25 + xLoc, yLoc, 0.83).scale(textureScale/1.2).texture(textureList[i]);
-            let texturePanelItemBG = texturePicker.add('cube').move(-0.25 + xLoc, yLoc, 0.73).scale(textureScale/1.1).color(textureTilesDefaultColor);
+            let yLoc = spaceBetweenTextures - 1.4 * Math.floor(i/4) * textureScale;
+            let xLoc = (i%4)*0.28;
+            let texturePanelItem = texturePicker.add('cube').move(-0.41 + xLoc, yLoc, 0.83).scale(textureScale/2.1).texture(textureList[i]);
+            let texturePanelItemBG = texturePicker.add('cube').move(-0.41 + xLoc, yLoc, 0.73).scale(textureScale/2).color(textureTilesDefaultColor);
             texturePreviewObjects.push(texturePanelItem);
             texturePreviewObjectsBG.push(texturePanelItemBG);
          }
@@ -191,7 +207,7 @@ export class CreateMenuController {
             }
 
             // BEAM INTERSECTION FOR TEXTURE PICKER
-            let newSelectedTextureIndex = this.getBeamIntersectionWithObjects(texturePreviewObjects, hitRadius, rt, rt_prev, selectedTextureIndex,texturePreviewObjectsBG, textureTilesDefaultColor,textureTilesHoverColor);
+            let newSelectedTextureIndex = this.getBeamIntersectionWithObjects(texturePreviewObjects, hitRadius/2, rt, rt_prev, selectedTextureIndex,texturePreviewObjectsBG, textureTilesDefaultColor,textureTilesHoverColor);
             if (newSelectedTextureIndex != selectedTextureIndex) {
                model.remove(selectedObject);
                selectedObject = null;
