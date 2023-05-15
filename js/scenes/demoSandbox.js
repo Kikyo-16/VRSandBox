@@ -10,6 +10,7 @@ import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
 import {CreateSavingController} from "../sandbox/savingController.js";
 import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js"
 import {CreateMessageCollection} from "../sandbox/messageCollection.js"
+import {CreateControlsViewController} from "../sandbox/controlsViewController.js";
 
 import * as ut from '../sandbox/utils.js';
 import * as wu from '../sandbox/wei_utils.js';
@@ -48,7 +49,7 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add();
+    let view_model = model.add();
     let invi_model = model.add()
     let shared_menu_model = model.add();
     let login_menu_model = model.add();
@@ -61,6 +62,9 @@ export const init = async model => {
     let box_controller = new CreateBoxController(box_model, sandbox);
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
+
+    let view_controller = new CreateControlsViewController();
+    view_controller.init(view_model);
 
     let invitation_controller = new CreateInvitationMenuController();
     invitation_controller.init(invi_model);
@@ -190,6 +194,9 @@ export const init = async model => {
         state_msg.RESUME =true;
 
         let state_code = login_controller.animate(model.time, state_msg, sandbox);
+        state_msg = checkStateCode(state_code);
+
+        state_code = view_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
 
         state_code = saving_controller.animate(model.time, state_msg);

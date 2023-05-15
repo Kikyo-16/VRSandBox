@@ -70,7 +70,7 @@ export let REFRESH_MSG = "Refresh"
 
 export let POS_EXCHANGE_MSG = "Position Exchange" // exchange position
 export let PERSP_SHARING_MSG = "Perspective Share" // inspect other people's view, lose control
-//export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange" 
+//export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
 
 /*
 * Menu CODE
@@ -85,9 +85,9 @@ export let WALKING_BACKWARD = 2;
 
 export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";
 export let TEXT_ROOM_WITHOUT_BOX = "Click to show Sandbox";
-export let TEXT_BOX_VIEW = "Sandbox->View";
-export let TEXT_BOX_EDIT = "Sandbox->Edit";
-export let TEXT_BOX_OBJ = "Sandbox->Object";
+export let TEXT_BOX_VIEW = "Sandbox View Mode";
+export let TEXT_BOX_EDIT = "Sandbox Edit Mode";
+export let TEXT_BOX_OBJ = "Sandbox Object Mode";
 export let TEXT_IS_DIVING = "Diving to Room...";
 export let TEXT_ROOM_WALKING = "Walking in the Room...";
 
