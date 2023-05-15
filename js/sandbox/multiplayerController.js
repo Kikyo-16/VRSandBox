@@ -190,93 +190,23 @@ export function CreateMultiplayerController(sandbox){
         }
     };
 
-    let updateSendList = (player_list, state) =>{
-        if(wu.isNull(this.name) || wu.isNull(this.player_list)){
-            return this.player_list;
-        }
+    let updateSendList = (state) =>{
         let user = state.PERSPECTIVE.ACTION.USER;
-        let players = new Map();
-        if(user !== null){
-            for(let [name, info] of player_list){
-                if(name === this.name){
-                    players.set(name, player_list.get(user));
-                }else{
-                    players.set(name, info);
-                }
-            }
-        }else{
-            players = this.player_list;
+        if (wu.isNull(this.name) || wu.isNull(this.player_list) || wu.isNull(user)){
+            return;
         }
-        return players;
-
-
-    }
-
-    let debuAnimate = (t, in_room, state) =>{
-        if (this.debug) {
-            // if (t_ >= 300 && t_ < 1230 ) {
-            //     console.log("share view");
-            //     state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_SHARE_MSG;
-            // }
-
-            if (t_ === 200 ) {
-                console.log("elapse time", t_)
-                this.debug_div_in();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t_ === 400 || t_ === 800 || t_ === 900 || t_ === 1000) {
-                console.log("elapse time", t_)
-                this.debug_exchange_in_room();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-
-            if (t_ === 600) {
-                console.log("elapse time", t_)
-                this.debug_leave_room();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t_ === 1100) {
-                console.log("elapse time", t_)
-                this.debug_leave_room();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t === 1250 ) {
-                console.log("stop share view");
-                state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
-            }
-
-            if (t === 1270) {
-                console.log("elapse time", t_)
-                this.debug_div_in();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t_ === 1290) {
-                console.log("elapse time", t_)
-                this.debug_div_in();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            if (t_ === 1320) {
-                console.log("elapse time", t_)
-                this.debug_leave_room();
-                console.log(this.player_list.get(sandbox._name));
-                state.PERSPECTIVE.ACTION.MSG = ut.PERSPECTIVE_EXCHANGE_MSG;
-            }
-
-            t_++;
+        
+        console.log("update send list", user)
+        if (state.PERSPECTIVE.ACTION.MSG === ut.PERSP_SHARING_MSG) {
+            this.player_list.set(this.name, this.player_list.get(user));
+        } else if (state.PERSPECTIVE.ACTION.MSG === ut.POS_EXCHANGE_MSG) {
+            console.log("update exchange");
+            console.log(state.PERSPECTIVE.ACTION.INFO)
+            this.player_list.set(this.name, state.PERSPECTIVE.ACTION.INFO);
+            console.log("updated", this.player_list);
         }
     }
+
 
     this.animate = (t, in_room, state) =>{
         if(!this.has_init)
@@ -286,14 +216,12 @@ export function CreateMultiplayerController(sandbox){
         this.player = this.getPlayer(in_room);
         this.player_list.set(this.name, this.player);
 
-        let send_player_list = updateSendList(this.player_list, state);
-        
-        // debug
-        debuAnimate(t, in_room, state);
+        // let send_player_list = updateSendList(this.player_list, state);
+        updateSendList(state);
 
-        console.log("sss", send_player_list);
+        console.log("sss", this.player_list);
         if(avatar_controller.local_user !== null)
-           state = avatar_controller.animate(send_player_list, state);
+           state = avatar_controller.animate(this.player_list, state);
         state["PERSPECTIVE"]["PLAYER_INFO"] = this.player_list;
         state["PERSPECTIVE"]["SELF"] = this.name;
         return [true, state];

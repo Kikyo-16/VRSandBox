@@ -313,6 +313,16 @@ export function CreateVRSandbox(model){
         room.relocate_view(vm);
     }
 
+    this.hud = (vm) => {
+        mini_sandbox.hud(vm);
+        room.hud(vm);
+    }
+
+    this.resetHud = () => {
+        mini_sandbox.reset_hud();
+        room.reset_hud();
+    }
+
     this.resetView = () => {
         mini_sandbox.reset_view();
         room.reset_view();

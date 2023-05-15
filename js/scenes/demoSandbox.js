@@ -15,6 +15,8 @@ import * as ut from '../sandbox/utils.js';
 import * as wu from '../sandbox/wei_utils.js';
 import * as croquet from "../util/croquetlib.js";
 
+import * as cg from "../render/core/cg.js";
+
 export let updateModelScene = msg => {
     window.clay.model.multi_controller.updateScene(msg);
 
@@ -133,6 +135,7 @@ export const init = async model => {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
                 USER: null,
+                RM: null,
                 ARG: null,
             },
             PLAYER_INFO: new Map(),
@@ -178,7 +181,17 @@ export const init = async model => {
 
     let debug = true;
 
+    let debug_cube = sandbox.room.debug_cube;
+    let debug_cube1 = sandbox.mini_sandbox.debug_cube;
+
     model.animate(() => {
+
+        let vm = window.views[0]._viewMatrix; //window.avatars[0].headset.matrix;//
+        let vm_inverse = cg.mInverse(vm);
+        debug_cube.identity();
+        debug_cube.setMatrix(vm_inverse).move(0,-1,-1.4).scale(.1);
+        debug_cube1.setMatrix(vm_inverse).move(0,-1,-1.4).scale(.1);
+        console.log("global_pos", debug_cube.getGlobalMatrix().slice(12, 15))
 
         state_msg.RESUME =true;
 
@@ -233,9 +246,6 @@ export const init = async model => {
 
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-
-
-
 
 
         /*

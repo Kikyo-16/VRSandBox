@@ -32,10 +32,6 @@ export let ACT_KEY = "V"
 
 export let INVITATION_KEY = "W"
 
-
-export let PERSPECTIVE_SHARE_MSG = "perspective-share"
-export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
-
 /*
 * STATUS CODE
 * */
@@ -71,8 +67,9 @@ export let LOGOUT_MSG = "Log out"
 export let CANCEL_MSG = "Cancel"
 export let RECEIVE_MSG = "New message from "
 
-export let POS_EXCHANGE_MSG = "Position Exchange"
-export let PERSP_SHARING_MSG = "Perspective Share"
+export let POS_EXCHANGE_MSG = "Position Exchange" // exchange position
+export let PERSP_SHARING_MSG = "Perspective Share" // inspect other people's view, lose control
+//export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange" 
 
 /*
 * Menu CODE

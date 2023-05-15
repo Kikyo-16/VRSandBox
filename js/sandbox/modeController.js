@@ -24,6 +24,9 @@ export function CreateModeController(model){
     menu_button.text = "";
     menu_button.color = [1, 1, 1];
 
+    this.tmp_mode = ut.BOX_VIEW_MSG;
+    this.mode = ut.BOX_VIEW_MSG;
+
 
     let refresh = (mode, state) =>{
         let text = "";
@@ -76,12 +79,14 @@ export function CreateModeController(model){
     let isInRoom = () =>{
         return this.mode_id === ut.ROOM_WITH_BOX_MSG ||
             this.mode_id === ut.ROOM_WITHOUT_BOX_MSG ||
-            this.mode_id === ut.ROOM_WALKING_MSG;
+            this.mode_id === ut.ROOM_WALKING_MSG || 
+            (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.ROOM_WITHOUT_BOX_MSG);
     }
     let isInBox = () =>{
         return this.mode_id === ut.BOX_VIEW_MSG ||
             this.mode_id === ut.BOX_EDIT_MSG ||
-            this.mode_id === ut.BOX_OBJ_MSG;
+            this.mode_id === ut.BOX_OBJ_MSG ||
+            (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.BOX_VIEW_MSG);
     }
 
     let changeGlobalMode = () =>{
@@ -162,7 +167,6 @@ export function CreateModeController(model){
                 break;
             case ut.BOX_VIEW_MSG:
                 state.GLOBAL_MENU.INACTIVE = true;
-
                 break;
             case ut.BOX_EDIT_MSG:
                 break;
@@ -190,6 +194,10 @@ export function CreateModeController(model){
                 console.log(bug);
         }
         this.mode_id = mode;
+
+        this.mode = state.MODE.MODE;
+        this.tmp_mode = state.MODE.TMP_MODE;
+
         state.BOX.DISABLED = state.MENU.OPEN;
         if(isInBox()){
             sandbox.mini_sandbox.comeBack();
@@ -228,6 +236,9 @@ export function CreateModeController(model){
         }
         if(state.MODE.TMP_MODE === ut.PERSP_SHARING_MSG){
             if(bc.isRB()){
+                state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
+                state.PERSPECTIVE.ACTION.USER = null;
+                state.PERSPECTIVE.ACTION.INFO = null;
                 state.MODE.TMP_MODE = null;
             }
         }

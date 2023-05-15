@@ -8,7 +8,8 @@ export function CreateSandbox(model){
     let h = .05;
     let d = .01;
     let edge = .02;
-    let root = model.add();
+    let view_hud = model.add();
+    let root = view_hud.add(); //model.add();
     let view_node = root.add();
     let node = view_node.add();
     let walk = node.add();
@@ -26,6 +27,8 @@ export function CreateSandbox(model){
 
     let robot_model = box_model.add();
     this.robot_model = robot_model;
+
+    this.debug_cube = view_hud.add('cube').scale(.1);
 
     this.getNodeMatrix = () =>{
         return node.getMatrix();
@@ -142,6 +145,17 @@ export function CreateSandbox(model){
     this.relocate_view = (vm) => {
         view_node.identity();
         view_node.setMatrix(cg.mMultiply(view_node.getMatrix(), cg.mInverse(vm)));
+    }
+
+    this.hud = (vm) => {
+        console.log("hud")
+        console.log("view_hud", view_hud.getMatrix())
+        console.log("view_node", view_node.getMatrix())
+        view_hud.setMatrix(vm).move(0,-1,-1.4); //???
+    }
+
+    this.reset_hud = () => {
+        view_hud.identity();
     }
 
     this.reset_view = () => {

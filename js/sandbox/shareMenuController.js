@@ -322,12 +322,16 @@ export class CreateShareMenuController {
       if(!wu.isNull(state.GLOBAL_MENU.ACTION.op)){
          if(state.GLOBAL_MENU.ACTION.op === ut.PERSP_SHARING_MSG){
             state["MODE"]["TMP_MODE"] = ut.PERSP_SHARING_MSG;
+            state.PERSPECTIVE.ACTION.MSG = ut.PERSP_SHARING_MSG;
+            state.PERSPECTIVE.ACTION.USER = state.GLOBAL_MENU.ACTION.user;
          }else if(state.GLOBAL_MENU.ACTION.op === ut.POS_EXCHANGE_MSG){
             state.SEND.USER = state.GLOBAL_MENU.ACTION.user;
             state.SEND.OP = state.GLOBAL_MENU.ACTION.op;
             state.SEND.ACT = null;
             console.log("click", state.SEND);
             msg_collection.sendInvitation(state);
+            state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
+            state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(state.SEND.USER);
          }
          state.GLOBAL_MENU.ACTION.op = null;
       }

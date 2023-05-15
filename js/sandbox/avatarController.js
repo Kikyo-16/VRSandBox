@@ -52,39 +52,51 @@ export function CreateAvatarController(sandbox){
 		}
 	}
 
+	let moveSandbox = (inBox, floor, rm, vm, state, rLoc) => {
+		if (prevInBox && inBox) {
+			// from inbox to inbox
+			let rp = cg.subtract(prev_rp, rLoc);
+			console.log("move in room");
+			sandbox.changePerspective(rp);
+		} else if (!prevInBox && !inBox) { 
+			// from outside to outside
+			console.log("outside to outside")
+			// do nothing
+		} else if (!prevInBox && inBox) { 
+			// from outside to inbox
+			let loc = sandbox.getGPosition(0, rLoc);
+			console.log("dive", prevInBox, inBox, loc);
+			state.MODE["MODE"] = ut.DIVING_MSG;
+			state.BOX.ACTION.MSG = ut.DIVING_MSG;
+			state.BOX.ACTION.ARG = loc;
+			state.MODE.ARG = null;
+		} else { 
+			// from inbox to outside
+			console.log("leave room");
+			state.MODE["MODE"] = ut.BOX_VIEW_MSG;
+			state.BOX.ACTION.MSG = ut.NON_ACTION_MSG;
+			state.BOX.ACTION.ARG = null;
+		}
+		return state
+	}
+
 	this.updateLocal = (inBox, floor, rm, vm, state) =>{
 		
 		// move sandbox according to local user location
 
 		let rLoc = rm.slice(12, 15);
 
+		console.log("perspective flag", state.PERSPECTIVE.ACTION.MSG)
 		// move sandbox around, might need to block for diving??
 		if (state.MODE["MODE"] !== ut.DIVING_MSG) {
-			if (state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_EXCHANGE_MSG || state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_SHARE_MSG) {
-				if (prevInBox && inBox) {
-					// from inbox to inbox
-					let rp = cg.subtract(prev_rp, rLoc);
-					// console.log("move in room");
-					sandbox.changePerspective(rp);
-				} else if (!prevInBox && !inBox) { 
-					// from outside to outside
-					// do nothing
-				} else if (!prevInBox && inBox) { 
-					// from outside to inbox
-					let loc = sandbox.getGPosition(0, rLoc);
-					// console.log("dive", prevInBox, inBox, loc);
-					state.MODE["MODE"] = ut.DIVING_MSG;
-					state.BOX.ACTION.MSG = ut.DIVING_MSG;
-					state.BOX.ACTION.ARG = loc;
-					state.MODE.ARG = null;
-				} else { 
-					// from inbox to outside
-					// console.log("leave room")
-					state.MODE["MODE"] = ut.BOX_VIEW_MSG;
-					state.BOX.ACTION.MSG = ut.NON_ACTION_MSG;
-					state.BOX.ACTION.ARG = null;
-				}
-				//state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
+			if (state.PERSPECTIVE.ACTION.MSG === ut.POS_EXCHANGE_MSG || state.PERSPECTIVE.ACTION.MSG === ut.PERSP_SHARING_MSG) {
+				console.log("perspective flag", state.PERSPECTIVE.ACTION.MSG)
+				state = moveSandbox(inBox, floor, rm, vm, state, rLoc);
+			}
+			if (state.PERSPECTIVE.ACTION.MSG === ut.POS_EXCHANGE_MSG) {
+				state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
+				state.PERSPECTIVE.ACTION.USER = null;
+				state.PERSPECTIVE.ACTION.INFO = null;
 			}
 			prevInBox = inBox;
 			prev_rp = rLoc;
@@ -154,24 +166,22 @@ export function CreateAvatarController(sandbox){
 
 		if (state.MODE["MODE"] !== ut.DIVING_MSG) {
 			console.log("avatar ", state.PERSPECTIVE.ACTION.MSG)
-			if (state.PERSPECTIVE.ACTION.MSG === ut.PERSPECTIVE_SHARE_MSG) {
+			if (state.PERSPECTIVE.ACTION.MSG === ut.PERSP_SHARING_MSG) {
 				// compensate for view offset??
 				// update to the other player's view
 				let vm = info.get("VM");
 				vm[12] = 0;
 				vm[13] = 0;
 				vm[14] = 0;
+				console.log("persp share", vm)
 				sandbox.changeView(vm);
 
 				// lock local player's view
-				let local_vm = window.avatars[0].headset.matrix;
-				if (prev_vm !== null){
-					local_vm = cg.subtract(local_vm, prev_vm); // ????? 
-					sandbox.changeView(local_vm); 
-				}
-				prev_vm = local_vm;
+				let local_vm = window.views[0]._viewMatrix;
+				sandbox.hud(cg.mInverse(local_vm)); 
 			} else {
 				prev_vm = null;
+				sandbox.resetHud();
 				sandbox.resetView();
 			}
 		}
