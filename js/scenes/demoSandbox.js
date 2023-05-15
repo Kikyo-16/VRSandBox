@@ -175,7 +175,6 @@ export const init = async model => {
     croquet.register('croquetDemo_11.99');
 
     model.animate(() => {
-
         state_msg.RESUME =true;
 
         let state_code = login_controller.animate(model, state_msg);
