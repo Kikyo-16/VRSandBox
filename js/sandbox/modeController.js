@@ -7,14 +7,16 @@ import * as ut from "../sandbox/utils.js"
 
 export function CreateModeController(model){
     let node = model.add();
-    let menu_button = node.add("cube").texture(() => {
-            g2.setColor(menu_button.color);
-            g2.fillRect(0,0,1,1);
-            g2.setColor('black');
-            g2.textHeight(.12);
-            g2.fillText(menu_button.text, .5, .5, 'center');
-            g2.drawWidgets(menu_button);
-    });
+    
+    let menu_button = node.add('cube').texture('../media/textures/menu/png-small/menu-item-type-3.png');
+    menu_button.add('cube').texture( () => {
+         g2.textHeightAndFont('',0.042,'Arial');
+         g2.setColor('#1a1aff');
+         g2.fillText( menu_button.text, 0.5, 0.5 , 'center');
+         g2.drawWidgets(menu_button);
+    }).scale(1.4,8.4,1);
+
+
     let CD = 20;
     this.cold_down = -1;
     this.mode_id = ut.BOX_VIEW_MSG;
@@ -129,19 +131,23 @@ export function CreateModeController(model){
         state.OBJ.INACTIVE = true;
         state.BOX.DISABLED = false;
         state.ROOM.WALKING.DISABLED = true;
+        state.GLOBAL_MENU.INACTIVE = true;
+        state.MODE.DISABLED = false;
         switch(state.MODE.MODE) {
             case ut.ROOM_WITH_BOX_MSG:
                 sandbox.mini_sandbox.comeBack();
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.ROOM_WITHOUT_BOX_MSG:
                 sandbox.mini_sandbox.flyAway();
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.BOX_VIEW_MSG:
-
+                state.GLOBAL_MENU.INACTIVE = false;
 
                 break;
             case ut.BOX_EDIT_MSG:
@@ -150,6 +156,7 @@ export function CreateModeController(model){
                 state.MENU.INACTIVE = false;
                 state.OBJ.INACTIVE = state.MENU.OPEN;
                 sandbox.clear(4);
+                state.GLOBAL_MENU.INACTIVE = false;
                 break;
             case ut.DIVING_MSG:
                 break;
@@ -168,16 +175,33 @@ export function CreateModeController(model){
         }else{
             state.BOX.DISABLED = true;
         }
+        if(state.MENU.OPEN || state.GLOBAL_MENU.OPEN){
+            state.BOX.DISABLED = true;
+            state.MODE.DISABLED = true;
+            state.OBJ.INACTIVE =true;
+        }
+        if(state.MENU.OPEN)
+            state.GLOBAL_MENU.INACTIVE = true;
+        if(state.GLOBAL_MENU.OPEN)
+            state.MENU.INACTIVE = true;
         return state;
     }
 
     this.animate = (t, state) =>{
+
+        if(state.LOGIN.DISABLED){
+            menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(1);
+        } else {
+            menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(0.001);
+        }
+
+        if(state.MODE.DISABLED)
+            return [false, state]
         if(state.MODE.MODE === ut.DIVING_MSG){
             refresh(ut.DIVING_MSG);
             return [false, state]
         }
         this.mode_id = state.MODE.MODE;
-        menu_button.identity().hud().move(-.2, .5, -.1).scale(.2, .2, .001);
         if(state.MODE.SWITCH){
             if(state.MODE.IN_ROOM)
                 this.mode_id = ut.ROOM_WITHOUT_BOX_MSG;

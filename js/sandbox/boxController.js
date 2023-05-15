@@ -22,7 +22,7 @@ export function CreateBoxController(model, sandbox) {
     this.menu_id = ut.MENU_DISABLED;
 
 
-    let rod = model.add("tubeZ").color(1, 0, 1);
+    let rod = model.add("tubeZ").color(1, 0, 1).move(-100, 0, 0);
 
 
     let adjustRodLength = (t) =>{
@@ -175,8 +175,11 @@ export function CreateBoxController(model, sandbox) {
         let args = action.ARG;
         switch(act_code) {
             case ut.DIVING_MSG:
-                sandbox.div(args);
-                state.MODE["MODE"] = ut.DIVING_MSG;
+                let floor = sandbox.mini_sandbox.inWhichBox(args);
+                if(floor !== undefined && floor > -1){
+                    sandbox.div(args);
+                    state.MODE["MODE"] = ut.DIVING_MSG;
+                }
                 break;
             case ut.ADD_FLOOR_MSG:
                 sandbox.addFloor(true);

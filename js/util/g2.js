@@ -12,6 +12,7 @@ function G2() {
    let height  = textureCanvas.height;
    let mouseZPrev = false;
    let mouseState = 'move';
+   this.context = context;
 
    let x2c = x => width * x;
    let y2c = y => height * (1 - y);
@@ -320,6 +321,7 @@ function G2() {
          context.fillStyle = context.strokeStyle = isRgba(color) ? rgbaToHex(color[0],color[1],color[2],color[3]) : color;
    }
    this.textHeight = h => context.font = (height * h) + 'px helvetica';
+   this.textHeightAndFont = (t,h,f) => context.font = t + ' ' + (height * h) + 'px ' + f;
 
    this.barChart = (x,y,w,h, values, labels, colors) => {
       context.save();

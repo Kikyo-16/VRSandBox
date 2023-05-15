@@ -1,7 +1,7 @@
 import * as cg from "../render/core/cg.js";
 import * as wu from "../sandbox/wei_utils.js"
 import * as ut from "../sandbox/utils.js"
-import {Object} from "../sandbox/objCollection.js"
+import {CreateTimer} from "../sandbox/timer.js"
 import {CreateSandbox} from "../sandbox/sandbox.js"
 
 let NAME_LIST = ["Mike"];
@@ -12,15 +12,18 @@ export function CreateVRSandbox(model){
     let room = new CreateSandbox(model);
     let effect = new CreateSandbox(model);
     let boxes = [mini_sandbox, room, effect];
-    let wrapped_model = new Object();
-    this.latest = -1;
+    //let wrapped_model = new Object();
+    //wrapped_model.vallinaInit(model)
+    this.timer = new CreateTimer();
+
+
     this._name = NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString();
 
     this.mini_sandbox = mini_sandbox;
     this.room = room;
     this.effect = effect;
 
-    wrapped_model.vallinaInit(model)
+
     this.is_diving = false;
     this.diving_time = -1;
     this.div_pos = -1;
@@ -33,8 +36,11 @@ export function CreateVRSandbox(model){
     }
 
     this.initialize = (p) =>{
+        this.timer.register([ut.WALL_TIMER, ut.OBJ_TIMER,
+            ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.N_WALL_TIMER]);
         model.move(0, .8, -.4);
         this.addFloor(false);
+        console.log("init", this.mini_sandbox.boxes.length)
         this.active_floor = 0;
         mini_sandbox.activeFloor(this.active_floor);
         room.activeFloor(this.active_floor);
@@ -42,6 +48,8 @@ export function CreateVRSandbox(model){
         this.in_room = true;
         this.is_diving = false;
         this.leaveRoom();
+        this.timer.reset();
+
 
 
     }
@@ -118,9 +126,11 @@ export function CreateVRSandbox(model){
         let floor = this.active_floor;
         if(floor < 0)
             return;
-        boxes[0].boxes[floor].split();
-        boxes[1].boxes[floor].split();
-        boxes[2].boxes[floor].split();
+        let uid = wu.newUniqueId();
+        let time = this.timer.newTime();
+        boxes[0].boxes[floor].split(uid, time);
+        boxes[1].boxes[floor].split(uid, time);
+        boxes[2].boxes[floor].split(uid, time);
         deleteTmpFocus();
 
 
@@ -130,30 +140,34 @@ export function CreateVRSandbox(model){
         let floor = this.active_floor;
         if(floor < 0)
             return;
-        boxes[0].boxes[floor].reviseFocus(args);
-        boxes[1].boxes[floor].reviseFocus(args);
-        boxes[2].boxes[floor].reviseFocus(args);
+        let time = this.timer.newTime();
+        boxes[0].boxes[floor].reviseFocus(args, time);
+        boxes[1].boxes[floor].reviseFocus(args, time);
+        boxes[2].boxes[floor].reviseFocus(args, time);
+
         deleteTmpFocus();
     }
-    let update = () =>{
-        this.latest = (new Date()).getTime();
-        return this.latest;
-    }
+
     this.addFloor = (flag) =>{
         console.log("addFloor");
-        if(flag)
-            update();
-        boxes[0].addFloor(flag);
-        boxes[1].addFloor(flag);
-        boxes[2].addFloor(flag);
+        let time;
+        if(flag){
+            time = this.timer.newTime();
+        }
+        else{
+            time = -1;
+        }
+        boxes[0].addFloor(time);
+        boxes[1].addFloor(time);
+        boxes[2].addFloor(time);
     }
     this.removeFloor = () =>{
         if(this.numFloors()<= 1)
             return;
-        update();
-        boxes[0].removeFloor();
-        boxes[1].removeFloor();
-        boxes[2].removeFloor();
+        let time = this.timer.newTime();
+        boxes[0].removeFloor(time);
+        boxes[1].removeFloor(time);
+        boxes[2].removeFloor(time);
         if(this.active_floor >= mini_sandbox.boxes.length){
             this.active_floor = -1;
             room.reset(mini_sandbox);
@@ -198,29 +212,37 @@ export function CreateVRSandbox(model){
             mini_sandbox.flyAway();
             room.flyAway();
             this.active_floor = floor;
-            this.div_mode = this.is_collapse ? "collapse" : "expand";
             mini_sandbox.activeFloor(floor);
             mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
-
         }
 
     }
 
+     this.changePerspective = (mode, rp) => {
+        // move to relative loc rp
+        if (cg.norm(rp) <= 0.01) {
+            return
+        }
+        //rp = [-.5,0,-.5];
+        mini_sandbox.walkAway(rp);
+        room.walkAway(rp);
+    }
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
         if(floor === -1 || mode < 0)
             return Array(0);
-        if(mode === -2){
-            return wrapped_model
-        }
-        return boxes[mode].boxes[floor].objCollection;
+        return boxes[mode].boxes[floor].furniture_collection.getObjCollection();
     }
+
 
     this.getRPosition = (mode, p) =>{
         return boxes[mode].getMPosition(p, this.active_floor);
+    }
+    this.getRM = (mode, p) =>{
+        return boxes[mode].getRM(p, this.active_floor);
     }
     this.addObj = (obj, floor) =>{
         boxes[0].newObj(floor, obj, obj._rm);
@@ -230,57 +252,43 @@ export function CreateVRSandbox(model){
     this.addNewObj = (mode, obj) =>{
         if(this.active_floor < 0)
             return
-        update();
+        let time = this.timer.newTime();
         obj._rm = wu.objMatrix(obj.getGlobalMatrix(), boxes[mode].boxes[this.active_floor].obj_model);
-        obj._name = (new Date()).getTime().toString() + "_" + Math.round(Math.random() * 10000).toString();
+        obj._name = wu.newUniqueId();
         obj._revised = true;
+        obj._latest = time;
         this.addObj(obj, this.active_floor);
     }
 
-    this.removeObj = (mode, idx) =>{
+    this.removeObjOfName = (name, collection_mode) =>{
         let floor = this.active_floor;
-        if(floor === -1 || mode <0 || idx < 0)
+        if(floor === -1 || collection_mode <0 || name === -1)
             return
-        boxes[mode].removeObj(floor, idx);
-        boxes[1 - mode].removeObj(floor, idx);
-        boxes[2].removeObj(floor, idx);
-
-    }
-
-    this.refreshObjByIdx = (idx_lst, collection_mode) =>{
-        let floor = this.active_floor;
-        if(floor < 0 || idx_lst.length === 0)
-            return
-        let obj_state = Array(0);
-        let latest = null;
-        for(let i = 0; i < idx_lst.length; ++ i){
-            let obj = boxes[collection_mode].getObj(floor, idx_lst[i]);
-            if(latest === null){
-                latest = update();
-            }
-            obj_state.push({
-                _form: obj._form,
-                _color: obj._color,
-                _texture: obj._texture,
-                _name: obj._name,
-                _rm: obj.getMatrix(),
-                _latest: latest,
-                _revised: true,
-            })
-        }
-        this.refreshObj(floor, obj_state);
-
+        let time = this.timer.newTime();
+        boxes[0].removeObjOfName(floor, name, time);
+        boxes[1].removeObjOfName(floor, name, time);
+        boxes[2].removeObjOfName(floor, name, time);
 
     }
 
 
-
-    this.refreshObj = (floor, obj_state) =>{
+    this.refreshObj = (objs) =>{
         let flag = false;
-        for(let i =0; i< obj_state.length; ++ i){
-            flag = flag || boxes[0].reviseObj(floor, obj_state[i]) === 2;
-            boxes[1].reviseObj(floor, obj_state[i]);
-            boxes[2].reviseObj(floor, obj_state[i]);
+        let floor = this.active_floor;
+        let time = this.timer.newTime();
+
+        for(let i =0; i< objs.length; ++ i){
+            let obj_state = {
+                _name: objs[i]._name,
+                _rm: objs[i].getMatrix(),
+                _texture: objs[i].getTexture(),
+                _color: objs[i].getColor(),
+                _latest: time,
+                _revised: true,
+            }
+            flag = flag || boxes[0].reviseObj(floor, obj_state) === 2;
+            boxes[1].reviseObj(floor, obj_state);
+            boxes[2].reviseObj(floor, obj_state);
         }
         return flag;
 
@@ -330,29 +338,7 @@ export function CreateVRSandbox(model){
     this.animate = (t, state) =>{
         return this.divAnimation(state)
     }
-    this.setScene = (args) =>{
-        this.latest = args.latest;
-        this.mini_sandbox.setScene(args);
-        this.room.setScene(args);
-        this.effect.setScene(args);
-        if(this.active_floor >= this.mini_sandbox.boxes.length){
-            this.active_floor = 0;
-        }
 
-        console.log("set scene")
-        /*this.mini_sandbox.remove();
-        this.room.remove();
-        this.effect.remove();
-        this.mini_sandbox.setScene(args);
-
-        this.active_floor = 0;
-        mini_sandbox.activeFloor(this.active_floor);
-        room.activeFloor(this.active_floor);
-        effect.activeFloor(this.active_floor);
-        this.in_room = true;
-        this.is_diving = false;
-        this.leaveRoom();*/
-    }
 
     this.hasFocus = () =>{
         let floor = this.active_floor;
@@ -362,14 +348,95 @@ export function CreateVRSandbox(model){
     }
 
     this.getScene = () => {
-        let scene = this.mini_sandbox.getScene();
-        scene.latest = this.latest;
-        scene._name = this._name;
-        //console.log("---", this.latest);
+        let tags = [ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.OBJ_TIMER, ut.N_WALL_TIMER, ut.WALL_TIMER];
+        let scene = new Map();
+        for(let i = 0; i < tags.length; ++ i){
+            let time = this.timer.get(tags[i]);
+            let v = this.mini_sandbox.getScene(tags[i], time);
+            scene.set(tags[i], v);
+        }
         return scene;
+
+    }
+
+    this.setScene = (args) =>{
+        console.log("set Scene")
+        this.mini_sandbox.setScene(args);
+        this.room.setScene(args);
+        this.effect.setScene(args);
+        if(this.active_floor >= this.mini_sandbox.boxes.length){
+            this.active_floor = 0;
+        }
+    }
+
+    this.setName = (n) =>{
+        this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+    }
+
+}
+
+
+let checkCollection = (collection_1, collection_2) =>{
+    if(collection_2 === null)
+        return collection_1;
+    if(collection_1 === null)
+        return null
+
+    let collection_3 = Array(0);
+    let flag = false;
+    for(let i = 0; i < collection_1.length; ++ i){
+        if(i < collection_2.length){
+            let collc = new Map();
+            for(const [name, v1] of collection_1[i]){
+                if(!collection_2[i].has(name)){
+                    collc.set(name, v1);
+                    flag = true;
+                    continue
+                }
+                let v2 = collection_2[i].get(name);
+                if(v2 === undefined || v1.get(ut.LATEST_KEY) > v2.get(ut.LATEST_KEY)){
+                    collc.set(name, v1);
+                    flag = true;
+                }
+            }
+            collection_3.push(collc)
+        }else{
+            collection_3.push(collection_1[i]);
+            if(collection_1[i].size > 0){
+                flag = true;
+            }
+        }
+    }
+    if(flag)
+        return collection_3;
+    return null;
+}
+
+
+export let diffData = (x1, x2) =>{
+
+    let x3 = new Map();
+
+    let scene_1 = x1.get(ut.FLOOR_TIMER);
+    let scene_2 = x2.get(ut.FLOOR_TIMER);
+    if(scene_1.get(ut.NUM_FLOORS_KEY) !== scene_2.get(ut.NUM_FLOORS_KEY)){
+        x3.set(ut.FLOOR_TIMER, scene_1);
     }
 
 
+    let tags = [ut.OBJ_TIMER, ut.N_OBJ_TIMER,
+            ut.WALL_TIMER, ut.N_WALL_TIMER];
+    for(let i = 0; i < tags.length; ++ i){
+        scene_1 = x1.get(tags[i]);
+        scene_2 = x2.get(tags[i]);
+        let scene = checkCollection(scene_1, scene_2);
+        if(scene !== null)
+            x3.set(tags[i], scene);
+    }
+
+    if(x3.size === 0)
+        x3 = null;
+    return x3;
 
 
 }

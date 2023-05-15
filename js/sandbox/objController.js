@@ -228,8 +228,17 @@ export function CreateObjController(obj_model){
             this.operateSingleObj(objs, resr, 1); 
         }
 
-        state.OBJ.ACTION["DELETE"] = delete_obj_idx;
-        state.OBJ.ACTION["REVISE"] = selected_obj_idx;
+        let deleted_name = -1;
+        if(delete_obj_idx > -1)
+            deleted_name = objs[delete_obj_idx]._name;
+        let selected_names = Array(0)
+        for(let i =0; i < selected_obj_idx.length; ++ i){
+            selected_names.push(objs[selected_obj_idx[i]]);
+        }
+
+
+        state.OBJ.ACTION["DELETE"] = deleted_name;
+        state.OBJ.ACTION["REVISE"] = selected_names;
 
         return [false, state]
 
@@ -237,12 +246,17 @@ export function CreateObjController(obj_model){
     }
 
     this.clearState = (t, state, sandbox, collection_mode) =>{
-        let revised_index = state.OBJ.ACTION.REVISE;
-        sandbox.refreshObjByIdx(revised_index, collection_mode);
-        state.OBJ.ACTION["REVISE"] = Array(0);
+        let revised_lst = state.OBJ.ACTION.REVISE;
+        let delete_name = state.OBJ.ACTION.DELETE;
+        if(revised_lst.length > 0){
+            sandbox.refreshObj(revised_lst);
+            state.OBJ.ACTION["REVISE"] = Array(0);
+        }
+        if(delete_name !== -1){
+            sandbox.removeObjOfName(delete_name, collection_mode);
+            state.OBJ.ACTION["DELETE"] = -1;
+        }
 
-
-        //sandbox.removeObj(collection_mode, obj_index[0]);
         return state
     }
 }

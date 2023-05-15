@@ -405,6 +405,13 @@ export let mScale = (x,y,z) => {
    return m;
 }
 
+export let scaleO = (m,x,y,z) => {
+   m[ 0] = x;
+   m[ 5] = y;
+   m[10] = z;
+   return m;
+}
+
 export let mTransform = (m,p) => {
    let x = p[0], y = p[1], z = p[2], w = p[3] === undefined ? 1 : p[3];
    let q = [ m[0]*x + m[4]*y + m[ 8]*z + m[12]*w,

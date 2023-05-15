@@ -1,27 +1,44 @@
 import * as cg from "../render/core/cg.js";
 import * as wu from "../sandbox/wei_utils.js";
+import * as ut from "../sandbox/utils.js";
 
 let distanceXZ = (p1, p2) =>{
     return Math.sqrt((p1[0] - p2[0])**2 + (p1[2] - p2[2])**2);
 }
 
-export function MakeWall(model, p1, p2, h, d, ddt, level){
-    let op = .8;
+export function MakeWall(model, p1, p2, h, d, ddt, uid){
+    let op = .95;
 
     let wall = model.add("cube").opacity(op);
     let inner = wall.add();
     this.wall = wall;
     this.focus_edge = null;
-    this.color = [1, 1, 1];
-    this.texture = undefined;
-    this.wall.color(this.color);
+    this._color = [1, 1, 1];
+    this._texture = undefined;
+    this.wall.color(this._color);
     this.focus_flag = 0;
     this.in_active_floor = false;
+    this._name = uid;
+    this._revised = false;
+    this._latest = -1;
+
+
+
     p1[1] = h * 2;
     p2[1] = h * 2;
     this.p1 = p1;
     this.p2 = p2;
 
+    this.getRM = () =>{
+        return wall.getMatrix();
+    }
+
+    this.reviseName = (n) =>{
+        this._name = n;
+    }
+    this.reviseStatus = (r) =>{
+        this._revised = r;
+    }
 
     let setPosition = (debug)=>{
         wall.setMatrix(cg.mIdentity());
@@ -41,6 +58,10 @@ export function MakeWall(model, p1, p2, h, d, ddt, level){
 
     setPosition(false);
 
+
+    this.update = () =>{
+        this._latest = (new Date).getTime();
+    }
     this.isFocus = () => {
         return this.focus_flag;
     }
@@ -55,7 +76,7 @@ export function MakeWall(model, p1, p2, h, d, ddt, level){
     }
     this.defocus = () =>{
         this.focus_edge = null;
-        this.wall.color(this.color);
+        this.wall.color(this._color);
         this.focus_flag = 0;
         this.isOnActiveFloor(this.in_active_floor);
     }
@@ -101,7 +122,7 @@ export function MakeWall(model, p1, p2, h, d, ddt, level){
     this.setColor = (c) =>{
         if(c !== undefined && c !== null){
             this.wall.color(c);
-            this.color = c;
+            this._color = c;
         }
 
     }
@@ -109,10 +130,15 @@ export function MakeWall(model, p1, p2, h, d, ddt, level){
     this.setTexture = (v) =>{
         if(v !== undefined && v !== null){
             this.wall.texture(v);
-            this.texture = v;
+            this._texture = v;
         }
 
     }
+    this.delete = () =>{
+        this.wall.remove(inner);
+        model.remove(this.wall);
+    }
+
     this.getWallGPosition = (p) =>{
         return wu.objGlobalMatrix(cg.mTranslate(p), this.wall).slice(12, 15);
     }
@@ -134,11 +160,11 @@ export  let MakeBottom = (model, p1, p2, p3, d, edge) => {
     return bottom
 }
 
-export
-function WallCollection(model, level, h, d){
-    this.walls = Array(0);
+export function WallCollection(model, level, h, d){
+    this.walls = new Map();
+    this.removedTags = new Map();
     let opacityCanSelect = .2;
-
+    this.focus_walls = Array(0);
 
     let isInWall = (w, p1, p2) =>{
         let rp1 = w.getMPosition(p1);
@@ -158,79 +184,87 @@ function WallCollection(model, level, h, d){
         return undefined;
 
     }
-    let add = (w) =>{
-        this.walls.push(w);
-    }
-    this.remove = (w) =>{
-        let walls = Array(0);
-        for(let i = 0 ; i < this.walls.length; ++ i){
-            if (this.walls[i] !== w){
-                walls.push(this.walls[i])
-            }
-        }
-        this.walls = walls;
-        model.remove(w.wall);
-    }
-    this.merge = (w1, w2) =>{
-        let poly_1 = w1.getPoly();
-        let poly_2 = w2.getPoly();
-        let p = [poly_1[0], poly_1[3], poly_2[0], poly_2[3]];
-        let dis = 233333., idx = [-1, -1];
-        for(let i = 0; i < p.length; ++ i){
-            for(let j = i + 1; j < p.length; ++ j){
-                let t = cg.distance(p[i], p[j]);
-                if(t < dis){
-                    dis = t;
-                    idx = [i, j];
-                }
-            }
-        }
-        let res = Array(0);
-        for(let i = 0; i < p.length; ++ i){
-            if(i !== idx[0] && i !== idx[1])
-                res.push(p[i]);
-        }
 
-        this.createWall(res[0], res[1], 0);
-        this.remove(w1);
-        this.remove(w2);
+    this.formatName = (level) =>{
+        for(let i = 0; i < this.walls.length; ++ i){
+            this.walls[i].reviseName("base" + i.toString() + "_" + level.toString());
+            this.walls[i].reviseStatus(false);
+        }
     }
-    this.createWall = (p1, p2, ddt) =>{
-        let wall = new MakeWall(model, p1, p2, h, d, ddt, level);
-        add(wall);
+    this.remove = (name, time) =>{
+        if(this.walls.has(name)){
+            let target = this.walls.get(name);
+            target.delete();
+            this.walls.delete(name);
+        }
+        let v = new Map();
+        v.set(ut.LATEST_KEY, time);
+        this.removedTags.set(name, v);
+    }
+
+    this.isRemoved = (name) =>{
+        if(this.removedTags.has(name))
+            return true
+        if(this.removedTags.size > 60){
+
+        }
+        return false;
+    }
+
+    this.createWall = (p1, p2, ddt, uid) =>{
+        let wall = new MakeWall(model, p1, p2, h, d, ddt, uid);
+        this.walls.set(uid, wall);
         return wall;
     }
-    this.split = (w, p) =>{
+    this.reviseWall = (w) =>{
+        if(this.walls.has(w._name)){
+            let target = this.walls.get(w._name);
+            if(w._latest > target._latest){
+                target.setColor(w._color);
+                target.setTexture(w._texture);
+                target._latest = w._latest;
+                target._revised = w._revised;
+                return 2;
+            }
+            return 1;
+
+        }
+        return 0
+    }
+    this.split = (w, p, name, time) =>{
         let poly = w.getPoly();
-        let wall_1 = this.createWall(poly[0], p, 0);
-        let wall_2 = this.createWall(p, poly[3], 0);
+        let wall_1 = this.createWall(poly[0], p, 0, name + "_1");
+        let wall_2 = this.createWall(p, poly[3], 0, name + "_2");
         wall_1.setTexture(w.texture);
         wall_2.setTexture(w.texture);
-        wall_1.setColor(w.color);
-        wall_2.setColor(w.color);
-
-        this.remove(w);
+        wall_1.setColor(w._color);
+        wall_2.setColor(w._color);
+        wall_1._revised = true;
+        wall_2._revised = true;
+        wall_1._latest = time;
+        wall_2._latest = time;
+        this.remove(w._name, time);
     }
     this.select = (p1, p2) =>{
-        let min_dis = -1, idx = -1, intp = -1;
-        for(let i = 0; i < this.walls.length; ++ i){
+        let min_dis = -1, idx = -1, intp = -1, target = null;
+        for(let [name, wall] of this.walls){
 
-            if(this.walls[i].wall._opacity <= opacityCanSelect) {
+            if(wall.wall._opacity <= opacityCanSelect) {
                 continue;
             }
-            let intersection = isInWall(this.walls[i], p1, p2);
+            let intersection = isInWall(wall, p1, p2);
 
             if(intersection !== undefined){
                 let dis = cg.distance(p2, intersection);
                 if(min_dis < 0 || min_dis > dis){
                     min_dis = dis;
-                    idx = i;
                     intp = intersection;
+                    target = wall;
                 }
             }
         }
-        if(idx > -1){
-            return [this.walls[idx], intp];
+        if(target !== null){
+            return [target, intp];
         }
         return undefined;
 
@@ -241,6 +275,57 @@ function WallCollection(model, level, h, d){
         }
 
     }
+    this.getRemovedTags = () =>{
+        let collections = new Map();
+        for(const [name, obj] of this.removedTags) {
+            collections.set(name, obj);
+        }
+        return collections;
+    }
+
+    this.getCollectionState = (time) =>{
+        let collections = new Map();
+        for(let [name, w] of this.walls){
+            if(w._revised){
+                let v = new Map();
+                v.set(ut.COLOR_KEY, w._color);
+                v.set(ut.TEXTURE_KEY, w._texture);
+                v.set(ut.P_KEY, [w.p1, w.p2]);
+                v.set(ut.LATEST_KEY, w._latest);
+                collections.set(w._name, v);
+            }
+        }
+        return collections
+    }
+
+    this.setWallScene = (collection) => {
+        for(let [name, w_map] of collection){
+            if(this.isRemoved(name))
+                continue;
+            let w = {
+                _color: w_map.get(ut.COLOR_KEY),
+                _texture: w_map.get(ut.TEXTURE_KEY),
+                _latest: w_map.get(ut.LATEST_KEY),
+                _p: w_map.get(ut.P_KEY),
+                _name: name
+            };
+            w._revised = false;
+            let res = this.reviseWall(w);
+            if(res === 0){
+                this.createWall(w._p[0], w._p[1], d, name);
+            }
+
+        }
+
+    }
+    this.setNwallScene = (collection) =>{
+        if(wu.isNull(collection))
+            return;
+        for(let [name, obj_map] of collection) {
+            this.remove(name, obj_map.get(ut.LATEST_KEY));
+        }
+    }
+
 }
 
 
