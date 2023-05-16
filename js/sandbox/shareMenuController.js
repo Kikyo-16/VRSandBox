@@ -330,8 +330,10 @@ export class CreateShareMenuController {
             state.SEND.ACT = null;
             console.log("click", state.SEND);
             msg_collection.sendInvitation(state);
-            state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
-            state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(state.SEND.USER);
+            //state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
+            state.PERSPECTIVE.ACTION.USER = state.SEND.USER;
+            state.PERSPECTIVE.ACTION.INFO = ut.deepcopy_player(state.PERSPECTIVE.PLAYER_INFO.get(state.SEND.USER));
+            console.log("send invitation", state.PERSPECTIVE.ACTION, state.SEND.USER)
          }
          state.GLOBAL_MENU.ACTION.op = null;
       }

@@ -218,14 +218,23 @@ export function CreateVRSandbox(model){
 
     }
 
-     this.changePerspective = (mode, rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.01) {
-            return
-        }
-        //rp = [-.5,0,-.5];
-        mini_sandbox.walkAway(rp);
-        room.walkAway(rp);
+    this.changePerspective = (rloc, floor) => {
+        // move to relative relative loc of floor in room
+        this.active_floor = floor
+        // mini_sandbox.activeFloor(floor);
+        // room.activeFloor(floor);
+        // effect.activeFloor(floor);
+        // get node matrix
+        let gloc = mini_sandbox.getGPosition(rloc, floor);
+        let div_pos = mini_sandbox.getNodeMatrix(gloc);
+        // let gloc = room.getGPosition(rloc, floor);
+        // let div_pos = cg.scale(room.getNodeMatrix(gloc), 1/sc); // mind scale
+        // Let loc = sandbox.getFloorGPosition(0, rLoc, floor);
+        console.log("changePerspective rloc", rloc);
+        console.log("changePerspective global", gloc);
+        console.log("changePerspective div pos", div_pos);
+        room.comeBack();
+        room.relocate(div_pos, this.active_floor, sc);
     }
 
     this.getObjCollection = (mode) =>{
@@ -242,6 +251,13 @@ export function CreateVRSandbox(model){
 
     this.getRobotPosition = (mode, p) =>{
         return boxes[mode].getRobotMPosition(p);
+    }
+
+    this.getFloorGPosition = (mode, p, floor) =>{
+        return boxes[mode].getGPosition(p, floor);
+    }
+    this.getFloorRPosition = (mode, p, floor) =>{
+        return boxes[mode].getMPosition(p, floor);
     }
 
     this.getGPosition = (mode, p) =>{
@@ -299,14 +315,14 @@ export function CreateVRSandbox(model){
 
     }
 
-    this.changePerspective = (rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.05) {
-            return
-        }
+    // this.changePerspective = (rp) => {
+    //     // move to relative loc rp
+    //     if (cg.norm(rp) <= 0.05) {
+    //         return
+    //     }
 
-        room.walk(rp);
-    }
+    //     room.walk(rp);
+    // }
 
     this.changeView = (vm) => {
         mini_sandbox.relocate_view(vm);

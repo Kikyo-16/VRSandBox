@@ -150,12 +150,14 @@ export function CreateMessageCollection(sandbox){
 
     this.clearState = (t, state) =>{
         let send_msg = state.SEND;
+        console.log("Invitor receive clear", send_msg);
         if(!wu.isNull(send_msg.USER)&&!wu.isNull(send_msg.OP)&&!wu.isNull(send_msg.ACT)){
-            console.log("Invitation rev", send_msg.ACT);
+            console.log("Invitor receive reply", send_msg.ACT);
             if (send_msg.ACT) {
                 state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
-                state.PERSPECTIVE.ACTION.USER = send_msg.USER;
-                state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(send_msg.USER);
+                // state.PERSPECTIVE.ACTION.USER = send_msg.USER;
+                // state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(send_msg.USER);
+                console.log("Invitor receive reply", state.PERSPECTIVE.ACTION);
             }
             send_msg.USER = null;
             send_msg.OP = null;
