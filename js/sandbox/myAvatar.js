@@ -22,8 +22,8 @@ export function CreateAvatar(sandbox, name, scale){
 
     let tag = avatar.add().move(0, .2, 0).scale(.2, .1,.0001);
     this.nameTag = tag.add("cube").color(1,1,1);
-    this.nameTag.text = name;
-    this.nameTag.color = [1,1,1];
+    this.text = name;
+    this.color = [1,1,1];
 
     this.getScale = () => _scale;
     this.getLoc = () => _loc;
@@ -54,18 +54,30 @@ export function CreateAvatar(sandbox, name, scale){
         avatar_node = null;
     }
 
-    let textureFn = () =>{
+    /*let textureFn = () =>{
         g2.setColor(this.nameTag.color);
         g2.fillRect(0,0,1,1);
         g2.setColor('black');
         g2.textHeight(.3);
         g2.fillText(this.nameTag.text, .5, .5, 'center');
         g2.drawWidgets(this.nameTag);
+    }*/
+
+
+    let textureFn = () => {
+        g2.setColor(this.color);
+        g2.fillRect(0,0,1,1);
+        g2.setColor('black');
+        g2.textHeightAndFont('',.3,'Arial');
+        g2.fillText(this.text, .5, .5 , 'center');
+        g2.drawWidgets(this.nameTag);
     }
+
+    this.nameTag.texture(textureFn);
 
     this.animate = (hide) => {
         //nameTag.text = name;
-        this.nameTag.texture(textureFn);
+
         avatar.opacity(hide ? .0000001 : 1);
     }
 }
