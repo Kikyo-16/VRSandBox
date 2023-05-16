@@ -211,19 +211,19 @@ export function CreateModeController(model){
             state.BOX.DISABLED = true;
             state.MODE.DISABLED = true;
             state.OBJ.INACTIVE =true;
-            state.MENU.INACTIVE = true;
+        }
+        if(state.MENU.OPEN){
             state.GLOBAL_MENU.INACTIVE = true;
             state.SAVING.INACTIVE = true;
         }
-        if(state.MENU.OPEN){
-            state.MENU.INACTIVE = false;
-        }
 
         if(state.GLOBAL_MENU.OPEN){
-            state.GLOBAL_MENU.INACTIVE = false;
+            state.MENU.INACTIVE = true;
+            state.SAVING.INACTIVE = true;
         }
         if(state.SAVING.OPEN){
-            state.SAVING.INACTIVE = false;
+            state.MENU.INACTIVE = true;
+            state.GLOBAL_MENU.INACTIVE = true;
         }
 
         return state;
