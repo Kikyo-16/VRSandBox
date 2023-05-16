@@ -142,6 +142,8 @@ export const init = async model => {
                 USER: null,
                 RM: null,
                 ARG: null,
+                INFO: null,
+                ORI_INFO: null, //original local player info before share perspective
             },
             PLAYER_INFO: new Map(),
             SELF: sandbox.name,
@@ -172,7 +174,7 @@ export const init = async model => {
     }
 
     let multi_controller = new CreateMultiplayerController(sandbox);
-    multi_controller.init(state_msg.MODE.IN_ROOM);
+    multi_controller.init(state_msg.MODE.IN_ROOM, state_msg);
     multi_controller.debug = false;//false;
     model.message_collection = message_collection;
     model.multi_controller = multi_controller;
@@ -223,7 +225,7 @@ export const init = async model => {
         state_msg = checkStateCode(state_code);
         state_msg = multi_controller.clearState(model.time, state_msg)
 
-        multi_controller.init(state_msg.MODE.IN_ROOM);
+        multi_controller.init(state_msg.MODE.IN_ROOM, state_msg);
         state_code = room_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = room_controller.clearState(model.time, state_msg);

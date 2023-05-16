@@ -150,3 +150,13 @@ export let distance = (a, b) =>{
     }
     return Math.sqrt(d);
 }
+
+export let deepcopy_player = (player_info) => {
+    let player = new Map();
+    player.set("VM", player_info.get("VM"));
+    player.set("RM", player_info.get("RM"))
+    player.set("IN_BOX", player_info.get("IN_BOX"));
+    player.set("FLOOR", player_info.get("FLOOR"));
+    player.set("F", player_info.get("F"));
+    return player;
+}

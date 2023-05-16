@@ -154,8 +154,8 @@ export function CreateMessageCollection(sandbox){
             console.log("Invitation rev", send_msg.ACT);
             if (send_msg.ACT) {
                 state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
-                state.PERSPECTIVE.ACTION.USER = send_msg.USER;
-                state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(send_msg.USER);
+                //state.PERSPECTIVE.ACTION.USER = send_msg.USER;
+                //state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(send_msg.USER);
             }
             send_msg.USER = null;
             send_msg.OP = null;

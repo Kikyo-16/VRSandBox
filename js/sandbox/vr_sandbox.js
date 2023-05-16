@@ -217,15 +217,7 @@ export function CreateVRSandbox(model){
 
     }
 
-     this.changePerspective = (mode, rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.01) {
-            return
-        }
-        //rp = [-.5,0,-.5];
-        mini_sandbox.walkAway(rp);
-        room.walkAway(rp);
-    }
+
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
@@ -309,13 +301,12 @@ export function CreateVRSandbox(model){
         return flag;
     }
 
-    this.changePerspective = (rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.05) {
-            return
-        }
-
-        room.walk(rp);
+    this.changePerspective = (rloc, floor) => {
+        this.active_floor = floor
+        let gloc = mini_sandbox.getGPosition(rloc, floor);
+        let div_pos = mini_sandbox.getNodeMatrix(gloc);
+        room.comeBack();
+        room.relocate(div_pos, this.active_floor, sc);
     }
 
     this.changeView = (vm) => {
@@ -337,6 +328,14 @@ export function CreateVRSandbox(model){
         mini_sandbox.reset_view();
         room.reset_view();
     }
+
+    this.getFloorGPosition = (mode, p, floor) =>{
+        return boxes[mode].getGPosition(p, floor);
+    }
+    this.getFloorRPosition = (mode, p, floor) =>{
+        return boxes[mode].getMPosition(p, floor);
+    }
+
 
     this.divAnimation = (state) =>{
         if(!this.is_diving){

@@ -29,7 +29,7 @@ export function CreateSandbox(model){
     let robot_model = box_model.add();
     this.robot_model = robot_model;
 
-    this.debug_cube = view_hud.add('cube').scale(.1);
+    //this.debug_cube = view_hud.add('cube').scale(.1);
 
     this.getNodeMatrix = () =>{
         return node.getMatrix();

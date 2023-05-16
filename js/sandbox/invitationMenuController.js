@@ -119,9 +119,13 @@ export class CreateInvitationMenuController {
          msg.USER = null;
          msg.OP = null;
          msg.ACT = null;
-         state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
-         state.PERSPECTIVE.ACTION.USER = user;
-         state.PERSPECTIVE.ACTION.INFO = state.PERSPECTIVE.PLAYER_INFO.get(user);
+         if (op) {
+            state.PERSPECTIVE.ACTION.MSG = ut.POS_EXCHANGE_MSG;
+            state.PERSPECTIVE.ACTION.USER = user;
+            state.PERSPECTIVE.ACTION.INFO = ut.deepcopy_player(state.PERSPECTIVE.PLAYER_INFO.get(user));
+         }
+         console.log("receive invitation", user, op, act);
+         console.log("receive invitation", state.PERSPECTIVE.ACTION);
          msg_collection.sendReply(user, op, act);
       }
       return state;

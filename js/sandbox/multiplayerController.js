@@ -44,15 +44,13 @@ export function CreateMultiplayerController(sandbox){
         this.name = null;
     }
 
-    this.init =(in_room) =>{
+    this.init =(in_room, state) =>{
         if(wu.isNull(sandbox._name) || this.has_init)
             return;
         this.has_init = true;
-        if (this.debug)
-            this.debug_init();
-            //console.log("local user", this.name)
+
         this.name = sandbox._name;
-        this.player = this.getPlayer(in_room);
+        this.player = this.getPlayer(in_room, state);
         this.scene = sandbox.getScene(true);
         this.wholeScene = sandbox.getScene(false);
         this.player_list.set(this.name, this.player)
@@ -82,17 +80,33 @@ export function CreateMultiplayerController(sandbox){
             players.delete(selected_name);
     }
 
-    this.getPlayer = (in_room) =>{
-        let vm_ = window.avatars[0].headset.matrix;
-        // let vm = window.views[0]._viewMatrix;
-        let rm = in_room ? sandbox.getRobotPosition(1,  vm_.slice(12, 15)) : out_pos;
-        // let rm = in_room ? sandbox.getRPosition(1, vm_.slice(12, 15)) : out_pos;
-        rm = cg.mTranslate(rm);
+    this.getPlayer = (in_room, state) =>{
+        if (wu.isNull(this.name) || wu.isNull(this.player_list)){
+            return;
+        }
+
+        let user = state.PERSPECTIVE.ACTION.USER;
         let msg = new Map();
+        let vm_ = window.avatars[0].headset.matrix;
         msg.set("VM", vm_);
-        msg.set("RM", rm);
-        msg.set("IN_BOX", in_room);
-        msg.set("FLOOR", sandbox.active_floor);
+        if (!wu.isNull(user) && state.PERSPECTIVE.ACTION.MSG === ut.POS_EXCHANGE_MSG) {
+            console.log("update exchange");
+            console.log(state.PERSPECTIVE.ACTION.INFO)
+            msg.set("RM", state.PERSPECTIVE.ACTION.INFO.get("RM"))
+            msg.set("IN_BOX", state.PERSPECTIVE.ACTION.INFO.get("IN_BOX"));
+            msg.set("FLOOR", state.PERSPECTIVE.ACTION.INFO.get("FLOOR"));
+            console.log("updated", msg);
+        } else if (!wu.isNull(user) && state.PERSPECTIVE.ACTION.MSG === ut.PERSP_SHARING_MSG) {
+            state.PERSPECTIVE.ACTION.ORI_INFO = ut.deepcopy_player(this.player_list.get(this.name));
+            msg = ut.deepcopy_player(this.player_list.get(this.name));
+            console.log("update player persp share", msg);
+        } else {
+            let rm = in_room ? sandbox.getRPosition(1, vm_.slice(12, 15)) : out_pos;
+            rm = cg.mTranslate(rm);
+            msg.set("RM", rm);
+            msg.set("IN_BOX", in_room);
+            msg.set("FLOOR", sandbox.active_floor);
+        }
         msg.set(ut.LATEST_KEY, sandbox.timer.newTime());
         return msg;
     }
@@ -126,40 +140,7 @@ export function CreateMultiplayerController(sandbox){
         }
     };
 
-    this.debug_init = () => {
-        let NAME_LIST = ["Mike", "SAM", "TOM", "TIM"];
-        for (let i = 0; i < 10; ++i) {
-            let vm = cg.mIdentity();
-            let in_room = i % 2 === 0 ? true : false;
-            let rm = in_room ? [Math.random(), .8*.05, Math.random()] : [-.25+1.25*Math.random(), .8*.05*ac.s_in_out, 1.1+.25*Math.random()];
-            rm = cg.mTranslate(rm);
-            let msg = new Map();
-            msg.set("VM", vm);
-            msg.set("RM", rm);
-            msg.set("IN_BOX", in_room);
-            msg.set("FLOOR", sandbox.active_floor);
-            this.player_list.set(NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString(), msg)
-        }  
-    }
 
-    this.debug_exchange_in_room = () => {
-        console.log("debug move player")
-        if (this.player_list.get(this.name).get("IN_BOX")) {
-            this.player_list.get(this.name).set("RM", cg.mTranslate([.88 - .6*Math.random(), .8*.05, .33+.5*Math.random()]))
-        }
-    }
-
-    this.debug_div_in = () => {
-        console.log("debug move player in")
-        this.player_list.get(this.name).set("IN_BOX", true)
-        this.player_list.get(this.name).set("RM", cg.mTranslate([.23+.6*Math.random(), .8*.05, .25+.6*Math.random()]))
-    }
-
-    this.debug_leave_room = () => {
-        console.log("debug move player out")
-        this.player_list.get(this.name).set("IN_BOX", false)
-        this.player_list.get(this.name).set("RM", cg.mTranslate([.75, .8*.05, 1.25]))
-    }
 
     this.updateWholeScene = (e) =>{
         let who = e.get(ut.WHO_KEY);
@@ -204,22 +185,6 @@ export function CreateMultiplayerController(sandbox){
         }
     };
 
-    let updateSendList = (state) =>{
-        let user = state.PERSPECTIVE.ACTION.USER;
-        if (wu.isNull(this.name) || wu.isNull(this.player_list) || wu.isNull(user)){
-            return;
-        }
-        
-        console.log("update send list", user)
-        if (state.PERSPECTIVE.ACTION.MSG === ut.PERSP_SHARING_MSG) {
-            this.player_list.set(this.name, this.player_list.get(user));
-        } else if (state.PERSPECTIVE.ACTION.MSG === ut.POS_EXCHANGE_MSG) {
-            console.log("update exchange");
-            console.log(state.PERSPECTIVE.ACTION.INFO)
-            this.player_list.set(this.name, state.PERSPECTIVE.ACTION.INFO);
-            console.log("updated", this.player_list);
-        }
-    }
 
 
     this.animate = (t, in_room, state) =>{
@@ -228,11 +193,9 @@ export function CreateMultiplayerController(sandbox){
             return [false, state];
         this.scene = this.getScene();
         this.wholeScene = this.getWholeScene();
-        this.player = this.getPlayer(in_room);
+        this.player = this.getPlayer(in_room, state);
         this.player_list.set(this.name, this.player);
 
-        // let send_player_list = updateSendList(this.player_list, state);
-        //updateSendList(state);
 
         console.log("sss", this.player_list);
         if(avatar_controller.local_user !== null)

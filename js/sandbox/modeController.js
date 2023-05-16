@@ -80,7 +80,9 @@ export function CreateModeController(model){
         return this.mode_id === ut.ROOM_WITH_BOX_MSG ||
             this.mode_id === ut.ROOM_WITHOUT_BOX_MSG ||
             this.mode_id === ut.ROOM_WALKING_MSG || 
-            (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.ROOM_WITHOUT_BOX_MSG);
+           // (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.ROOM_WITHOUT_BOX_MSG);
+        ((this.tmp_mode === ut.PERSP_SHARING_MSG || this.tmp_mode === ut.POS_EXCHANGE_MSG) &&
+                (this.mode === ut.ROOM_WITHOUT_BOX_MSG || this.mode === ut.ROOM_WITHOUT_BOX_MSG || this.mode === ut.ROOM_WALKING_MSG));
     }
     let isInBox = () =>{
         return this.mode_id === ut.BOX_VIEW_MSG ||
