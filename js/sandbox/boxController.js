@@ -3,7 +3,6 @@ import {lcb, rcb} from '../handle_scenes.js';
 import * as cg from "../render/core/cg.js"
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
-import {COLLAPSE_FLOOR_MSG, FOCUS_WALL_MSG, SPLITTING_FOCUS_WALL_MSG} from "../sandbox/utils.js";
 
 
 
@@ -179,6 +178,7 @@ export function CreateBoxController(model, sandbox) {
                 if(floor !== undefined && floor > -1){
                     sandbox.div(args);
                     state.MODE["MODE"] = ut.DIVING_MSG;
+                    state.MODE["ARG"] = sandbox.div_pos;
                 }
                 break;
             case ut.ADD_FLOOR_MSG:
@@ -265,18 +265,22 @@ export function CreateBoxController(model, sandbox) {
             return [flag, state];
         }
         if(!flag){
-            let res = [ut.NON_ACTION_MSG, null];
-            if(state.MODE.MODE === ut.BOX_VIEW_MSG)
-                res = box();
-            if(res[0] === ut.NON_ACTION_MSG && state.MODE.MODE === ut.BOX_EDIT_MSG) {
-                res = split();
+            if (state.MODE.MODE !== ut.DIVING_MSG) {
+                let res = [ut.NON_ACTION_MSG, null];
+                if(state.MODE.MODE === ut.BOX_VIEW_MSG)
+                    res = box();
+                if(res[0] === ut.NON_ACTION_MSG && state.MODE.MODE === ut.BOX_EDIT_MSG) {
+                    res = split();
+                }
+                state.BOX.ACTION = {
+                    MSG: res[0],
+                    ARG: res[1]
+                }
+                flag = res[0] !== ut.NON_ACTION_MSG;
+            } else {
+                flag = state.BOX.ACTION.MSG !== ut.NON_ACTION_MSG;
             }
-            state.BOX.ACTION = {
-                MSG: res[0],
-                ARG: res[1]
-            }
-            flag = res[0] !== ut.NON_ACTION_MSG;
-
+            
         }
         return [flag, state];
     }

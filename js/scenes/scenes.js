@@ -7,7 +7,7 @@ export default () => {
    })).name = "backGround";
 
    return {
-      enableSceneReloading: false,
+      enableSceneReloading: true,
       scenes: [ 
          // { name: "DemoSimplest"       , path: "./demoSimplest.js"       },
          // { name: "DemoShapes"         , path: "./demoShapes.js"         },
@@ -31,10 +31,12 @@ export default () => {
          // { name: "DemoSprite"         , path: "./demoSprite.js"         },
          // { name: "DemoIntersect"      , path: "./demoIntersect.js"      },
          // { name: "DemoCroquet"        , path: "./demoCroquet.js"        },
-         // { name: "DemoShareMenuTest"        , path: "./demoShareMenuTest.js"      },
-         // { name: "DemoInvitationMenuTest"   , path: "./demoInvitationMenuTest.js" },
-         // { name: "DemoLoginMenuTest"        , path: "./demoLoginMenuTest.js" },
+          { name: "DemoShareMenuTest"        , path: "./demoShareMenuTest.js"      },
+          { name: "DemoInvitationMenuTest"   , path: "./demoInvitationMenuTest.js" },
           { name: "DemoSandbox"              , path: "./demoSandbox.js"            },
+          { name: "DemoFileInput"              , path: "./demoFileInput.js"            },
+         { name: "DemoAvatarTest"           , path: "./DemoAvatarTest.js"      },
+        //{ name: "DemoControlTest"           , path: "./demoControlsTest.js"      },
       ]
    };
 }

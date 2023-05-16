@@ -16,7 +16,9 @@ export function FurnitureCollection(model){
         }
         return false;
     }
-
+    this.numCollection = () =>{
+        return this.objCollection.size;
+    }
     this.newObj = (obj, m) => {
         let n_obj = new Object();
         n_obj.init(model, obj._form, [0, 0, 0], 1, 0);
@@ -37,6 +39,18 @@ export function FurnitureCollection(model){
     this.getObjByName = (name) => {
         if(this.objCollection.has(name))
             return this.objCollection.get(name);
+        return null;
+    }
+
+    this.copyObjByName = (name, time) =>{
+        if(this.objCollection.has(name)){
+            let n_name = name + "_cp";
+            let obj = this.objCollection.get(name).copy(n_name);
+            this.objCollection.set(n_name, obj);
+            obj._revised = true;
+            obj._latest = time;
+            return obj;
+        }
         return null;
     }
 
@@ -80,10 +94,10 @@ export function FurnitureCollection(model){
         }
         return collection;
     }
-    this.getCollectionState = (time) =>{
+    this.getCollectionState = (time, revised) =>{
         let collections = new Map();
         for(const [name, obj] of this.objCollection){
-            if(obj._revised) {
+            if(obj._revised || !revised) {
                 let v = new Map();
                 v.set(ut.COLOR_KEY, obj.getColor());
                 v.set(ut.TEXTURE_KEY, obj.getTexture());
@@ -95,27 +109,25 @@ export function FurnitureCollection(model){
         }
         return collections
     }
-    this.reviseObj = (obj) =>{
-
-        let target = this.getObjByName(obj._name);
-        if(target === null)
-            return 0;
-        if(target._latest >= obj._latest){
+    this.reviseObj = (obj, revised) =>{
+        if(this.objCollection.has(obj._name)){
+            let target = this.objCollection.get(obj._name);
+            if(obj._latest > target._latest) {
+                target.setMatrix(obj._rm);
+                target.setColor(obj._color);
+                target.setTexture(obj._texture);
+                target._latest = obj._latest;
+                target._revised = obj._revised;
+                return 2;
+            }
             return 1;
         }
-        if(!wu.isNull(target)){
-            target.setMatrix(obj._rm);
-            target.setColor(obj._color);
-            target.setTexture(obj._texture);
-            target._latest = (new Date).getTime();
-            target._revised = obj._revised;
-            return 2;
-        }
-        return 1;
+        return 0;
+
 
     }
 
-    this.setObjScene = (collection) =>{
+    this.setObjScene = (collection, revised) =>{
         for(let [name, obj_map] of collection){
             if(this.isRemoved(name))
                 continue
@@ -128,7 +140,7 @@ export function FurnitureCollection(model){
                 _name: name,
             };
             obj._revised = false;
-            let res = this.reviseObj(obj);
+            let res = this.reviseObj(obj, revised);
             if(res === 0){
                 this.newObj(obj, obj._rm);
             }
@@ -136,7 +148,7 @@ export function FurnitureCollection(model){
         }
     }
 
-    this.setNobjScene = (collection) =>{
+    this.setNobjScene = (collection, revised) =>{
         if(wu.isNull(collection))
             return;
         for(let [name, obj_map] of collection) {

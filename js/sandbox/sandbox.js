@@ -8,12 +8,16 @@ export function CreateSandbox(model){
     let h = .05;
     let d = .01;
     let edge = .02;
-    let root = model.add();
-    let node = root.add();
+    let view_hud = model.add();
+    let root = view_hud.add(); //model.add();
+    let view_node = root.add();
+    let node = view_node.add();
     let walk = node.add();
     let box_model = walk.add();
-    this.robot = walk;//robot;
+    let robot = box_model;
+    this.robot = robot;
     this.boxes = Array(0);
+    this.shift_status = Array(0);
     let p1 = [0, 0, 0];
     let p2 = [0, 0, 1];
     let p3 = [1, 0, 1];
@@ -22,6 +26,10 @@ export function CreateSandbox(model){
     this.timer.register([ut.WALL_TIMER, ut.OBJ_TIMER,
             ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.N_WALL_TIMER]);
 
+    let robot_model = box_model.add();
+    this.robot_model = robot_model;
+
+    //this.debug_cube = view_hud.add('cube').scale(.1);
 
     this.getNodeMatrix = () =>{
         return node.getMatrix();
@@ -36,15 +44,34 @@ export function CreateSandbox(model){
             e = edge;
         }
         this.boxes.push(new CreateBox(box_model, p1, p2, p3, p4, h, d, e, new_level));
+        let dt;
+        let shift_dt = 0;
+        if(this.shift_status.length > 0){
+            shift_dt = this.shift_status[this.shift_status.length - 1];
+        }
+        if(this.shift_status.length > 1){
+            dt = this.shift_status[1] - this.shift_status[0];
+            dt += shift_dt;
+        }else{
+            dt = shift_dt;
+        }
+        this.boxes[this.boxes.length - 1].shift(dt, 0, 0);
+        this.shift_status.push(dt);
+        console.log("shift_status", this.shift_status);
+
     }
 
     this.removeFloor = (time) =>{
         if(this.boxes.length === 0)
             return false;
         this.timer.set(ut.FLOOR_TIMER, time);
-        this.boxes[this.boxes.length - 1].remove();
-        this.boxes.pop();
-        return true;
+        if(this.boxes[this.boxes.length - 1].remove()){
+            this.boxes.pop();
+            this.shift_status.pop();
+            return true;
+        }
+
+        return false;
     }
 
     this.remove = () =>{
@@ -52,28 +79,33 @@ export function CreateSandbox(model){
             this.removeFloor();
         }
     }
-    this.expand = (active_floor) =>{
-        let dx = 0;
+    this.collapse = (active_floor) =>{
+        let dx = this.shift_status[0];
         if(active_floor >= 0){
-            dx = - active_floor;
+            dx = this.shift_status[active_floor];
         }
+        let shift_status = Array(0);
         for(let i = 0; i < this.boxes.length; ++i){
             this.boxes[i].shift(dx, 0, 0);
-            dx += 1;
+            shift_status.push(dx);
         }
+        this.shift_status = shift_status;
 
 
     }
 
-    this.collapse = (active_floor) =>{
-        let dx = 0;
+    this.expand = (active_floor) =>{
+        let dx = this.shift_status[0];
         if(active_floor >= 0){
-            dx = active_floor;
+            dx = this.shift_status[active_floor] - active_floor;
         }
+        let shift_status = Array(0);
         for(let i = 0; i < this.boxes.length; ++i){
+            shift_status.push(dx);
             this.boxes[i].shift(dx, 0, 0);
-            dx -= 1;
+            dx += 1;
         }
+        this.shift_status = shift_status;
 
     }
 
@@ -97,8 +129,8 @@ export function CreateSandbox(model){
 
     this.getRM = (p, floor) =>{
         return this.boxes[floor].getRM(p);
-
     }
+
     this.getMPosition = (p, floor) =>{
         return this.boxes[floor].getMPosition(p);
 
@@ -121,9 +153,39 @@ export function CreateSandbox(model){
     this.getWalkPosition = (p) =>{
         return walk.getGlobalMatrix().slice(12, 15);
     }
+
     this.walkAway = (rp) =>{
         walk.identity().move(rp);
     }
+
+    this.walk = (rp) =>{
+        walk.move(rp);
+    }
+
+    this.clear_view = () => {
+        view_node.identity();
+        walk.identity();
+    }
+
+    this.relocate_view = (vm) => {
+        view_node.identity();
+        view_node.setMatrix(cg.mMultiply(view_node.getMatrix(), cg.mInverse(vm)));
+    }
+
+    this.hud = (vm) => {
+        console.log("hud")
+        console.log("view_hud", view_hud.getMatrix())
+        console.log("view_node", view_node.getMatrix())
+        view_hud.setMatrix(vm).move(0,-1,-1.4); //???
+    }
+
+    this.reset_hud = () => {
+        view_hud.identity();
+    }
+
+    this.reset_view = () => {
+        view_node.identity();
+    }  
 
     this.relocate = (p, floor, s) =>{
         let height = (h*2 + .01) * floor + 1.5 / 4 * 2 * h;
@@ -131,6 +193,7 @@ export function CreateSandbox(model){
         let pos_p = [p[0], height, p[2]];
         node.identity().move(pos_p).scale(s).move(neg_p);
     }
+
     this.reset = (m) =>{
         node.setMatrix(m.getNodeMatrix());
     }
@@ -151,10 +214,13 @@ export function CreateSandbox(model){
 
     this.reviseObj = (floor, obj_state) =>{
 
-        let flag = this.boxes[floor].reviseObj(obj_state);
+        let flag = this.boxes[floor].reviseObj(obj_state, true);
         if(flag)
             this.timer.set(ut.OBJ_TIMER, obj_state._latest);
         return flag;
+    }
+    this.copyObjByName = (floor, name, time) =>{
+        return this.boxes[floor].copyObjByName(name, time);
     }
 
     this.newObj = (floor, obj, m) =>{
@@ -167,14 +233,16 @@ export function CreateSandbox(model){
     }
 
     this.flyAway = () =>{
-
+        this.clear_view();
         root.identity().move(0, -1000, 0);
     }
+
     this.comeBack = () =>{
+        this.clear_view();
         root.identity();
     }
 
-    this.getScene = (tag, time) => {
+    this.getScene = (tag, time, revised) => {
         let flag = false;
         switch (tag) {
             case ut.FLOOR_TIMER:
@@ -185,7 +253,7 @@ export function CreateSandbox(model){
             case ut.OBJ_TIMER:
                 let obj_collection = Array(0);
                 for(let i = 0; i < this.boxes.length; ++ i) {
-                    let obj = this.boxes[i].getObjCollectionState(time);
+                    let obj = this.boxes[i].getObjCollectionState(time, revised);
 
                     obj_collection.push(obj);
                     if(obj.size > 0)
@@ -205,7 +273,7 @@ export function CreateSandbox(model){
             case ut.WALL_TIMER:
                 let wall_collection = Array(0);
                 for(let i = 0; i < this.boxes.length; ++ i) {
-                    let wall = this.boxes[i].getWallCollectionState(time);
+                    let wall = this.boxes[i].getWallCollectionState(time, revised);
                     wall_collection.push(wall);
                     if(wall.size > 0)
                         flag = true
@@ -225,7 +293,7 @@ export function CreateSandbox(model){
         return null
 
     }
-    this.setScene = (args) =>{
+    this.setScene = (args, revised) =>{
         //console.log("updaaaaaaaaaate", args)
         for(let [tag, scene] of args) {
             if(scene === null || scene === undefined)
@@ -248,22 +316,22 @@ export function CreateSandbox(model){
                     break
                 case ut.OBJ_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setObjCollection(scene[i]);
+                        this.boxes[i].setObjCollection(scene[i], revised);
                     }
                     break
                 case ut.N_OBJ_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setNobjScene(scene[i]);
+                        this.boxes[i].setNobjScene(scene[i], revised);
                     }
                     break
                 case ut.WALL_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setWallCollection(scene[i]);
+                        this.boxes[i].setWallCollection(scene[i], revised);
                     }
                     return scene
                 case ut.N_WALL_TIMER:
                     for (let i = 0; i < this.boxes.length; ++i) {
-                        this.boxes[i].setNwallScene(scene[i]);
+                        this.boxes[i].setNwallScene(scene[i], revised);
                     }
                     break
                 default:

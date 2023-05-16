@@ -216,7 +216,7 @@ export function WallCollection(model, level, h, d){
         this.walls.set(uid, wall);
         return wall;
     }
-    this.reviseWall = (w) =>{
+    this.reviseWall = (w, revised) =>{
         if(this.walls.has(w._name)){
             let target = this.walls.get(w._name);
             if(w._latest > target._latest){
@@ -235,6 +235,7 @@ export function WallCollection(model, level, h, d){
         let poly = w.getPoly();
         let wall_1 = this.createWall(poly[0], p, 0, name + "_1");
         let wall_2 = this.createWall(p, poly[3], 0, name + "_2");
+        this.remove(w._name, time);
         wall_1.setTexture(w.texture);
         wall_2.setTexture(w.texture);
         wall_1.setColor(w._color);
@@ -243,7 +244,7 @@ export function WallCollection(model, level, h, d){
         wall_2._revised = true;
         wall_1._latest = time;
         wall_2._latest = time;
-        this.remove(w._name, time);
+
     }
     this.select = (p1, p2) =>{
         let min_dis = -1, idx = -1, intp = -1, target = null;
@@ -283,10 +284,10 @@ export function WallCollection(model, level, h, d){
         return collections;
     }
 
-    this.getCollectionState = (time) =>{
+    this.getCollectionState = (time, revised) =>{
         let collections = new Map();
         for(let [name, w] of this.walls){
-            if(w._revised){
+            if(w._revised || !revised){
                 let v = new Map();
                 v.set(ut.COLOR_KEY, w._color);
                 v.set(ut.TEXTURE_KEY, w._texture);
@@ -298,7 +299,7 @@ export function WallCollection(model, level, h, d){
         return collections
     }
 
-    this.setWallScene = (collection) => {
+    this.setWallScene = (collection, revised) => {
         for(let [name, w_map] of collection){
             if(this.isRemoved(name))
                 continue;
@@ -310,7 +311,7 @@ export function WallCollection(model, level, h, d){
                 _name: name
             };
             w._revised = false;
-            let res = this.reviseWall(w);
+            let res = this.reviseWall(w, revised);
             if(res === 0){
                 this.createWall(w._p[0], w._p[1], d, name);
             }

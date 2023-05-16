@@ -16,8 +16,7 @@ export function CreateVRSandbox(model){
     //wrapped_model.vallinaInit(model)
     this.timer = new CreateTimer();
 
-
-    this._name = NAME_LIST[0] + "_" + Math.round(Math.random() * 10000).toString();
+    this._name = null;
 
     this.mini_sandbox = mini_sandbox;
     this.room = room;
@@ -30,6 +29,8 @@ export function CreateVRSandbox(model){
     this.active_floor = -1;
     this.is_collapse = true;
     this.in_room = false;
+
+    let sc = 80;
 
     this.numFloors = () =>{
         return mini_sandbox.boxes.length;
@@ -49,9 +50,6 @@ export function CreateVRSandbox(model){
         this.is_diving = false;
         this.leaveRoom();
         this.timer.reset();
-
-
-
     }
 
     let deleteTmpFocus = () =>{
@@ -213,22 +211,13 @@ export function CreateVRSandbox(model){
             room.flyAway();
             this.active_floor = floor;
             mini_sandbox.activeFloor(floor);
-            mini_sandbox.activeFloor(floor);
             room.activeFloor(floor);
             effect.activeFloor(floor);
         }
 
     }
 
-     this.changePerspective = (mode, rp) => {
-        // move to relative loc rp
-        if (cg.norm(rp) <= 0.01) {
-            return
-        }
-        //rp = [-.5,0,-.5];
-        mini_sandbox.walkAway(rp);
-        room.walkAway(rp);
-    }
+
 
     this.getObjCollection = (mode) =>{
         let floor = this.active_floor;
@@ -240,6 +229,14 @@ export function CreateVRSandbox(model){
 
     this.getRPosition = (mode, p) =>{
         return boxes[mode].getMPosition(p, this.active_floor);
+    }
+
+    this.getRobotPosition = (mode, p) =>{
+        return boxes[mode].getRobotMPosition(p);
+    }
+
+    this.getGPosition = (mode, p) =>{
+        return boxes[mode].getGPosition(p, this.active_floor);
     }
     this.getRM = (mode, p) =>{
         return boxes[mode].getRM(p, this.active_floor);
@@ -276,7 +273,6 @@ export function CreateVRSandbox(model){
         let flag = false;
         let floor = this.active_floor;
         let time = this.timer.newTime();
-
         for(let i =0; i< objs.length; ++ i){
             let obj_state = {
                 _name: objs[i]._name,
@@ -291,15 +287,62 @@ export function CreateVRSandbox(model){
             boxes[2].reviseObj(floor, obj_state);
         }
         return flag;
-
     }
+
+    this.copyObj = (names) =>{
+        let flag = false;
+        let floor = this.active_floor;
+        let time = this.timer.newTime();
+        for(let i =0; i< names.length; ++ i){
+            flag = flag || !wu.isNull(boxes[0].copyObjByName(floor, names[i], time));
+            boxes[1].copyObjByName(floor, names[i], time);
+            boxes[2].copyObjByName(floor, names[i], time);
+        }
+        return flag;
+    }
+
+    this.changePerspective = (rloc, floor) => {
+        this.active_floor = floor
+        let gloc = mini_sandbox.getGPosition(rloc, floor);
+        let div_pos = mini_sandbox.getNodeMatrix(gloc);
+        room.comeBack();
+        room.relocate(div_pos, this.active_floor, sc);
+    }
+
+    this.changeView = (vm) => {
+        mini_sandbox.relocate_view(vm);
+        room.relocate_view(vm);
+    }
+
+    this.hud = (vm) => {
+        mini_sandbox.hud(vm);
+        room.hud(vm);
+    }
+
+    this.resetHud = () => {
+        mini_sandbox.reset_hud();
+        room.reset_hud();
+    }
+
+    this.resetView = () => {
+        mini_sandbox.reset_view();
+        room.reset_view();
+    }
+
+    this.getFloorGPosition = (mode, p, floor) =>{
+        return boxes[mode].getGPosition(p, floor);
+    }
+    this.getFloorRPosition = (mode, p, floor) =>{
+        return boxes[mode].getMPosition(p, floor);
+    }
+
 
     this.divAnimation = (state) =>{
         if(!this.is_diving){
             return [false, state];
         }
         let diving_limit = 50;
-        let sc = 80;
+        
         if(this.diving_time === -1){
             this.diving_time = 0;
         }else if(this.diving_time > diving_limit){
@@ -336,6 +379,9 @@ export function CreateVRSandbox(model){
         effect.walkAway(rp);
     }
     this.animate = (t, state) =>{
+        mini_sandbox.activeFloor(this.active_floor);
+        room.activeFloor(this.active_floor);
+        effect.activeFloor(this.active_floor);
         return this.divAnimation(state)
     }
 
@@ -347,32 +393,84 @@ export function CreateVRSandbox(model){
         return mini_sandbox.boxes[floor].focus_walls.length > 0;
     }
 
-    this.getScene = () => {
+    this.getScene = (revised) => {
         let tags = [ut.FLOOR_TIMER, ut.N_OBJ_TIMER, ut.OBJ_TIMER, ut.N_WALL_TIMER, ut.WALL_TIMER];
         let scene = new Map();
         for(let i = 0; i < tags.length; ++ i){
             let time = this.timer.get(tags[i]);
-            let v = this.mini_sandbox.getScene(tags[i], time);
+            let v = this.mini_sandbox.getScene(tags[i], time, revised);
             scene.set(tags[i], v);
         }
         return scene;
 
     }
 
-    this.setScene = (args) =>{
+
+    this.setScene = (args, revised) =>{
         console.log("set Scene")
-        this.mini_sandbox.setScene(args);
-        this.room.setScene(args);
-        this.effect.setScene(args);
+        this.mini_sandbox.setScene(args, revised);
+        this.room.setScene(args, revised);
+        this.effect.setScene(args, revised);
         if(this.active_floor >= this.mini_sandbox.boxes.length){
             this.active_floor = 0;
         }
     }
 
     this.setName = (n) =>{
-        this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+        //this._name = n + "_" + Math.round(Math.random() * 10000).toString();
+        this._name = n;
     }
 
+    let parseMap = (obj, type, bt) =>{
+        let res = obj;
+        if(type === "map"){
+            res = new Map();
+            for(let k in obj) {
+                if(k === ut.TEXTURE_KEY || k === ut.FORM_KEY || k === ut.NUM_FLOORS_KEY || k === ut.LATEST_KEY){
+                    res.set(k, obj[k]);
+                }else if(k === ut.P_KEY || k === ut.RM_KEY || k === ut.COLOR_KEY){
+                    res.set(k, parseMap(obj[k], "array", true));
+                }else{
+                    res.set(k, parseMap(obj[k], "map", false));
+                }
+
+            }
+        }else if(type === "array"){
+            res = Array(0);
+            for(let k in obj) {
+                if(bt){
+                    res.push(obj[k]);
+                }else{
+                    res.push(parseMap(obj[k], "map", bt));
+                }
+
+            }
+            if(res.length === 0){
+                return null;
+            }
+        }
+        return res;
+    }
+    let parseJson = (obj) =>{
+        let res = new Map();
+        for(let k in obj){
+            if(k === ut.FLOOR_TIMER){
+                res.set(k, parseMap(obj[k], "map", false));
+            }else {
+                res.set(k, parseMap(obj[k], "array", false));
+            }
+
+        }
+        return res;
+
+    }
+
+    this.loadScene = (e) =>{
+        const obj = JSON.parse(e)[0];
+        let res = parseJson(obj);
+        console.log(res);
+        this.setScene(res, false);
+    }
 }
 
 

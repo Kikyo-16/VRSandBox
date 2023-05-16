@@ -9,19 +9,20 @@ export class CreateLoginMenuController {
 
         this.logInMenu = null;
         // List of all user names supported
-        this.userNamesAll = ["Lewei", "Rahul", "Zhiqi", "Namrata"];
+        this.userNamesAll = ["Liwei", "Rahul", "Zhiqi", "Namrata"];
         this.availableUserNames = [];
         this.userNameTilesObjectList = [];
         this.rt_prev = false;
         this.model = null;
+        this.name = "";
     }
 
-    init = (model) => {
+    init = (model, loggedInUsers) => {
         this.model = model;
         this.currentUserBanner = null;
         // already logged in users 
         // UPDATE this variable to get a list of all logged in users using state["PERSPECTIVE"]["PLAYER_INFO"]
-        let loggedInUsers = ["Rahul", "Zhiqi"];
+
         
         for(let i=0;i<this.userNamesAll.length;i++){
             if(!loggedInUsers.includes(this.userNamesAll[i])){
@@ -60,7 +61,21 @@ export class CreateLoginMenuController {
             this.userNameTilesObjectList.push(userNameTileBG);
             yLoc = yLoc + yDelta;
         }
+
+
+
+        this.currentUserBanner = this.model.add('cube').texture('../media/textures/menu/png-small/menu-item-type-4.png').scale(0.1,0.1,0.001);
+        this.selectUserText = this.currentUserBanner.add('cube').scale(1.5,7.5,1).move(0,0,0.1);
+        this.currentUserBanner.opacity(0.0001);
         
+    }
+
+
+    textureFn = (userName) =>{
+        g2.textHeightAndFont('',0.05,'Arial');
+        g2.setColor('white');
+        g2.fillText(" Hi ! " + this.name, 0.5, 0.5 , 'center');
+        g2.drawWidgets(this.selectUserText);
     }
 
     // Menu item selection/hover logic
@@ -83,36 +98,40 @@ export class CreateLoginMenuController {
         return -1;
     }
 
-    animate = (model, state) =>{
-        
+    animate = (model, state, sandbox) =>{
+
         if(this.currentUserBanner != null){
             this.currentUserBanner.identity().hud().turnY(-0.4).move(0.77,0.43,0.0).scale(0.30,0.06,0.001);
         }
 
         // TODO :set state as required
-        if(state.LOGIN.DISABLED){
+        if(state.LOGIN.INACTIVE){
             // TODO : Update return as required
+            this.logInMenu.opacity(0.0001);
+            this.currentUserBanner.opacity(1);
             return [false, state];
         }
 
+        this.logInMenu.opacity(1);
+        this.currentUserBanner.opacity(0.0001);
         this.logInMenu.identity().hud().move(0,0,0).scale(1,1,.0001);
+
+
+        if(state.LOGIN.CD > 0){
+            state.LOGIN.CD = state.LOGIN.CD -1;
+            return [false, state];
+        }
         let rt = buttonState.right[0].pressed;
         let res = this.getBeamIntersectionWithBoxObjects(this.userNameTilesObjectList, 0.1, 0.02, rt, this.rt_prev, [0.2,0.2,1]);
         
         if(res > -1){
             let userName = this.availableUserNames[res];
-            this.currentUserBanner = model.add('cube').texture('../media/textures/menu/png-small/menu-item-type-4.png').scale(0.1,0.1,0.001);
-            let selectUserText = this.currentUserBanner.add('cube').texture(() => {
-                g2.textHeightAndFont('',0.05,'Arial');
-                g2.setColor('white');
-                g2.fillText(" Hi ! " + userName, 0.5, 0.5 , 'center');
-                g2.drawWidgets(selectUserText);
-            }).scale(1.5,7.5,1).move(0,0,0.1);
-
-            // TODO :set state as required - update list of users in sandbox
+            this.name = userName;
+            this.selectUserText.texture(this.textureFn);
+            // TODO :set state as required
             state.LOGIN.NAME = userName;
-            this.logInMenu.opacity(0.0001);
-            state.LOGIN.DISABLED = true;
+            sandbox.setName(userName);
+            state.LOGIN.INACTIVE = true;
 
             // TODO : Update return as required
             return [false, state];
@@ -123,10 +142,6 @@ export class CreateLoginMenuController {
         return [false, state];
     }
 
-    clearState = (state, sandbox) =>{
-        if(state.LOGIN.NAME !== null){
-            sandbox.setName(state.LOGIN.NAME)
-        }
-    }
+
     
 }

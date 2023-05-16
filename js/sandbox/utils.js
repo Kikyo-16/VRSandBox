@@ -1,5 +1,7 @@
 import * as cg from "../render/core/cg.js";
 
+
+
 export let FLOOR_TIMER = "A"
 export let OBJ_TIMER = "B"
 export let N_OBJ_TIMER = "C"
@@ -22,10 +24,13 @@ export let P_KEY = "P"
 
 export let WHO_KEY = "Q"
 export let WHAT_KEY = "R"
+export let WHOLE_KEY = "S"
 
+export let USER_KEY = "T"
+export let OP_KEY = "U"
+export let ACT_KEY = "V"
 
-export let PERSPECTIVE_SHARE_MSG = "perspective-share"
-export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
+export let INVITATION_KEY = "W"
 
 /*
 * STATUS CODE
@@ -56,13 +61,27 @@ export let SPLITTING_FOCUS_WALL_MSG = "splitting-focus-wall"
 export let SPLITTING_WALL_MSG = "splitting-wall"
 export let MULTI_FOCUS_WALL_MSG = "multi-focus-wall"
 
+export let LOAD_MSG = "Load"
+export let SAVE_MSG = "Save"
+export let LOGOUT_MSG = "Log out"
+export let CANCEL_MSG = "Cancel"
+export let RECEIVE_MSG = "New message from "
+export let REFRESH_MSG = "Refresh"
+
+export let POS_EXCHANGE_MSG = "Position Exchange" // exchange position
+export let PERSP_SHARING_MSG = "Perspective Share" // inspect other people's view, lose control
+//export let PERSPECTIVE_EXCHANGE_MSG = "perspective-exchange"
+
 /*
 * Menu CODE
 * */
 export let MENU_DISABLED = 4;
 
+
+
 export let WALKING_FORWARD = 1;
 export let WALKING_BACKWARD = 2;
+
 
 export let TEXT_ROOM_WITH_BOX = "Click to hidden Sandbox";
 export let TEXT_ROOM_WITHOUT_BOX = "Click to show Sandbox";
@@ -72,6 +91,7 @@ export let TEXT_BOX_OBJ = "Sandbox Object Mode";
 export let TEXT_IS_DIVING = "Diving to Room...";
 export let TEXT_ROOM_WALKING = "Walking in the Room...";
 
+
 export let COLOR_ROOM_WITH_BOX = [153/255, 204/255, 255/255];
 export let COLOR_ROOM_WITHOUT_BOX = [153/255, 1, 153/255];
 export let COLOR_ROOM_WALKING = [255/255, 204/255, 102/255];
@@ -80,9 +100,11 @@ export let COLOR_BOX_EDIT = [153/255, 204/255, 255/255];
 export let COLOR_BOX_OBJ = [153/255, 1, 153/255];
 export let COLOR_IS_DIVING = [201/255, 176/255, 255/255];
 
+
 export let isObj = (obj) => {
     return obj._form !== undefined && obj.status === 0;
 }
+
 
 export let disableSelect = (obj) => {
     for(let i = 0; i < obj.nChildren(); ++i){
@@ -91,12 +113,21 @@ export let disableSelect = (obj) => {
     obj.status = 1;
 }
 
+
 export let transform = (mTr, obj) => {
     let mGA = obj.getGlobalMatrix();
     let mA  = obj.getMatrix();
     let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
     mGA      = cg.mMultiply(mTr, mGA);
     return cg.mMultiply(tr, mGA)
+}
+
+
+export let transformR = (m, obj) => {
+    let mGA = obj.getGlobalMatrix();
+    let mA  = obj.getMatrix();
+    let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
+    return cg.mMultiply(tr, m)
 }
 
 export let copy = (parent, obj) => {
@@ -110,10 +141,22 @@ export let copy = (parent, obj) => {
     }
 }
 
+
+
 export let distance = (a, b) =>{
     let d = 0;
     for(let i =0; i < a.length; ++ i){
         d += (a[i] - b[i])**2
     }
     return Math.sqrt(d);
+}
+
+export let deepcopy_player = (player_info) => {
+    let player = new Map();
+    player.set("VM", player_info.get("VM"));
+    player.set("RM", player_info.get("RM"))
+    player.set("IN_BOX", player_info.get("IN_BOX"));
+    player.set("FLOOR", player_info.get("FLOOR"));
+    player.set("F", player_info.get("F"));
+    return player;
 }

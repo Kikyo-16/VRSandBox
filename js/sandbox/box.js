@@ -55,19 +55,25 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
 
+
     this.deleteWall = (w, time) =>{
         this.wall_collection.remove(w._name, time);
     }
 
     this.remove = () =>{
-        model.remove(node_1);
+        if(this.furniture_collection.numCollection() === 0){
+            model.remove(node_1);
+            return true;
+        }
+        return false;
+
     }
 
     this.resetPos = (active_floor) =>{
         node_2.identity().move(active_floor, y, z);
     }
     this.shift = (x, y, z) => {
-        node_2.move(x, y, z);
+        node_2.identity().move(x, y, z);
     }
     this.isInbox = (p) =>{
         let pos = wu.objMatrix(cg.mTranslate(p), box).slice(12, 15);
@@ -84,8 +90,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     this.newObj = (obj, m) =>{
         return this.furniture_collection.newObj(obj, m);
     }
-    this.reviseObj = (obj) =>{
-        return this.furniture_collection.reviseObj(obj);
+    this.reviseObj = (obj, revised) =>{
+        return this.furniture_collection.reviseObj(obj, revised);
+    }
+    this.copyObjByName = (name, time) =>{
+        return this.furniture_collection.copyObjByName(name, time);
     }
 
     this.getObjByName = (name) => {
@@ -97,11 +106,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         return this.furniture_collection.removeObjOfName(idx, time);
     }
 
-    this.getObjCollectionState = (time) =>{
-        return this.furniture_collection.getCollectionState(time);
+    this.getObjCollectionState = (time, revised) =>{
+        return this.furniture_collection.getCollectionState(time, revised);
     }
-    this.getWallCollectionState = (time) =>{
-        return this.wall_collection.getCollectionState(time);
+    this.getWallCollectionState = (time, revised) =>{
+        return this.wall_collection.getCollectionState(time, revised);
     }
     this.getRemovedObjTags = (time) =>{
         return this.furniture_collection.getRemovedTags();
@@ -110,19 +119,19 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
         return this.wall_collection.getRemovedTags();
     }
 
-    this.setObjCollection = (collection) =>{
-        this.furniture_collection.setObjScene(collection);
+    this.setObjCollection = (collection, revised) =>{
+        this.furniture_collection.setObjScene(collection, revised);
     }
 
-    this.setWallCollection = (collection) =>{
-        this.wall_collection.setWallScene(collection);
+    this.setWallCollection = (collection, revised) =>{
+        this.wall_collection.setWallScene(collection, revised);
     }
-    this.setNobjScene = (obj_tags) =>{
-        this.furniture_collection.setNobjScene(obj_tags);
+    this.setNobjScene = (obj_tags, revised) =>{
+        this.furniture_collection.setNobjScene(obj_tags, revised);
 
     }
-    this.setNwallScene = (wall_tags) =>{
-        this.wall_collection.setNwallScene(wall_tags);
+    this.setNwallScene = (wall_tags, revised) =>{
+        this.wall_collection.setNwallScene(wall_tags, revised);
     }
     this.removeWallCollection = (wall_tags) =>{
 
@@ -276,10 +285,11 @@ export function CreateBox(model, p1, p2, p3, p4, h, d, edge, level){
     }
 
     this.deleteTmpFocus = () =>{
-        if(this.tmp_focus !== undefined && this.tmp_focus.isFocus() === 3){
+        if(!wu.isNull(this.tmp_focus) && this.tmp_focus.isFocus() === 3){
             this.tmp_focus.defocus();
             this.tmp_focus = undefined;
         }
+
     }
 
 

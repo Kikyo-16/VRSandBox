@@ -2,6 +2,8 @@ import {g2} from "../util/g2.js";
 
 import * as bc from "../sandbox/baseController.js"
 import * as ut from "../sandbox/utils.js"
+import * as wu from "../sandbox/wei_utils.js"
+import {RECEIVE_MSG} from "../sandbox/utils.js";
 
 
 
@@ -16,15 +18,17 @@ export function CreateModeController(model){
          g2.drawWidgets(menu_button);
     }).scale(1.4,8.4,1);
 
-
-    let CD = 20;
+    let CD = 10;
     this.cold_down = -1;
     this.mode_id = ut.BOX_VIEW_MSG;
     menu_button.text = "";
     menu_button.color = [1, 1, 1];
 
+    this.tmp_mode = ut.BOX_VIEW_MSG;
+    this.mode = ut.BOX_VIEW_MSG;
 
-    let refresh = (mode) =>{
+
+    let refresh = (mode, state) =>{
         let text = "";
         let color = [1, 1, 1];
         switch(mode) {
@@ -56,6 +60,12 @@ export function CreateModeController(model){
                 text = ut.TEXT_ROOM_WALKING;
                 color = ut.COLOR_ROOM_WALKING;
                 break;
+            case ut.PERSP_SHARING_MSG:
+                text = "You are viewing " + state.GLOBAL_MENU.ACTION.user + "'s view";
+                break;
+            case ut.RECEIVE_MSG:
+                text = RECEIVE_MSG + state.REV.USER;
+                break;
             default:
                 let bug = "you got a bug here";
                 console.log(bug);
@@ -69,12 +79,16 @@ export function CreateModeController(model){
     let isInRoom = () =>{
         return this.mode_id === ut.ROOM_WITH_BOX_MSG ||
             this.mode_id === ut.ROOM_WITHOUT_BOX_MSG ||
-            this.mode_id === ut.ROOM_WALKING_MSG;
+            this.mode_id === ut.ROOM_WALKING_MSG || 
+           // (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.ROOM_WITHOUT_BOX_MSG);
+        ((this.tmp_mode === ut.PERSP_SHARING_MSG || this.tmp_mode === ut.POS_EXCHANGE_MSG) &&
+                (this.mode === ut.ROOM_WITHOUT_BOX_MSG || this.mode === ut.ROOM_WITHOUT_BOX_MSG || this.mode === ut.ROOM_WALKING_MSG));
     }
     let isInBox = () =>{
         return this.mode_id === ut.BOX_VIEW_MSG ||
             this.mode_id === ut.BOX_EDIT_MSG ||
-            this.mode_id === ut.BOX_OBJ_MSG;
+            this.mode_id === ut.BOX_OBJ_MSG ||
+            (this.tmp_mode === ut.PERSP_SHARING_MSG && this.mode === ut.BOX_VIEW_MSG);
     }
 
     let changeGlobalMode = () =>{
@@ -129,45 +143,65 @@ export function CreateModeController(model){
     this.clearState = (t, state, sandbox) =>{
         state.MENU.INACTIVE = true;
         state.OBJ.INACTIVE = true;
+        state.SAVING.INACTIVE = true;
+        state.GLOBAL_MENU.INACTIVE = true;
         state.BOX.DISABLED = false;
         state.ROOM.WALKING.DISABLED = true;
-        state.GLOBAL_MENU.INACTIVE = true;
         state.MODE.DISABLED = false;
-        switch(state.MODE.MODE) {
+
+
+        let menu_active = state.MENU.OPEN || state.GLOBAL_MENU.OPEN || state.SAVING.OPEN || !state.LOGIN.INACTIVE;
+        let mode = wu.isNull(state.MODE.TMP_MODE) ? state.MODE.MODE : state.MODE.TMP_MODE;
+        switch(mode) {
             case ut.ROOM_WITH_BOX_MSG:
                 sandbox.mini_sandbox.comeBack();
                 state.MENU.INACTIVE = false;
-                state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.OBJ.INACTIVE = menu_active;
                 state.GLOBAL_MENU.INACTIVE = false;
+                state.SAVING.INACTIVE = false;
                 break;
             case ut.ROOM_WITHOUT_BOX_MSG:
                 sandbox.mini_sandbox.flyAway();
                 state.MENU.INACTIVE = false;
-                state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.OBJ.INACTIVE = menu_active;
                 state.GLOBAL_MENU.INACTIVE = false;
+                state.SAVING.INACTIVE = false;
                 break;
             case ut.BOX_VIEW_MSG:
-                state.GLOBAL_MENU.INACTIVE = false;
-
+                state.GLOBAL_MENU.INACTIVE = true;
+                state.SAVING.INACTIVE = true;
+                state.SAVING.OPEN = false;
                 break;
             case ut.BOX_EDIT_MSG:
                 break;
             case ut.BOX_OBJ_MSG:
                 state.MENU.INACTIVE = false;
-                state.OBJ.INACTIVE = state.MENU.OPEN;
+                state.OBJ.INACTIVE = menu_active;
                 sandbox.clear(4);
                 state.GLOBAL_MENU.INACTIVE = false;
+                state.SAVING.INACTIVE = false;
                 break;
             case ut.DIVING_MSG:
+                menu_active = true;
                 break;
             case ut.ROOM_WALKING_MSG:
                 state.ROOM.WALKING.DISABLED = false;
+                break;
+            case ut.PERSP_SHARING_MSG:
+                menu_active = true;
+                break;
+            case ut.RECEIVE_MSG:
+                menu_active = true;
                 break;
             default:
                 let bug = "you got a bug here";
                 console.log(bug);
         }
-        this.mode_id = state.MODE.MODE;
+        this.mode_id = mode;
+
+        this.mode = state.MODE.MODE;
+        this.tmp_mode = state.MODE.TMP_MODE;
+
         state.BOX.DISABLED = state.MENU.OPEN;
         if(isInBox()){
             sandbox.mini_sandbox.comeBack();
@@ -175,30 +209,46 @@ export function CreateModeController(model){
         }else{
             state.BOX.DISABLED = true;
         }
-        if(state.MENU.OPEN || state.GLOBAL_MENU.OPEN){
+        if(menu_active){
             state.BOX.DISABLED = true;
             state.MODE.DISABLED = true;
             state.OBJ.INACTIVE =true;
         }
-        if(state.MENU.OPEN)
+        if(state.MENU.OPEN){
             state.GLOBAL_MENU.INACTIVE = true;
-        if(state.GLOBAL_MENU.OPEN)
+            state.SAVING.INACTIVE = true;
+        }
+
+        if(state.GLOBAL_MENU.OPEN){
             state.MENU.INACTIVE = true;
+            state.SAVING.INACTIVE = true;
+        }
+        if(state.SAVING.OPEN){
+            state.MENU.INACTIVE = true;
+            state.GLOBAL_MENU.INACTIVE = true;
+        }
+
         return state;
     }
 
     this.animate = (t, state) =>{
 
-        if(state.LOGIN.DISABLED){
+        if(state.LOGIN.INACTIVE){
             menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(1);
         } else {
             menu_button.identity().hud().move(0, .47, 0.1).scale(.36, .06, .001).opacity(0.001);
         }
-
-        if(state.MODE.DISABLED)
-            return [false, state]
-        if(state.MODE.MODE === ut.DIVING_MSG){
-            refresh(ut.DIVING_MSG);
+        if(state.MODE.TMP_MODE === ut.PERSP_SHARING_MSG){
+            if(bc.isRB()){
+                state.PERSPECTIVE.ACTION.MSG = ut.NON_ACTION_MSG;
+                state.PERSPECTIVE.ACTION.USER = null;
+                state.PERSPECTIVE.ACTION.INFO = null;
+                state.MODE.TMP_MODE = null;
+            }
+        }
+        if(state.MODE.DISABLED){
+            let mode = wu.isNull(state.MODE.TMP_MODE) ? state.MODE.MODE : state.MODE.TMP_MODE;
+            refresh(mode, state);
             return [false, state]
         }
         this.mode_id = state.MODE.MODE;
@@ -207,7 +257,7 @@ export function CreateModeController(model){
                 this.mode_id = ut.ROOM_WITHOUT_BOX_MSG;
             else
                 this.mode_id = ut.BOX_VIEW_MSG;
-            refresh(this.mode_id);
+            refresh(this.mode_id, state);
             state.MODE.MODE = this.mode_id;
             state.MODE.SWITCH = false;
             return [true, state]
@@ -228,7 +278,7 @@ export function CreateModeController(model){
 
         }
 
-        refresh(this.mode_id);
+        refresh(this.mode_id, state);
         state.MODE.IN_ROOM = isInRoom();
         state.MODE.MODE = this.mode_id;
         return [flag, state]

@@ -7,28 +7,35 @@ import {CreateRoomController} from '../sandbox/roomController.js'
 import {CreateMultiplayerController} from "../sandbox/multiplayerController.js";
 import {CreateLoginMenuController} from '../sandbox/loginMenuController.js'
 import {CreateShareMenuController} from "../sandbox/shareMenuController.js";
-import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js";
-import {CreateInfoBannerController} from "../sandbox/infoBannerController.js";
-import {CreateInvitationARController} from "../sandbox/invitationAcceptOrReject.js";
+import {CreateSavingController} from "../sandbox/savingController.js";
+import {CreateInvitationMenuController} from "../sandbox/invitationMenuController.js"
+import {CreateMessageCollection} from "../sandbox/messageCollection.js"
 import {CreateControlsViewController} from "../sandbox/controlsViewController.js";
 
-import * as ut from '../sandbox/utils.js'
-import * as wu from '../sandbox/wei_utils.js'
+import * as ut from '../sandbox/utils.js';
+import * as wu from '../sandbox/wei_utils.js';
 import * as croquet from "../util/croquetlib.js";
 
+import * as cg from "../render/core/cg.js";
 
+export let updateModelScene = msg => {
+    window.clay.model.multi_controller.updateScene(msg);
 
-
-export let updateScene = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updateScene(msg);
-    }
 }
 
-export let updatePlayer = msg => {
-    if(window.demoDemoSandboxState) { // use window.demo[your-demo-name]State to see if the demo is active. Only update the croquet interaction when the demo is active.
-        window.clay.model.multi_controller.updatePlayer(msg);
-    }
+export let updateModelPlayer = msg => {
+    window.clay.model.multi_controller.updatePlayer(msg);
+
+}
+
+export let updateModelWholeScene = msg => {
+    window.clay.model.multi_controller.updateWholeScene(msg);
+
+}
+
+export let updateModelMsg = msg => {
+    window.clay.model.message_collection.updateRev(msg);
+
 }
 
 
@@ -42,19 +49,29 @@ export const init = async model => {
     let obj_model = model.add();
     let mode_model = model.add();
     let sandbox_model = model.add();
-    let multi_model = model.add()
+    let view_model = model.add();
+    let invi_model = model.add()
     let shared_menu_model = model.add();
     let login_menu_model = model.add();
-    let info_banner_model = model.add();
-    let invitation_ar_banner_model = model.add();
-    let controls_view_box = model.add();
+    let save_model = model.add();
 
     let sandbox = new CreateVRSandbox(sandbox_model);
     sandbox.initialize()
+    let saving_controller = new CreateSavingController(save_model, sandbox);
     let mode_controller = new CreateModeController(mode_model);
     let box_controller = new CreateBoxController(box_model, sandbox);
     let obj_controller = new CreateObjController(obj_model);
     let room_controller = new CreateRoomController(sandbox);
+
+    let view_controller = new CreateControlsViewController();
+    view_controller.init(view_model);
+
+    let invitation_controller = new CreateInvitationMenuController();
+    invitation_controller.init(invi_model);
+
+    let login_controller = new CreateLoginMenuController();
+    login_controller.init(login_menu_model, []);
+
 
     // Object Customize/Select Menu
     let menu_controller = new CreateMenuController();
@@ -64,28 +81,9 @@ export const init = async model => {
     let share_menu_controller = new CreateShareMenuController();
     share_menu_controller.init(shared_menu_model);
 
-    // User invitation prompt
-    let invitation_menu_controller = new CreateInvitationMenuController();
 
+    let message_collection = new CreateMessageCollection(sandbox);
 
-    let login_controller = new CreateLoginMenuController();
-    login_controller.init(login_menu_model);
-
-    let infoBanner = new CreateInfoBannerController();
-    infoBanner.init(info_banner_model,[0,0.38,0]);
-
-    let invitationARBanner = new CreateInvitationARController();
-    invitationARBanner.init(invitation_ar_banner_model,[0,0.3,0], 10);
-
-    let controlsViewBox = new CreateControlsViewController();
-    controlsViewBox.init(controls_view_box);
-
-    let test_players = new Map();
-    let names = ["Mike_1111", "Mike_1112", "Mike_1113", "Mike_1114"]
-    for(let i =0; i < names.length; ++ i){
-        test_players.set(names[i], "");
-    }
-    test_players.set(sandbox.name, "");
 
     let state_msg = {
         RESUME: true,
@@ -94,6 +92,7 @@ export const init = async model => {
             SWITCH: false,
             IN_ROOM: false,
             MODE: ut.BOX_VIEW_MSG,
+            TMP_MODE: null,
         },
         MENU: {
             INACTIVE: true,
@@ -119,51 +118,65 @@ export const init = async model => {
             INACTIVE: true,
             ACTION: {
                 DELETE: -1,
+                COPY: -1,
                 REVISE: Array(0),
             }
         },
 
         LOGIN: {
-            DISABLED: false,
-            NAME: null,
+            INACTIVE: false,
+            NAME: "Liwei",
+            SAVE: false,
+            OUT: false,
+            CD: 0,
 
         },
+        SAVING:{
+            INACTIVE: false,
+            OPEN: false,
+        },
 
-         PERSPECTIVE: {
+        PERSPECTIVE: {
             ACTION: {
                 MSG: ut.NON_ACTION_MSG, // ut.PERSPECTIVE_SHARE_MSG, ut.PERSPECTIVE_EXCHANGE_MSG
+                USER: null,
+                RM: null,
                 ARG: null,
+                INFO: null,
+                ORI_INFO: null, //original local player info before share perspective
             },
             PLAYER_INFO: new Map(),
             SELF: sandbox.name,
         },
 
         GLOBAL_MENU: {
-            ACTION: null,
+            ACTION: {
+                op: null,
+                user: null,
+            },
             INACTIVE: true,
             OPEN: false,
             SELECT: null,
         },
-
-        // INVITATION_PERSPECTIVE_SEND: {
-        //     USER : new Map(),
-        //     // SENT: null,
-        //     // SENT_TO: null,
-        //     // ACCEPTED: false,
-        //     // SESSION_ON: false
-        // },
-
-        // INVITATION_PERSPECTIVE_RECEIVE: {
-        //     FROM: null,
-        //     ACCEPTED: false,
-        //     SESSION_ON: false
-        // }
-
+        SEND : {
+            USER: null,
+            OP: null,
+            ACT: null,
+        },
+        REV : {
+            USER: null,
+            OP: null,
+            ACT: null,
+            ANS: null,
+        },
+        RESET: -1,
 
     }
 
-    let multi_controller = new CreateMultiplayerController(multi_model, sandbox);
-    multi_controller.init(state_msg.MODE.IN_ROOM);
+    let multi_controller = new CreateMultiplayerController(sandbox);
+    multi_controller.init(state_msg.MODE.IN_ROOM, state_msg);
+    multi_controller.debug = false;//false;
+    model.message_collection = message_collection;
     model.multi_controller = multi_controller;
 
     let checkStateCode = (state) =>{
@@ -172,30 +185,47 @@ export const init = async model => {
         return s;
     }
 
-    croquet.register('croquetDemo_11.99');
+    if(!wu.isNull(window.temporal)){
+        sandbox.loadScene(window.temporal);
+    }
+    state_msg.RESET = sandbox.timer.newTime();
+    croquet.register('croquetDemo_24.11');
 
     model.animate(() => {
+
         state_msg.RESUME =true;
 
-        let state_code = login_controller.animate(model, state_msg);
+        let state_code = login_controller.animate(model.time, state_msg, sandbox);
         state_msg = checkStateCode(state_code);
-        login_controller.clearState(state_msg, sandbox);
 
+        state_code = view_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+
+        state_code = saving_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = saving_controller.clearState(model.time, state_msg, multi_controller, message_collection);
 
         state_code = share_menu_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
-        state_msg = share_menu_controller.clearState(state_msg)
+        state_msg = share_menu_controller.clearState(model.time, state_msg, message_collection);
+
+        state_code = message_collection.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = message_collection.clearState(model.time, state_msg);
+
+        state_code = invitation_controller.animate(model.time, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = invitation_controller.clearState(model.time, state_msg, message_collection);
 
         state_code = mode_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = mode_controller.clearState(model.time, state_msg, sandbox);
 
+        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
+        state_msg = checkStateCode(state_code);
+        state_msg = multi_controller.clearState(model.time, state_msg)
 
-        infoBanner.animate(state_msg);
-        invitationARBanner.animate(state_msg);
-        controlsViewBox.animate(state_msg);
-        
-
+        multi_controller.init(state_msg.MODE.IN_ROOM, state_msg);
         state_code = room_controller.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
         state_msg = room_controller.clearState(model.time, state_msg);
@@ -220,23 +250,11 @@ export const init = async model => {
         state_code = sandbox.animate(model.time, state_msg);
         state_msg = checkStateCode(state_code);
 
-        state_code = multi_controller.animate(model.time, state_msg.MODE.IN_ROOM, state_msg);
-        state_msg = checkStateCode(state_code);
 
-
-        // let invitationResult = invitation_menu_controller.animate(model,<fromUser>, <operation> ,<isInviteForMe> ,true);
         /*
-            Inputs :
-            <fromUser> = The user name who sent the invitaion
-            <operation> = The operation/invitation type
-            <isInviteForMe> = Set this to true if the invitation is for the current user, currentUser == <the user for which the invitation is meant for>
-
-            Output :
-            Returns null until the user accepts or rejects the invitation.
-            Returns True   if user accepts invitaion
-            Returns False  if user rejects invitaion
-
-            Example : let invitationResult = invitation_menu_controller.animate(model, 'Rahul', 'collaborate' ,true);
+            Returns Object with keys 'user' and 'op'
+            'user' : <username selected>
+            'op'   : <operation selected>
         */
 
         //login_controller.animate(model);

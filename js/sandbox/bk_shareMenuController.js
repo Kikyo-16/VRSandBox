@@ -1,10 +1,9 @@
 import { g2 } from "../util/g2.js";
 import * as cg from "../render/core/cg.js";
-import * as ut from "../sandbox/utils.js"
-import * as wu from "../sandbox/wei_utils.js"
 import { controllerMatrix, buttonState, joyStickState } from "../render/core/controllerInput.js";
 import { lcb, rcb } from '../handle_scenes.js';
 import { rotate } from "../third-party/gl-matrix/src/gl-matrix/mat2.js";
+import * as ut from "../sandbox/utils.js";
 
 
 
@@ -13,7 +12,7 @@ export class CreateShareMenuController {
 
    constructor(){
       // Menu selection controls
-      this.operationTypes = [ut.POS_EXCHANGE_MSG, ut.PERSP_SHARING_MSG];
+      this.operationTypes = ['Collaborate', ut.PERSPECTIVE_EXCHANGE_MSG, ut.PERSPECTIVE_SHARE_MSG];
       this.rt = false;
       this.rt_prev = false;
 
@@ -39,6 +38,9 @@ export class CreateShareMenuController {
       this.userListMenu = null;
       this.operationMenu = null;
       this.playerNames = null;
+
+      this.CD = 50;
+      this.cold_down = -1;
 
 
       this.init = (model) =>{
@@ -80,7 +82,7 @@ export class CreateShareMenuController {
 
 
    // Menu item selection/hover logic
-   getBeamIntersectionWithBoxObjects =  (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
+   getBeamIntersectionWithBoxObjects = (objectList, intersectionWidth, intersectionHeight, rt, rt_prev, hoverColorSet) => {
       for(let i=0;i<objectList.length;i++){
          let center = objectList[i].getGlobalMatrix().slice(12,15);
          let point = rcb.projectOntoBeam(center);
@@ -88,7 +90,7 @@ export class CreateShareMenuController {
          let hit = (Math.abs(diff[0]) < intersectionWidth) &&  (Math.abs(diff[1]) < intersectionHeight);//cg.norm(diff) < intersectionRadius;
 
          if(hit){
-            if(i===0){
+            if(i===objectList.length-1){
                objectList[i].color([0.9,0,0]);
             } else {
                objectList[i].color(hoverColorSet);
@@ -97,7 +99,7 @@ export class CreateShareMenuController {
                return i;
             }
          } else {
-            if(i===0){
+            if(i===objectList.length-1){
                objectList[i].color([0.9,0.3,0.3]);
             } else {
                objectList[i].color([1,1,1]);
@@ -138,15 +140,13 @@ export class CreateShareMenuController {
             g2.drawWidgets(operationTileText);
          }).scale(0.4,0.4,1).move(0,-0.1,0.15);
          
-      this.operationTilesObjectList.push(operationMenuCancelButton);
-      
       let yLocO = 5.2, yDeltaO = -2.5;
       for (let i = 0; i < this.operationTypes.length; i++) {
          let operationTileBG = operationTiles.add('cube').scale(0.20,0.05,1).texture('../media/textures/menu/png-small/menu-item-type-6.png').move(0,yLocO,0.1);
          this.operationTilesObjectList.push(operationTileBG);
          yLocO = yLocO + yDeltaO;
       }
-      
+      this.operationTilesObjectList.push(operationMenuCancelButton);
       return operationMenu;
    };
 
@@ -154,8 +154,8 @@ export class CreateShareMenuController {
    // Username selection menu
    createUserListMenu = (sharingMenu) => {
       let userListMenu = sharingMenu.add();
-      let userListMenuBG = userListMenu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
       // User Select Text Box Heading
+      let userListMenuBG = userListMenu.add('cube').texture('../media/textures/menu/png-small/menu-bg.png').scale(0.3,0.5,0.001);
       let selectUserBox = userListMenu.add('cube').scale(0.20,0.04,1).texture('../media/textures/menu/png-small/menu-item-type-3.png').move(0,9.5,0.1);
       let selectUserText = selectUserBox.add('cube').texture(() => {
          g2.textHeightAndFont('',0.05,'Arial');
@@ -210,7 +210,6 @@ export class CreateShareMenuController {
       }else if(newPlayerNames.length < playerNames.length){
          for(let i = newPlayerNames.length; i < playerNames.length; i++){
             this.playerTiles.remove(this.playerTilesObjectList[i + 1]);
-            this.playerTilesObjectList.pop();
          }
       }
       this.playerNames = newPlayerNames;
@@ -240,7 +239,7 @@ export class CreateShareMenuController {
    animate = (t, state_msg) => {
       if(state_msg.GLOBAL_MENU.INACTIVE){
          this.closeMenu();
-         state_msg.GLOBAL_MENU.OPEN = this.openMenu;
+         state_msg["GLOBAL_MENU"]["OPEN"] = this.openMenu;
          return [false, state_msg];
       }
       let model = this.model;
@@ -253,8 +252,9 @@ export class CreateShareMenuController {
       }
       this.onChangeNameList(playerNames);
 
+
+
       if( buttonState.right[5].pressed){
-         console.log("????????????????????????????????????")
          this.openUserMenu();
 
       } else if(this.openMenu){
@@ -284,7 +284,7 @@ export class CreateShareMenuController {
 
                }
 
-               if (this.selectedOperationIndex === 0) {
+               if (this.selectedOperationIndex === this.operationTilesObjectList.length - 1) {
                   // Closing the operation menu
                   if (this.moveX > 0) {
                      this.moveX = this.moveX - this.moveXDelta;
@@ -297,10 +297,12 @@ export class CreateShareMenuController {
                   }
                }
 
-               if (this.selectedPlayerIndex > 0 && this.selectedOperationIndex > 0 ) {
+               if (this.selectedPlayerIndex > 0 &&
+                   this.selectedOperationIndex > -1 &&
+                   this.selectedOperationIndex !== this.operationTilesObjectList.length - 1) {
                   // close all open menus and return selected values - assign default values to variables
                   let user = this.playerNames[this.selectedPlayerIndex - 1];
-                  let op = this.operationTypes[this.selectedOperationIndex - 1];
+                  let op = this.operationTypes[this.selectedOperationIndex];
                   this.closeMenu(model);
                   selected = this.returnObject(user, op);
                   flag = true;
@@ -309,33 +311,25 @@ export class CreateShareMenuController {
 
          }
          this.rt_prev = rt;
-         if(flag){
-            state_msg.GLOBAL_MENU.ACTION = selected;
-         }
 
       }
+      if(!flag)
+         selected = this.returnObject(null);
+      state_msg["GLOBAL_MENU"]["ACTION"] = selected;
       state_msg.GLOBAL_MENU.OPEN = this.openMenu;
+      if(selected !== null && selected.user !== null){
+         state_msg["PERSPECTIVE"]["ACTION"] = {
+            USER: selected.user,
+            MSG: selected.op,
+         }
+      }else{
+
+      }
+
       return [false, state_msg];
    }
 
-   clearState = (t, state, msg_collection) =>{
-      if(!wu.isNull(state.GLOBAL_MENU.ACTION.op)){
-         if(state.GLOBAL_MENU.ACTION.op === ut.PERSP_SHARING_MSG){
-            state["MODE"]["TMP_MODE"] = ut.PERSP_SHARING_MSG;
-            state.PERSPECTIVE.ACTION.MSG = ut.PERSP_SHARING_MSG;
-            state.PERSPECTIVE.ACTION.USER = state.GLOBAL_MENU.ACTION.user;
-         }else if(state.GLOBAL_MENU.ACTION.op === ut.POS_EXCHANGE_MSG){
-            state.SEND.USER = state.GLOBAL_MENU.ACTION.user;
-            state.SEND.OP = state.GLOBAL_MENU.ACTION.op;
-            state.SEND.ACT = null;
-            console.log("click", state.SEND);
-            msg_collection.sendInvitation(state);
-            state.PERSPECTIVE.ACTION.USER = state.SEND.USER;
-            state.PERSPECTIVE.ACTION.INFO = ut.deepcopy_player(state.PERSPECTIVE.PLAYER_INFO.get(state.SEND.USER));
-            console.log("send invitation", state.PERSPECTIVE.ACTION, state.SEND.USER)
-         }
-         state.GLOBAL_MENU.ACTION.op = null;
-      }
+   clearState = (state) =>{
 
       return state;
    }
