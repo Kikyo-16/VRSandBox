@@ -6,6 +6,7 @@ export class CreateControlsViewController {
 
    constructor(){
       this.controlTextBox = null;
+      this.helpTextBox = null;
       this.controlList = [];
       this.controls = new Map();
       this.controls.set(ut.BOX_VIEW_MSG, ["Left Y    : Add a floor",
@@ -79,7 +80,7 @@ export class CreateControlsViewController {
       }).move(0,0.075,1.1).scale(0.20,0.1,0.001);
       
       let controlTextBoxControlList = this.controlTextBox.add('cube').texture( () => {
-         g2.textHeightAndFont('',0.04,'Arial');
+         g2.textHeightAndFont('',0.045,'Arial');
          g2.setColor('white');
          g2.fillRect(0.01,0,0.97 ,0.75);
          g2.setColor('black');
@@ -88,7 +89,32 @@ export class CreateControlsViewController {
          }
          g2.drawWidgets(controlTextBoxControlList);
       }).scale(0.44,0.2,0.001).move(0,-.21,0.1);
+
+      this.helpTextBox = model.add();
+      let helpTextBoxBG = this.helpTextBox.add('cube').scale(0.24,0.04,1).texture('../media/textures/menu/png-small/rectangle-boundary.png').move(0.07,-0.4,0);
+      let helpTextBoxHeadingBG = this.helpTextBox.add('cube').scale(0.20,0.015,1).texture('../media/textures/menu/png-small/menu-item-type-6.png').move(0,3,0);
+      let helpTextBoxHeadingText = this.helpTextBox.add('cube').texture( () => {
+         g2.textHeightAndFont('',0.1,'Arial');
+         g2.setColor('white');
+         g2.fillText("HELP", 0.5, 0.5 , 'center');
+         g2.drawWidgets(controlTextBoxControlList);
+      }).move(0,0.045,1.1).scale(0.20,0.1,0.001);
+      
+      let displayText = ["FOR HELP AND CONTROLS", "HOLD RIGHT JOYSTICK"];
+      let helpTextBoxControlList = this.helpTextBox.add('cube').texture( () => {
+         g2.textHeightAndFont('',0.071,'Arial');
+         g2.setColor('white');
+         g2.fillRect(0.03,0.24,0.94,0.31);
+         g2.setColor('black');
+         for(let i = 0;i < displayText.length;i++){
+            g2.fillText(displayText[i], 0.5, 0.5 - 0.15*i , 'center');
+         }
+         g2.drawWidgets(helpTextBoxControlList);
+      }).scale(0.22,0.09,0.001).move(0,.10,0.1);
+   
    };
+
+   
 
    animate = (t, state_msg) => {
       let currentMode = state_msg.MODE.MODE;
@@ -100,15 +126,18 @@ export class CreateControlsViewController {
       //    display.push(newLine);
       // }
       //this.controlList = this.controls.get(currentMode);
-      if(state_msg.GLOBAL_MENU.OPEN || state_msg.SAVING.OPEN || state_msg.MENU.OPEN || !this.controls.has(currentMode)){
+      if(state_msg.GLOBAL_MENU.OPEN || state_msg.SAVING.OPEN || state_msg.MENU.OPEN || !state_msg.LOGIN.INACTIVE || !this.controls.has(currentMode)){
          this.controlList = Array(0);
          this.controlTextBox.identity().hud().opacity(0.0001).move(0,0.1,0.1).scale(1.1,2.5,0.0001);
-      } else if(helpPressed){
+         this.helpTextBox.identity().hud().opacity(0.0001).move(-0.7,0.4,0.1).scale(0.8,2,0.0001);
+      } else if(this.controls.has(currentMode) && helpPressed){
          this.controlList = this.controls.get(currentMode);
          this.controlTextBox.identity().hud().opacity(1).move(0,0.1,0.1).scale(1.1,2.5,0.0001);
+         this.helpTextBox.identity().hud().opacity(0.0001).move(-0.7,0.4,0.1).scale(0.8,2,0.0001);
       } else {
          this.controlList = Array(0);
          this.controlTextBox.identity().hud().opacity(0.0001).move(0,0.1,0.1).scale(1.1,2.5,0.0001);
+         this.helpTextBox.identity().hud().opacity(1).turnY(0.4).move(-0.7,0.4,0.01).scale(1.2,2.4,0.0001);
       }
       
       return [false, state_msg]
