@@ -203,7 +203,7 @@ export class CreateMenuController {
                   selectedObject = model.add(objectMeshList[selectedObjectMeshIndex]).color(selectedColor).move(menu_pos).scale(selectedObjectScale);
                }
             } else {
-               selectedObject.identity().hud().color(selectedColor).move(menu_pos).scale(selectedObjectScale).turnX(t / 2).turnZ(t / 2).turnZ(t / 2);
+               selectedObject.identity().hud().color(selectedColor).move(menu_pos).scale(selectedObjectScale).turnY(t / 2);
             }
 
             // BEAM INTERSECTION FOR TEXTURE PICKER
