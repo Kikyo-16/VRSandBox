@@ -54,30 +54,28 @@ export function CreateObjController(obj_model){
     this.isRightTriggerPressed = () => this.bs.right[0].pressed;
     this.isLeftYTriggerPressed = () => this.bs.left[5].pressed;
 
-    this.rotateObj_v2 = (obj, p) =>{
-
-
+    this.rotateObj = (obj, p) =>{
 
         if(wu.isNull(obj)){
             this.prev_lm = null;
             this.prev_obj_m = null;
             return
         }
+        console.log("rotate", this.isLeftTriggerPressed(), this.prev_lm,this.prev_obj_m );
         if(this.isLeftTriggerPressed()){
-            let m = this.m.left;
+            let m = cg.mMultiply(this.m.left, cg.mIdentity());
+            let pos = m.slice(12, 15);
+            this.moveObj(obj, pos);
             if(wu.isNull(this.prev_lm) || wu.isNull(this.prev_obj_m)) {
-                this.prev_lm = m;
-
-                let v = cg.mMultiply(obj.getMatrix(), cg.mIdentity());
-                v[12] = p[0];
-                v[13] = p[1];
-                v[14] = p[2];
-                this.prev_obj_m = obj.getMatrix();
+                this.prev_obj_m = obj.getGlobalMatrix();
+                this.prev_lm = cg.mInverse(m);
             }else{
-                m = cg.mMultiply(this.m.left, cg.mInverse(this.prev_lm));
-                m = cg.mMultiply(m, this.prev_obj_m);
-                obj.setMatrix(m);
+
+                let mTr = cg.mMultiply(m, this.prev_lm);
+                mTr = cg.mMultiply(mTr, this.prev_obj_m);
+                obj.updateM(mTr);
             }
+            this.moveObj(obj, p);
         }else{
             this.prev_lm = null;
             this.prev_obj_m = null;
@@ -145,7 +143,7 @@ export function CreateObjController(obj_model){
         obj.updateLoc(cg.add(obj.getLoc(), cg.scale(direction, this.js.right.y*move_speed)));
     }
 
-    this.rotateObj = (obj) => {
+    this.rotsateObj = (obj) => {
         // up down to rotate along X, left right to rotate along Y
         let thetaX = this.js.left.y*rotate_speed;
         let thetaY = this.js.left.x*rotate_speed;
@@ -205,8 +203,8 @@ export function CreateObjController(obj_model){
             //this.rotateObj(obj);
         }
         if(!wu.isNull(obj) && this.isLeftTriggerPressed() && hand === 0){
-            this.moveObj(obj, p);
-            this.rotateObj(obj);
+            //this.moveObj(obj, p);
+            this.rotateObj(obj, p);
         }
 
     } 
@@ -220,7 +218,6 @@ export function CreateObjController(obj_model){
             this.cold_down -= 1;
             return -1;
         }
-        console.log("wei ", !wu.isNull(obj), this.isLeftYTriggerPressed());
         if(!wu.isNull(obj) && this.isLeftYTriggerPressed()){
             this.cold_down = CD;
             console.log("wei copy obj...")

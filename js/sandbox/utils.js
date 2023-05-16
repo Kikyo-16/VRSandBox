@@ -122,6 +122,14 @@ export let transform = (mTr, obj) => {
     return cg.mMultiply(tr, mGA)
 }
 
+
+export let transformR = (m, obj) => {
+    let mGA = obj.getGlobalMatrix();
+    let mA  = obj.getMatrix();
+    let tr  = cg.mMultiply(mA, cg.mInverse(mGA));
+    return cg.mMultiply(tr, m)
+}
+
 export let copy = (parent, obj) => {
     let obj_copy = parent.add();
     obj_copy._form = obj._form

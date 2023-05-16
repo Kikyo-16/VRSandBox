@@ -1,5 +1,6 @@
 import * as cg from "../render/core/cg.js";
 import * as ut from '../sandbox/utils.js';
+import {transformR} from "../sandbox/utils.js";
 
 export class Object{
     constructor() {
@@ -78,6 +79,13 @@ export class Object{
 	    	let mTr = cg.mTranslate(cg.subtract(loc, this.getLoc()));
 	    	this.obj_node.setMatrix(ut.transform(mTr, this.obj_node));
             this.detect_node.setMatrix(ut.transform(mTr, this.detect_node));
+	    }
+    }
+
+    updateM(m){ //move to global location loc
+    	if (this.obj_node !== null) {
+	    	this.obj_node.setMatrix(ut.transformR(m, this.obj_node));
+            this.detect_node.setMatrix(ut.transformR(m, this.detect_node));
 	    }
     }
 
