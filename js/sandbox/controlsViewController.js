@@ -11,19 +11,23 @@ export class CreateControlsViewController {
       this.controls = new Map();
       this.controls.set(ut.BOX_VIEW_MSG, ["Left Y    : Add a floor",
                                           "Left X    : Remove a floor",
-                                          "Left 1    : Expand",
-                                          "Left 2    : Collapse",
-                                          "Right B   : Div",
-                                          "Right A   : Turn mode (Edit / Object)",
-                                          "Right 1&2 : Place the loc cursor"]);
+                                          "Left 1    : Expand Building Floors side by side",
+                                          "Left 2    : Stack Up Building Floors",
+                                          "Right A   : ",
+                                          "Toggle Modes (Wall Edit Mode, Object Edit Mode)",
+                                          "Right 1&2 : ",
+                                          "Move Cursor to Location of right Beam",
+                                          "Right B   : Dive in to Cursor Location",
+                                       ]);
                                           
-      this.controls.set(ut.BOX_EDIT_MSG, ["Left Y    : Delete walls / Finish menu selection",
-                                          "Left X    : Open menu",
-                                          "Right B   : Split walls",
-                                          "Right A   : Turn mode (Object / View)",
-                                          "*Right 1  : Hold to select walls to split",
+      this.controls.set(ut.BOX_EDIT_MSG, ["Left Y    : Delete selected wall / Finish menu selection",
+                                          "Left X    : Open/Close Menu",
+                                          "Right B   : Finalize last created Wall",
+                                          "Right A   : ",
+                                          "Toggle Modes (Object Edit Mode , Sandbox View Mode)",
+                                          "Right 1  : Create Wall",
                                           "Right 2   : Select multiple walls",
-                                          "J-stick Y : Cancel menu"]);
+                                          ]);
       this.controls.set(ut.BOX_OBJ_MSG, ["Left Y     : Finish menu selection",
                                           "Left X    : Open object menu",
                                           "Right B   : Open multi-perspective menu",
