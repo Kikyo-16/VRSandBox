@@ -157,6 +157,7 @@ export  let MakeBottom = (model, p1, p2, p3, d, edge) => {
     let dx = distanceXZ(m_p2, m_p3) / 2;
     let dz = distanceXZ(m_p1, m_p2) / 2;
     bottom.move(mid_pos).scale(dx + edge, d, dz + edge);
+    bottom.texture("../media/textures/sandbox/concrete.png")
     return bottom
 }
 
