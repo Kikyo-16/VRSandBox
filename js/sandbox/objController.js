@@ -61,7 +61,7 @@ export function CreateObjController(obj_model){
             this.prev_obj_m = null;
             return
         }
-        console.log("rotate", this.isLeftTriggerPressed(), this.prev_lm,this.prev_obj_m );
+        //console.log("rotate", this.isLeftTriggerPressed(), this.prev_lm,this.prev_obj_m );
         if(this.isLeftTriggerPressed()){
             let m = cg.mMultiply(this.m.left, cg.mIdentity());
             let pos = m.slice(12, 15);
@@ -70,7 +70,6 @@ export function CreateObjController(obj_model){
                 this.prev_obj_m = obj.getGlobalMatrix();
                 this.prev_lm = cg.mInverse(m);
             }else{
-
                 let mTr = cg.mMultiply(m, this.prev_lm);
                 mTr = cg.mMultiply(mTr, this.prev_obj_m);
                 obj.updateM(mTr);
@@ -205,6 +204,9 @@ export function CreateObjController(obj_model){
         if(!wu.isNull(obj) && this.isLeftTriggerPressed() && hand === 0){
             //this.moveObj(obj, p);
             this.rotateObj(obj, p);
+        }else if(hand === 0){
+            this.prev_lm = null;
+            this.prev_obj_m = null;
         }
 
     } 
