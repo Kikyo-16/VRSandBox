@@ -167,6 +167,8 @@ export function CreateModeController(model){
                 break;
             case ut.BOX_VIEW_MSG:
                 state.GLOBAL_MENU.INACTIVE = true;
+                state.SAVING.INACTIVE = true;
+                state.SAVING.OPEN = false;
                 break;
             case ut.BOX_EDIT_MSG:
                 break;

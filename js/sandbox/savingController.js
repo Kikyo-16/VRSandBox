@@ -153,7 +153,7 @@ export function CreateSavingController(model, sandbox){
             state.SAVING.OPEN = this.is_open;
             return [false, state];
         }
-        if(!this.is_open && bc.isLBt1()&&bc.isLBt2()){
+        if(!this.is_open && bc.isLBt1()&&bc.isLBt2() && !(bc.isLBt2()&&bc.isLBt1()&&bc.isRBt1()&&bc.isLBt2())){
             openMenu();
         }
         if(!this.is_open){
