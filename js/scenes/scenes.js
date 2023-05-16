@@ -36,6 +36,7 @@ export default () => {
           { name: "DemoSandbox"              , path: "./demoSandbox.js"            },
           { name: "DemoFileInput"              , path: "./demoFileInput.js"            },
          { name: "DemoAvatarTest"           , path: "./DemoAvatarTest.js"      },
+        //{ name: "DemoControlTest"           , path: "./demoControlsTest.js"      },
       ]
    };
 }
