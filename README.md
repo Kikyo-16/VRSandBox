@@ -1,5 +1,9 @@
 # VRSandBox
+[Slides deck](https://docs.google.com/presentation/d/1QJBMZD4MGhu2Io4IlC1zVrE1-crEnpRAgHWpdDapyUI/edit?usp=sharing) | [Video collections](https://www.youtube.com/@liweilin9191/videos)
+
 VRSandBox: A VR interface for Interior design
+
+[<img src="https://img.youtube.com/vi/UwVeMFCA0lA/0.jpg" width="50%">](https://www.youtube.com/watch?v=UwVeMFCA0lA)
 
 # Global MODE  
 ## Sandbox Mode / Object Mode  
